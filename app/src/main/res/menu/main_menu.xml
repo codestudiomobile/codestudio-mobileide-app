@@ -1,0 +1,65 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.mc.MainActivity">
+    <item
+        android:title="Open new terminal"
+        android:id="@+id/openNewTerminal"/>
+    <item
+        android:id="@+id/runFile"
+        android:icon="@drawable/ic_run"
+        android:title="run"
+        android:visible="false"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/stopExecution"
+        android:icon="@drawable/ic_stop"
+        android:title="run"
+        android:visible="false"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/editFile"
+        android:icon="@drawable/ic_edit"
+        android:title="edit file"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/openWelcomeScreen"
+        android:orderInCategory="100"
+        android:title="Open welcome screen"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/settings"
+        android:orderInCategory="100"
+        android:title="Settings"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/about"
+        android:orderInCategory="100"
+        android:title="about"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/folder"
+        android:icon="@drawable/ic_folder"
+        android:title="folder"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/saveFiles"
+                android:title="Save" />
+            <item
+                android:id="@+id/refreshFilesFolders"
+                android:title="Refresh" />
+            <item
+                android:id="@+id/openFile"
+                android:title="Open file" />
+            <item
+                android:id="@+id/openFolder"
+                android:title="Open Folder" />
+
+        </menu>
+    </item>
+
+
+</menu>

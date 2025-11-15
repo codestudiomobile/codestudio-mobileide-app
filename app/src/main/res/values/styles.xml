@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--  BaseToolbar Title text appearance.  -->
+    <!--<style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        &lt;!&ndash; Customize only if needed &ndash;&gt;
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorOnSecondary">@color/black</item>
+    </style>-->
+
+    <style name="TextAppearance.Widget.BaseToolbar.Title" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textSize">14sp</item>
+    </style>
+    <!--  BaseToolbar Subtitle text appearance.  -->
+    <style name="TextAppearance.Widget.BaseToolbar.Subtitle" parent="TextAppearance.Widget.AppCompat.Toolbar.Subtitle">
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!--  ViewDivider style.  -->
+    <style name="ViewDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:layout_marginTop">@dimen/activity_vertical_margin</item>
+        <item name="android:layout_marginBottom">@dimen/activity_vertical_margin</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+    <!-- Termux Dialog Styles -->
+    <style name="BaseDialog.Title.Panel">
+        <item name="android:padding">16dp</item>
+        <item name="android:background">@color/black</item>
+    </style>
+
+    <style name="BaseDialog.Message.Text.Dark">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="BaseDialog">
+        <item name="android:background">@color/white</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <style name="BaseDialog.Message">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:padding">12dp</item>
+    </style>
+
+    <style name="BaseDialog.Title">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <style name="BaseDialog.Message.Text">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="BaseDialog.Message.Text.Light">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TermuxAlertDialogStyle" parent="@android:style/Theme.Material.Light.Dialog.Alert">
+        <!--  Seen in buttons on alert dialog:  -->
+        <item name="android:colorAccent">#212121</item>
+    </style>
+
+    <style name="TermuxActivity.Drawer.ButtonBarStyle.Light" parent="@style/Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="TermuxActivity.Drawer.ButtonBarStyle.Dark" parent="@style/Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="Theme.AppCompat.Light.Dialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <!-- Customize your dialog appearance here -->
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+        <item name="android:background">?android:selectableItemBackground</item>
+    </style>
+</resources>

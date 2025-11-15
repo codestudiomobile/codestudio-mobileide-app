@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--<style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        &lt;!&ndash; Background and text &ndash;&gt;
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:textColor">@color/black</item>
+
+        &lt;!&ndash; Status bar and navigation &ndash;&gt;
+        <item name="android:statusBarColor">@color/primaryDark</item>
+        <item name="android:navigationBarColor">@color/primaryDark</item>
+
+        &lt;!&ndash; Font and appearance &ndash;&gt;
+        <item name="android:textSize">16sp</item>
+
+        &lt;!&ndash; Button and widget styling &ndash;&gt;
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primaryDark</item>
+        <item name="colorAccent">@color/accent</item>
+    </style>-->
+    <style name="Base.Theme.CodeStudio" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+    </style>
+
+    <style name="Theme.CodeStudio" parent="Base.Theme.CodeStudio" />
+
+    <style name="Theme.BaseActivity.Light.DarkActionBar" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/red_400</item>
+        <item name="colorPrimaryVariant">@color/red_800</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/grey_900</item>
+        <item name="colorSecondaryVariant">@color/black</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="colorPrimaryDark" tools:targetApi="l">?attr/colorPrimary</item>
+
+        <!-- Text color. -->
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:textColorLink">@color/blue_link_light</item>
+
+        <!--
+         Dialog Themes.
+         These MUST be defined for the application `android:theme` so that if dialogs
+         are shown from non-activity context with TYPE_SYSTEM_ALERT, the correct dialog theme is
+         applied, otherwise exceptions like `UnsupportedOperationException: Failed to resolve attribute
+         at index... TypedValue` will be thrown, since ThemeOverlay would have all the activity
+         theme attributes defined.
+        -->
+        <item name="alertDialogTheme">@style/ThemeOverlay.BaseDialog.DayNight</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.BaseDialog.DayNight</item>
+    </style>
+
+    <!-- BaseActivity Light NoActionBar theme. -->
+    <style name="Theme.BaseActivity.Light.NoActionBar" parent="Theme.BaseActivity.Light.DarkActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+
+    <!-- BaseActivity DayNight DarkActionBar theme. -->
+    <style name="Theme.BaseActivity.DayNight.DarkActionBar" parent="Theme.BaseActivity.Light.DarkActionBar" />
+    <!-- BaseActivity DayNight NoActionBar theme. -->
+    <style name="Theme.BaseActivity.DayNight.NoActionBar" parent="Theme.BaseActivity.Light.NoActionBar" />
+
+
+    <!-- BaseActivity extended classes Day NoActionBar themes. -->
+    <style name="Theme.MediaViewActivity.Light" parent="Theme.BaseActivity.Light.NoActionBar" />
+
+    <style name="Theme.MarkdownViewActivity.Light" parent="Theme.MediaViewActivity.Light" />
+
+    <!-- BaseActivity extended classes DayNight NoActionBar themes. -->
+    <style name="Theme.MediaViewActivity.DayNight" parent="Theme.BaseActivity.DayNight.NoActionBar" />
+
+    <style name="Theme.MarkdownViewActivity.DayNight" parent="Theme.MediaViewActivity.DayNight" />
+
+
+    <!--
+      BaseDialog Light theme.
+      https://github.com/material-components/material-components-android/blob/1.4.0/lib/java/com/google/android/material/dialog/res/values/themes.xml#L70
+     -->
+    <style name="ThemeOverlay.BaseDialog.Light" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/red_400</item>
+        <item name="colorPrimaryVariant">@color/red_800</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/grey_900</item>
+        <item name="colorSecondaryVariant">@color/black</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Surface color. -->
+        <item name="colorSurface">@color/design_default_color_surface</item>
+        <item name="colorOnSurface">@color/design_default_color_on_surface</item>
+
+        <!-- Dialog title panel style. -->
+        <item name="materialAlertDialogTitlePanelStyle">@style/BaseDialog.Title.Panel</item>
+
+        <!-- Dialog message text style. -->
+        <item name="materialAlertDialogBodyTextStyle">@style/BaseDialog.Message.Text.Light</item>
+    </style>
+
+    <!-- BaseDialog DayNight theme. -->
+    <style name="ThemeOverlay.BaseDialog.DayNight" parent="ThemeOverlay.BaseDialog.Light" />
+
+    <!-- BaseDialog extended classes DayNight themes. -->
+    <style name="ThemeOverlay.MessageDialog.DayNight" parent="ThemeOverlay.BaseDialog.DayNight" />
+    <!--
+         https://material.io/develop/android/theming/dark
+         -->
+    <!--  TermuxApp Light DarkActionBar theme.  -->
+    <style name="Theme.TermuxApp.Light.DarkActionBar" parent="Theme.BaseActivity.Light.DarkActionBar" />
+    <!--  TermuxApp Light NoActionBar theme.  -->
+    <style name="Theme.TermuxApp.Light.NoActionBar" parent="Theme.BaseActivity.Light.NoActionBar" />
+    <!--  TermuxApp DayNight DarkActionBar theme.  -->
+    <style name="Theme.TermuxApp.DayNight.DarkActionBar" parent="Theme.BaseActivity.DayNight.DarkActionBar" />
+    <!--  TermuxApp DayNight NoActionBar theme.  -->
+    <style name="Theme.TermuxApp.DayNight.NoActionBar" parent="Theme.BaseActivity.DayNight.NoActionBar" />
+    <!--  TermuxActivity DayNight NoActionBar theme.  -->
+    <style name="Theme.TermuxActivity.DayNight.NoActionBar" parent="Theme.TermuxApp.DayNight.NoActionBar">
+        <!--  Primary brand color.  -->
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryVariant">@color/black</item>
+        <item name="android:windowBackground">@color/black</item>
+        <!--  Avoid action mode toolbar pushing down terminal content when
+                     selecting text on pre-6.0 (non-floating toolbar).  -->
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <!--  https://developer.android.com/training/tv/start/start.html#transition-color  -->
+        <item name="android:windowAllowReturnTransitionOverlap">true</item>
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+        <!--  Left drawer.  -->
+        <item name="buttonBarButtonStyle">@style/TermuxActivity.Drawer.ButtonBarStyle.Light</item>
+        <item name="termuxActivityDrawerBackground">@color/white</item>
+        <item name="termuxActivityDrawerImageTint">@color/black</item>
+        <!--  Extra keys colors.  -->
+        <item name="extraKeysButtonTextColor">@color/white</item>
+        <item name="extraKeysButtonActiveTextColor">@color/red_400</item>
+        <item name="extraKeysButtonBackgroundColor">@color/black</item>
+        <item name="extraKeysButtonActiveBackgroundColor">@color/grey_500</item>
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+    </style>
+</resources>

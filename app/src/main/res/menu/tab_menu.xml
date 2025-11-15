@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/close_tab"
+        android:title="Close" />
+    <item
+        android:id="@+id/close_other_tabs"
+        android:title="Close Others" />
+    <item
+        android:id="@+id/close_all_tabs"
+        android:title="Close All" />
+</menu>
