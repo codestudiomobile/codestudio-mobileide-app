@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/cc_primary"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/title_create_new_file"
+        android:textColor="@color/ide_text_primary"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <!-- Save location -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/label_save_location"
+        android:textColor="@color/ide_text_secondary"
+        android:textSize="14sp" />
+
+    <Spinner
+        android:id="@+id/locationSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:backgroundTint="@color/ide_text_secondary" />
+
+    <!-- Filename -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/label_filename"
+        android:textColor="@color/ide_text_secondary"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/fileName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:hint="@string/hint_enter_file_name"
+        android:minEms="12"
+        android:textColor="@color/ide_text_primary"
+        android:textColorHint="@color/ide_text_hint" />
+
+    <!-- Buttons -->
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/cancel"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/action_cancel"
+            android:textColor="@color/ide_text_secondary" />
+
+        <Button
+            android:id="@+id/create"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/create"
+            android:textColor="@color/ide_text_secondary" />
+    </LinearLayout>
+</LinearLayout>

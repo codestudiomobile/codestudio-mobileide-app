@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/new_file_folder"
+        android:title="@string/menu_create_new" />
+    <item
+        android:id="@+id/rename_file"
+        android:title="@string/rename" />
+    <item
+        android:id="@+id/delete_file"
+        android:title="@string/delete" />
+    <item
+        android:id="@+id/run_file"
+        android:title="@string/menu_run_file" />
+    <item
+        android:id="@+id/import_file"
+        android:title="@string/menu_import" />
+</menu>

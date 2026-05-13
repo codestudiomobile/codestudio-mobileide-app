@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== Generic palette ===== -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="purple_500">#6200EE</color>
+    <color name="purple_700">#3700B3</color>
+    <color name="teal_200">#03DAC5</color>
+
+    <color name="grey_200">#EEEEEE</color>
+    <color name="grey_400">#BDBDBD</color>
+    <color name="grey_500">#9E9E9E</color>
+    <color name="grey_800">#424242</color>
+    <color name="grey_900">#212121</color>
+
+    <color name="red_400">#FF0000</color>
+    <color name="red_500">#F44336</color>
+    <color name="red_800">#C4001D</color>
+    <color name="red_error">#DC143C</color>
+    <color name="red_error_link">#FC143C</color>
+
+    <color name="blue_link_light">#0969DA</color>
+    <color name="blue_link_dark">#58A6FF</color>
+    <color name="green_700">#4CAF50</color>
+    <color name="yellow_600">#FFEB3B</color>
+
+    <color name="background_markdown_code_inline">#1F000000</color>
+    <color name="background_markdown_code_block">#0F000000</color>
+
+    <!-- ===== Code Studio Mobile IDE / One Dark palette ===== -->
+    <!-- These mirror the original Code Studio Mobile IDE app's color tokens exactly -->
+    <color name="cc_primary">#FF313131</color>
+    <color name="cc_primary_dark">#FF292929</color>
+    <color name="cc_accent">#FFFFFFFF</color>
+
+    <!-- Editor / IDE surface colors -->
+    <color name="ide_background">#FF333333</color>
+    <color name="ide_surface">#FF282828</color>
+    <color name="ide_toolbar">#FF2D2D2D</color>
+    <color name="ide_toolbar_alt">#FF313131</color>
+    <color name="ide_button_pressed">#FF3E4451</color>
+    <color name="ide_divider">#FF3C3C3C</color>
+
+    <!-- Text -->
+    <color name="ide_text_primary">#FFFFFFFF</color>
+    <color name="ide_text_secondary">#FFBDBDBD</color>
+    <color name="ide_text_hint">#FF757575</color>
+    <color name="ide_line_number">#FF5C6370</color>
+    <color name="ide_current_line">#FF282828</color>
+
+    <!-- Syntax highlighting (One Dark) -->
+    <color name="syntax_keyword">#FFC678DD</color>
+    <color name="syntax_string">#FF98C379</color>
+    <color name="syntax_type">#FFE5C07B</color>
+    <color name="syntax_number">#FFD19A66</color>
+    <color name="syntax_comment">#FF5C6370</color>
+    <color name="syntax_preprocessor">#FF61AFEF</color>
+    <color name="syntax_function">#FF61AFEF</color>
+
+    <!-- Status/progress accents -->
+    <color name="progress_ok">#FF4CAF50</color>
+    <color name="progress_warn">#FFFFEB3B</color>
+    <color name="progress_error">#FFF44336</color>
+
+    <!-- Legacy compat names expected by existing termux theme refs -->
+    <color name="primary">#FF313131</color>
+    <color name="primaryDark">#FF292929</color>
+    <color name="accent">#FFFFFFFF</color>
+
+    <color name="design_default_color_surface">#FF282828</color>
+    <color name="design_default_color_on_surface">#FFFFFFFF</color>
+    <color name="extra_keys_active_bg">#20FFFFFF</color>
+</resources>

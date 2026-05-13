@@ -1,0 +1,87 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.cs.ide.app.MainActivity">
+
+    <item
+        android:id="@+id/openNewTerminal"
+        android:title="@string/menu_open_new_terminal" />
+
+    <item
+        android:id="@+id/runFile"
+        android:icon="@drawable/ic_run"
+        android:title="@string/menu_run"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/stopExecution"
+        android:icon="@drawable/ic_stop"
+        android:title="@string/menu_stop"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/editFile"
+        android:icon="@drawable/ic_edit"
+        android:title="@string/menu_edit_file"
+        android:visible="false"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/folder"
+        android:icon="@drawable/ic_folder"
+        android:title="@string/menu_folder"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/newItem"
+                android:title="@string/menu_new">
+                <menu>
+                    <item
+                        android:id="@+id/newFile"
+                        android:title="@string/menu_create_file" />
+                    <item
+                        android:id="@+id/newFolder"
+                        android:title="@string/menu_create_folder" />
+                </menu>
+            </item>
+            <item
+                android:id="@+id/saveFiles"
+                android:title="@string/menu_save" />
+            <item
+                android:id="@+id/saveAs"
+                android:title="@string/save_as" />
+            <item
+                android:id="@+id/refreshFilesFolders"
+                android:title="@string/menu_refresh" />
+            <item
+                android:id="@+id/openFile"
+                android:title="@string/menu_open_file" />
+            <item
+                android:id="@+id/openFolder"
+                android:title="@string/menu_open_folder" />
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/openNewFile"
+        android:title="@string/new_empty_file"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/openWelcomeScreen"
+        android:title="@string/menu_open_welcome_screen"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/settings"
+        android:title="@string/menu_settings"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/about"
+        android:title="@string/menu_about"
+        app:showAsAction="never" />
+
+</menu>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/editorLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cc_primary_dark"
+    android:orientation="vertical"
+    tools:context="com.cs.ide.app.activities.EditorActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/cc_primary_dark"
+        android:elevation="0dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/CodeStudio.PopupMenu"
+        app:title="@string/action_open_editor_settings"
+        app:titleTextColor="@color/white" />
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Startup"
+                android:textColor="@color/cc_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/openEditorOnStartup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="@string/pref_open_editor_on_startup"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:thumbTint="@color/cc_accent"
+                app:trackTint="@color/cc_primary" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/openWelcomeScreenOnStartup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="@string/pref_open_welcome_screen_on_startup"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:thumbTint="@color/cc_accent"
+                app:trackTint="@color/cc_primary" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="16dp"
+                android:background="@color/ide_divider" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Editor Appearance"
+                android:textColor="@color/cc_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/pref_editor_text_size"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/textSizeValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="12dp"
+                    android:text="14"
+                    android:textColor="@color/cc_accent"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/textSizeSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="8dp"
+                android:max="30"
+                android:progress="6" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:text="Preview"
+                android:textColor="@color/ide_text_secondary"
+                android:textSize="12sp" />
+
+            <com.cs.ide.app.editor.CodeView
+                android:id="@+id/editorPreview"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="8dp"
+                android:background="@color/ide_surface"
+                android:clickable="false"
+                android:focusable="false"
+                android:padding="8dp"
+                android:text="@string/editor_preview_text"
+                android:textColor="@color/white" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="16dp"
+                android:background="@color/ide_divider" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Features"
+                android:textColor="@color/cc_accent"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/pinchToZoomSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="@string/pref_pinch_to_zoom"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:thumbTint="@color/cc_accent"
+                app:trackTint="@color/cc_primary" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/showLineNumbersSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="@string/pref_show_line_numbers"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:thumbTint="@color/cc_accent"
+                app:trackTint="@color/cc_primary" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/autoIndentationSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="@string/pref_auto_indentation"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:thumbTint="@color/cc_accent"
+                app:trackTint="@color/cc_primary" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/syntaxHighlightingSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="@string/pref_syntax_highlighting"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:thumbTint="@color/cc_accent"
+                app:trackTint="@color/cc_primary" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/wordWrapSwitch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="@string/pref_word_wrap"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                app:thumbTint="@color/cc_accent"
+                app:trackTint="@color/cc_primary" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>
