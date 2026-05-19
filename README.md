@@ -1,6 +1,6 @@
 # CodeStudio Mobile IDE
 
-CodeStudio is a powerful, open-source integrated development environment (IDE) for Android. It combines a professional code editor with a full-featured terminal environment, allowing developers to write, compile, and run code directly on their mobile devices.
+CodeStudio is a powerful, open-source integrated development environment (IDE) for Android. We believe that a smooth development experience is essential, even on mobile. To achieve this, CodeStudio deeply integrates the robust Termux ecosystem directly into the IDE, harmonizing a professional editor with a powerful Linux environment. It's not just a wrapper—it's a synchronized workspace where your code and terminal breathe together.
 
 ## 🚀 Features
 
