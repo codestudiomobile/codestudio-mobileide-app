@@ -22,33 +22,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TabManager is responsible for persisting and restoring the state of open editor tabs.
- * It uses SharedPreferences and GSON to serialize/deserialize the list of open file URIs
- * and their corresponding names, ensuring the user's workspace is preserved between sessions.
+ * Manages persistence and restoration of open editor tabs.
+ * Uses SharedPreferences and GSON to save file URIs and names.
  */
 public class TabManager {
     private static final String TAG = "TabManager";
     private final SharedPreferences preferences;
 
-    /**
-     * Constructs a TabManager.
-     *
-     * @param context The context used to access SharedPreferences.
-     */
     public TabManager(Context context) {
         this.preferences = context.getSharedPreferences(AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE);
     }
 
     /**
-     * Loads the list of tabs that were open in the last session from SharedPreferences.
-     *
-     * @return A TabState object containing the lists of URIs, names, and the last active tab index.
+     * Loads saved tabs from the previous session.
      */
     @NonNull
     public TabState loadRecentTabs() {
         String jsonUris = preferences.getString(TAB_URI_KEY, null);
         String jsonNames = preferences.getString(TAB_NAME_KEY, null);
         int currentTab = preferences.getInt(CURRENT_TAB, -1);
+
         List<Uri> uriList = new ArrayList<>();
         List<String> namesList = new ArrayList<>();
 
@@ -59,37 +52,77 @@ public class TabManager {
         try {
             Gson gson = new Gson();
             Type listStringType = new TypeToken<List<String>>() {}.getType();
-            namesList = gson.fromJson(jsonNames, listStringType);
-            List<String> uriStringList = gson.fromJson(jsonUris, listStringType);
-            for (String uriString : uriStringList) {
-                uriList.add(Uri.parse(uriString));
+            List<String> rawNames = gson.fromJson(jsonNames, listStringType);
+            List<String> rawUris = gson.fromJson(jsonUris, listStringType);
+
+            if (rawNames == null || rawUris == null) {
+                Log.w(TAG, "Failed to deserialize tab lists");
+                return new TabState(uriList, namesList, -1);
             }
+
+            int adjustedCurrentTab = -1;
+            for (int i = 0; i < rawUris.size(); i++) {
+                String uriString = rawUris.get(i);
+                if (uriString == null) continue;
+
+                // Filter out transient tabs (e.g., compilation results)
+                if (uriString.startsWith("app://com.cs.ide/compile")) {
+                    continue;
+                }
+
+                Uri uri = Uri.parse(uriString);
+                String name = (i < rawNames.size()) ? rawNames.get(i) : uri.getLastPathSegment();
+                if (name == null) name = "Untitled";
+
+                uriList.add(uri);
+                namesList.add(name);
+
+                if (i == currentTab) {
+                    adjustedCurrentTab = uriList.size() - 1;
+                }
+            }
+            currentTab = adjustedCurrentTab;
+
             if (uriList.size() != namesList.size()) {
-                // Data mismatch, discard state
-                return new TabState(new ArrayList<>(), new ArrayList<>(), -1);
+                Log.w(TAG, "Mismatch in URI and name list sizes after filtering");
             }
         } catch (Exception e) {
             Log.e(TAG, "Error loading saved tabs", e);
-            return new TabState(new ArrayList<>(), new ArrayList<>(), -1);
         }
         return new TabState(uriList, namesList, currentTab);
     }
 
     /**
-     * Persists the currently opened tabs to SharedPreferences.
-     *
-     * @param adapter    The ViewPagerAdapter containing the fragment list.
-     * @param tabLayout  The TabLayout showing the tab headers.
+     * Persists the current state of open tabs.
      */
     public void saveOpenedTabs(ViewPagerAdapter adapter, TabLayout tabLayout) {
         if (adapter == null || tabLayout == null) return;
 
-        List<Uri> uriList = adapter.getFileUris();
-        List<String> namesList = adapter.getFileNames();
+        List<Uri> allUris = adapter.getFileUris();
+        List<String> allNames = adapter.getFileNames();
+        List<Boolean> isPrivate = adapter.isPrivateTab;
         int currentTab = tabLayout.getSelectedTabPosition();
 
-        // If no tabs are open, clear the saved state
-        if (uriList.isEmpty() || currentTab == -1) {
+        List<Uri> uriList = new ArrayList<>();
+        List<String> namesList = new ArrayList<>();
+        int adjustedCurrentTab = -1;
+
+        for (int i = 0; i < allUris.size(); i++) {
+            Uri uri = allUris.get(i);
+            // Skip private or transient tabs
+            if ((i < isPrivate.size() && isPrivate.get(i)) ||
+                    (uri != null && uri.toString().startsWith("app://com.cs.ide/compile"))) {
+                if (i == currentTab) adjustedCurrentTab = -1;
+                continue;
+            }
+            uriList.add(uri);
+            namesList.add(allNames.get(i));
+            if (i == currentTab) {
+                adjustedCurrentTab = uriList.size() - 1;
+            }
+        }
+
+        if (uriList.isEmpty()) {
             preferences.edit().remove(TAB_URI_KEY).remove(TAB_NAME_KEY).remove(CURRENT_TAB).apply();
             return;
         }
@@ -100,28 +133,15 @@ public class TabManager {
         }
 
         Gson gson = new Gson();
-        String jsonUris = gson.toJson(uriStringList);
-        String jsonNames = gson.toJson(namesList);
-
         preferences.edit()
-                .putString(TAB_URI_KEY, jsonUris)
-                .putString(TAB_NAME_KEY, jsonNames)
-                .putInt(CURRENT_TAB, currentTab)
+                .putString(TAB_URI_KEY, gson.toJson(uriStringList))
+                .putString(TAB_NAME_KEY, gson.toJson(namesList))
+                .putInt(CURRENT_TAB, adjustedCurrentTab)
                 .apply();
     }
 
     /**
-     * Inner class representing the state of open tabs.
+     * State holder for restored tabs.
      */
-    public static class TabState {
-        public final List<Uri> uris;
-        public final List<String> names;
-        public final int activeTabIndex;
-
-        public TabState(List<Uri> uris, List<String> names, int activeTabIndex) {
-            this.uris = uris;
-            this.names = names;
-            this.activeTabIndex = activeTabIndex;
-        }
-    }
+    public record TabState(List<Uri> uris, List<String> names, int activeTabIndex) {}
 }

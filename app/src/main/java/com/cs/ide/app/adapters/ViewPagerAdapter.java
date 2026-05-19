@@ -34,6 +34,8 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 	public final List<String> fileNames;
 	/** List of URIs for the currently open tabs. */
 	public final List<Uri> fileUris;
+	/** List of boolean flags indicating if a tab is private (not persisted). */
+	public final List<Boolean> isPrivateTab;
 	
 	private final FragmentActivity activity;
 	private final SharedPreferences preferences;
@@ -50,6 +52,11 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		this.activity = fragmentActivity;
 		this.fileUris = fileUris;
 		this.fileNames = fileNames;
+		this.isPrivateTab = new ArrayList<>();
+		// Initialize isPrivateTab with false for initial tabs
+		for (int i = 0; i < fileUris.size(); i++) {
+			isPrivateTab.add(false);
+		}
 		preferences = this.activity.getSharedPreferences(AppPreferences.PREFERENCE_NAME, 0);
 
 		if (fileUris.isEmpty()) {
@@ -66,10 +73,12 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		if (welcomeStartup) {
 			fileUris.add(WELCOME_URI);
 			fileNames.add(activity.getString(R.string.welcome));
+			isPrivateTab.add(false);
 		}
 		if (editorStartup) {
 			fileUris.add(UNTITLED_FILE_URI);
 			fileNames.add(activity.getString(R.string.untitled));
+			isPrivateTab.add(false);
 		}
 	}
 
@@ -96,6 +105,17 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 	 * @param name The display name for the tab.
 	 */
 	public void addFile(Uri uri, String name) {
+		addFile(uri, name, false);
+	}
+
+	/**
+	 * Adds a new file tab if it isn't already open.
+	 *
+	 * @param uri       The URI of the file.
+	 * @param name      The display name for the tab.
+	 * @param isPrivate Whether the tab should be private (not persisted).
+	 */
+	public void addFile(Uri uri, String name, boolean isPrivate) {
 		for (Uri existingUri : fileUris) {
 			if (uri.getPath() != null && uri.getPath().equals(existingUri.getPath())) {
 				return;
@@ -107,9 +127,11 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 			if (fileUris.size() == 1 && fileUris.get(0).equals(WELCOME_URI)) {
 				fileUris.clear();
 				fileNames.clear();
+				isPrivateTab.clear();
 			}
 			fileUris.add(uri);
 			fileNames.add(name);
+			isPrivateTab.add(isPrivate);
 			notifyDataSetChanged();
 		}
 	}
@@ -124,6 +146,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		if (index != -1) {
 			fileUris.remove(index);
 			fileNames.remove(index);
+			isPrivateTab.remove(index);
 			if (fileUris.isEmpty()) {
 				addFile(WELCOME_URI, activity.getString(R.string.welcome));
 			}
@@ -201,6 +224,18 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 	 * @return The index of the added or existing tab.
 	 */
 	public int addTab(Uri uri, String fileName) {
+		return addTab(uri, fileName, false);
+	}
+
+	/**
+	 * Adds a tab and returns its new position.
+	 *
+	 * @param uri       The URI to add.
+	 * @param fileName  The name to display.
+	 * @param isPrivate Whether the tab should be private.
+	 * @return The index of the added or existing tab.
+	 */
+	public int addTab(Uri uri, String fileName, boolean isPrivate) {
 		String runPrefix = activity.getString(R.string.run_prefix, "");
 		for (int i = 0; i < fileUris.size(); i++) {
 			if (fileUris.get(i).equals(uri) && !fileName.startsWith(runPrefix)) {
@@ -209,6 +244,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		}
 		fileUris.add(uri);
 		fileNames.add(fileName);
+		isPrivateTab.add(isPrivate);
 		notifyItemInserted(fileUris.size() - 1);
 		return fileUris.size() - 1;
 	}
@@ -237,6 +273,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		if (position >= 0 && position < fileUris.size()) {
 			fileUris.remove(position);
 			fileNames.remove(position);
+			isPrivateTab.remove(position);
 			if (fileUris.isEmpty()) {
 				setupInitialTabs();
 			}
@@ -271,6 +308,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 	public void removeAllTabs() {
 		fileUris.clear();
 		fileNames.clear();
+		isPrivateTab.clear();
 		setupInitialTabs();
 		notifyDataSetChanged();
 	}
@@ -286,10 +324,13 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		}
 		Uri currentUri = fileUris.get(currentPosition);
 		String currentName = fileNames.get(currentPosition);
+		boolean currentIsPrivate = isPrivateTab.get(currentPosition);
 		fileUris.clear();
 		fileNames.clear();
+		isPrivateTab.clear();
 		fileUris.add(currentUri);
 		fileNames.add(currentName);
+		isPrivateTab.add(currentIsPrivate);
 		notifyDataSetChanged();
 	}
 

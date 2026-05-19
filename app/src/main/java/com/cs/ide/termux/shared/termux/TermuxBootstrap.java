@@ -33,6 +33,9 @@ public class TermuxBootstrap {
      * {@link #TERMUX_APP_PACKAGE_MANAGER} from {@code packageVariantName} passed.
      */
     public static void setTermuxPackageManagerAndVariant(@Nullable String packageVariantName) {
+        if ("apt".equals(packageVariantName)) {
+            packageVariantName = PackageVariant.APT_ANDROID_7.getName();
+        }
         TERMUX_APP_PACKAGE_VARIANT = PackageVariant.variantOf(packageVariantName);
         if (TERMUX_APP_PACKAGE_VARIANT == null) {
             throw new RuntimeException("Unsupported TERMUX_APP_PACKAGE_VARIANT \"" + packageVariantName + "\"");

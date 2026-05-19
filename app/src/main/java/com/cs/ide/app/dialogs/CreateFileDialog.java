@@ -4,6 +4,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +20,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.DialogFragment;
 
 import com.cs.ide.R;
@@ -112,7 +113,7 @@ public class CreateFileDialog extends DialogFragment {
         createButton.setText(isSaveAsMode ? "Save" : "Create");
 
         if (!folderNames.isEmpty()) {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, folderNames);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), R.layout.spinner_item_codestudio, folderNames);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             locationSpinner.setAdapter(adapter);
         } else {
@@ -198,21 +199,29 @@ public class CreateFileDialog extends DialogFragment {
     }
 
     private void createInSaf(Uri folderUri, String fileName, String mimeType) {
-        DocumentFile folder = DocumentFile.fromTreeUri(requireContext(), folderUri);
-        if (folder != null && folder.canWrite()) {
-            if (folder.findFile(fileName) != null) {
-                Toast.makeText(requireContext(), "File already exists in this folder", Toast.LENGTH_SHORT).show();
-                return;
+        try {
+            Uri docUri = folderUri;
+            if (DocumentsContract.isTreeUri(folderUri) && !DocumentsContract.isDocumentUri(requireContext(), folderUri)) {
+                docUri = DocumentsContract.buildDocumentUriUsingTree(folderUri, DocumentsContract.getTreeDocumentId(folderUri));
             }
-            DocumentFile newFile = folder.createFile(mimeType, fileName);
-            if (newFile != null) {
-                listener.onFileCreated(fileName, newFile.getUri(), fileContent);
+            
+            Uri newFileUri = DocumentsContract.createDocument(requireContext().getContentResolver(), docUri, mimeType, fileName);
+            if (newFileUri != null) {
+                // Get the actual name assigned by the provider
+                String finalName = fileName;
+                try (android.database.Cursor c = requireContext().getContentResolver().query(newFileUri, new String[]{DocumentsContract.Document.COLUMN_DISPLAY_NAME}, null, null, null)) {
+                    if (c != null && c.moveToFirst()) {
+                        finalName = c.getString(0);
+                    }
+                }
+                listener.onFileCreated(finalName, newFileUri, fileContent);
                 dismiss();
             } else {
-                Toast.makeText(requireContext(), "Failed to create file: Check permissions or filename validity.", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireContext(), "Failed to create file: The provider returned null.", Toast.LENGTH_LONG).show();
             }
-        } else {
-            Toast.makeText(requireContext(), "Cannot write to the selected location. Permission error.", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Log.e("CreateFileDialog", "Error creating file", e);
+            Toast.makeText(requireContext(), "Failed to create file: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 

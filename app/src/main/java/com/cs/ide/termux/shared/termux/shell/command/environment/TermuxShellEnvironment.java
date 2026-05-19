@@ -1,8 +1,12 @@
 package com.cs.ide.termux.shared.termux.shell.command.environment;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
+
+import com.cs.ide.app.utils.AppPreferences;
 
 import com.cs.ide.termux.shared.errors.Error;
 import com.cs.ide.termux.shared.file.FileUtils;
@@ -13,6 +17,7 @@ import com.cs.ide.termux.shared.termux.TermuxBootstrap;
 import com.cs.ide.termux.shared.termux.TermuxConstants;
 import com.cs.ide.termux.shared.termux.shell.TermuxShellUtils;
 
+import java.io.File;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 
@@ -79,28 +84,52 @@ public class TermuxShellEnvironment extends AndroidShellEnvironment {
         if (termuxApiAppEnvironment != null)
             environment.putAll(termuxApiAppEnvironment);
 
-        environment.put(ENV_HOME, TermuxConstants.TERMUX_HOME_DIR_PATH);
-        environment.put(ENV_PREFIX, TermuxConstants.TERMUX_PREFIX_DIR_PATH);
+        boolean useProot = !isFailSafe && new File(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/proot").exists();
+        String fakePackagePath = "/data/data/com.termux";
+        String homePath = useProot ? fakePackagePath + "/files/home" : TermuxConstants.TERMUX_HOME_DIR_PATH;
+        String prefixPath = useProot ? fakePackagePath + "/files/usr" : TermuxConstants.TERMUX_PREFIX_DIR_PATH;
+
+
+        environment.put(ENV_HOME, homePath);
+        environment.put(ENV_PREFIX, prefixPath);
+
+        if (useProot) {
+            environment.put("TERMUX_PROOT_ACTIVE", "1");
+        }
+
+        // Pass the currently opened folder to the shell environment
+        SharedPreferences prefs = currentPackageContext.getSharedPreferences(AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE);
+        String lastFolderUriStr = prefs.getString(AppPreferences.LAST_FOLDER_URI_KEY, null);
+        if (lastFolderUriStr != null) {
+            String path = com.cs.ide.app.utils.FileUtils.getAbsolutePathFromUri(currentPackageContext, Uri.parse(lastFolderUriStr));
+            if (path != null) {
+                environment.put("OPENED_FOLDER", path);
+            }
+        }
 
         // If failsafe is not enabled, then we keep default PATH and TMPDIR so that
         // system binaries can be used
         if (!isFailSafe) {
-            environment.put(ENV_TMPDIR, TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH);
+            String tmpDir = useProot ? prefixPath + "/tmp" : TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH;
+            environment.put(ENV_TMPDIR, tmpDir);
+            
+            String binPath = useProot ? prefixPath + "/bin" : TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH;
+            
             if (TermuxBootstrap.isAppPackageVariantAPTAndroid5()) {
                 // Termux in android 5/6 era shipped busybox binaries in applets directory
-                environment.put(ENV_PATH, TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + ":"
-                        + TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/applets");
-                environment.put(ENV_LD_LIBRARY_PATH, TermuxConstants.TERMUX_LIB_PREFIX_DIR_PATH);
+                environment.put(ENV_PATH, binPath + ":" + binPath + "/applets");
+                environment.put(ENV_LD_LIBRARY_PATH, useProot ? prefixPath + "/lib" : TermuxConstants.TERMUX_LIB_PREFIX_DIR_PATH);
             } else {
                 // Termux binaries on Android 7+ rely on DT_RUNPATH, so LD_LIBRARY_PATH should
                 // be unset by default
-                environment.put(ENV_PATH, TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH);
+                environment.put(ENV_PATH, binPath);
                 environment.remove(ENV_LD_LIBRARY_PATH);
             }
         }
 
         return environment;
     }
+
 
     @NonNull
     @Override

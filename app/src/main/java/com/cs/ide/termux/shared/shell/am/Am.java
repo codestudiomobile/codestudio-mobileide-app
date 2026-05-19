@@ -29,6 +29,7 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.util.AndroidException;
 
+import androidx.annotation.Keep;
 import com.cs.ide.termux.shared.shell.am.logger.Logger;
 import com.cs.ide.termux.shared.shell.am.reflection.ReflectionUtils;
 
@@ -37,6 +38,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 
+@Keep
 public class Am extends BaseCommand {
 
     public static final String LOG_TAG = "TermuxAm";

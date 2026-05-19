@@ -7,32 +7,11 @@
     android:orientation="vertical"
     tools:context="com.cs.ide.app.fragments.TextFragment">
 
-    <ScrollView
+    <io.github.rosemoe.sora.widget.CodeEditor
+        android:id="@+id/fileContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:scrollbarThumbVertical="@null">
-
-        <HorizontalScrollView
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:fillViewport="true"
-            android:scrollbarThumbHorizontal="@null">
-
-            <com.cs.ide.app.editor.CodeView
-                android:id="@+id/fileContent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/ide_background"
-                android:gravity="start|top"
-                android:minWidth="1000dp"
-                android:padding="16dp"
-                android:textColor="@color/ide_text_primary"
-                android:textCursorDrawable="@drawable/custom_cursor" />
-
-        </HorizontalScrollView>
-    </ScrollView>
+        android:layout_weight="1" />
 
     <com.cs.ide.app.views.ExtraKeysView
         android:id="@+id/editorExtraKeys"

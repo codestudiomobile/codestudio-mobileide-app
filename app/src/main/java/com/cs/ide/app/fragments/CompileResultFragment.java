@@ -73,6 +73,12 @@ public class CompileResultFragment extends Fragment implements ServiceConnection
 
         terminalView = new TerminalView(requireContext(), null);
         terminalView.setId(R.id.terminal_view);
+
+        android.content.SharedPreferences prefs = requireContext().getSharedPreferences(com.cs.ide.app.utils.AppPreferences.PREFERENCE_NAME, android.content.Context.MODE_PRIVATE);
+        int textSizeSp = prefs.getInt(com.cs.ide.app.utils.AppPreferences.KEY_EDITOR_TEXT_SIZE, com.cs.ide.app.utils.AppPreferences.DEFAULT_TEXT_SIZE);
+        float px = android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, textSizeSp, getResources().getDisplayMetrics());
+        terminalView.setTextSize(Math.round(px));
+
         terminalContainer.addView(terminalView);
 
         view.findViewById(R.id.actionClose).setOnClickListener(v -> {
@@ -107,7 +113,23 @@ public class CompileResultFragment extends Fragment implements ServiceConnection
             if (termuxSession != null) {
                 terminalSession = termuxSession.getTerminalSession();
                 terminalView.setTerminalViewClient(new TerminalViewClient() {
-                    @Override public float onScale(float scale) { return scale; }
+                    @Override
+                    public float onScale(float scale) {
+                        if (scale < 0.9f || scale > 1.1f) {
+                            boolean increase = scale > 1.f;
+                            changeFontSize(increase);
+                            return 1.0f;
+                        }
+                        return scale;
+                    }
+
+                    private void changeFontSize(boolean increase) {
+                        int fontSize = terminalView.mRenderer.mTextSize;
+                        fontSize += (increase ? 1 : -1) * 2;
+                        fontSize = Math.max(4, Math.min(fontSize, 256));
+                        terminalView.setTextSize(fontSize);
+                    }
+
                     @Override public void onEmulatorSet() {}
                     @Override public void onSingleTapUp(android.view.MotionEvent e) {}
                     @Override public boolean shouldBackButtonBeMappedToEscape() { return false; }
@@ -115,6 +137,8 @@ public class CompileResultFragment extends Fragment implements ServiceConnection
                     @Override public boolean shouldUseCtrlSpaceWorkaround() { return false; }
                     @Override public boolean isTerminalViewSelected() { return true; }
                     @Override public void copyModeChanged(boolean copyMode) {}
+                    @Override public void onCopyTextToClipboard(String text) {}
+                    @Override public void onPasteTextFromClipboard() {}
                     @Override public boolean onKeyDown(int keyCode, android.view.KeyEvent e, TerminalSession session) { return false; }
                     @Override public boolean onKeyUp(int keyCode, android.view.KeyEvent e) { return false; }
                     @Override public boolean onLongPress(android.view.MotionEvent event) { return false; }

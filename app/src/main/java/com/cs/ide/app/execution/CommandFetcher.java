@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -53,22 +54,54 @@ public class CommandFetcher {
             if (configJson == null) return packs;
             try {
                 JSONObject fullConfig = new JSONObject(configJson);
-                Iterator<String> keys = fullConfig.keys();
-                while (keys.hasNext()) {
-                    String key = keys.next();
-                    if (key.equals("terminal")) continue;
-                    JSONObject langConfig = fullConfig.getJSONObject(key);
-                    String name = langConfig.optString("name", capitalize(key));
-                    String install = langConfig.optString("install", "");
-                    String check = langConfig.optString("check", "");
-                    if (!install.isEmpty()) {
-                        packs.add(new LanguagePack(
-                                key,
-                                name,
-                                install,
-                                check, 
-                                LanguagePack.STATUS_AVAILABLE 
-                        ));
+                JSONObject env = fullConfig.optJSONObject("termux_programming_environment");
+                if (env == null) return packs;
+                JSONObject languages = env.optJSONObject("languages");
+                if (languages == null) return packs;
+
+                String[] categories = {"interpreted", "compiled", "shell_scripting", "web"};
+                for (String category : categories) {
+                    JSONObject catObj = languages.optJSONObject(category);
+                    if (catObj == null) continue;
+                    Iterator<String> langKeys = catObj.keys();
+                    while (langKeys.hasNext()) {
+                        String langKey = langKeys.next();
+                        JSONObject lang = catObj.getJSONObject(langKey);
+                        String name = capitalize(langKey);
+                        
+                        // Add runtime package if available
+                        String install = lang.optString("install", "");
+                        String checkInstalled = lang.optString("check_installed", "");
+                        LanguagePack runtimePack = null;
+                        if (!install.isEmpty()) {
+                            runtimePack = new LanguagePack(
+                                    langKey,
+                                    name + " Runtime",
+                                    install,
+                                    checkInstalled,
+                                    LanguagePack.STATUS_AVAILABLE,
+                                    LanguagePack.TYPE_RUNTIME
+                            );
+                            packs.add(runtimePack);
+                        }
+
+                        // Add suggestion pack if available
+                        String suggestionUrl = lang.optString("suggestion_pack", "");
+                        if (!suggestionUrl.isEmpty()) {
+                            LanguagePack suggestionPack = new LanguagePack(
+                                    langKey + "_suggestions",
+                                    name + " Code Completion",
+                                    "download:" + suggestionUrl,
+                                    "check_suggestion:" + langKey,
+                                    LanguagePack.STATUS_AVAILABLE,
+                                    LanguagePack.TYPE_SUGGESTION
+                            );
+                            if (runtimePack != null) {
+                                runtimePack.companionKey = suggestionPack.key;
+                                suggestionPack.companionKey = runtimePack.key;
+                            }
+                            packs.add(suggestionPack);
+                        }
                     }
                 }
             } catch (JSONException e) {
@@ -76,6 +109,124 @@ public class CommandFetcher {
             }
             return packs;
         });
+    }
+
+    /**
+     * Resolves the execution command for a given file.
+     *
+     * @param absoluteFilePath The absolute path of the file.
+     * @return The resolved command string, or null if not found or error.
+     */
+    public String resolveCommandForFile(String absoluteFilePath) {
+        if (absoluteFilePath == null) return null;
+        File file = new File(absoluteFilePath);
+        String fileName = file.getName();
+        String extension = "";
+        int i = fileName.lastIndexOf('.');
+        if (i > 0) {
+            extension = fileName.substring(i);
+        }
+
+        String configJson = loadConfigurationJson();
+        if (configJson == null) return null;
+
+        try {
+            JSONObject fullConfig = new JSONObject(configJson);
+            JSONObject env = fullConfig.optJSONObject("termux_programming_environment");
+            if (env == null) return null;
+            JSONObject languages = env.optJSONObject("languages");
+            if (languages == null) return null;
+
+            String[] categories = {"interpreted", "compiled", "shell_scripting"};
+            for (String category : categories) {
+                JSONObject catObj = languages.optJSONObject(category);
+                if (catObj == null) continue;
+                Iterator<String> langKeys = catObj.keys();
+                while (langKeys.hasNext()) {
+                    String langKey = langKeys.next();
+                    JSONObject lang = catObj.getJSONObject(langKey);
+                    if (extension.equalsIgnoreCase(lang.optString("extension"))) {
+                        return buildCommand(lang, absoluteFilePath);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error resolving command for file: " + absoluteFilePath, e);
+        }
+        return null;
+    }
+
+    private String buildCommand(JSONObject lang, String absoluteFilePath) {
+        try {
+            String run = lang.optString("run", "");
+            String compile = lang.optString("compile", "");
+            
+            if (run.isEmpty() && compile.isEmpty()) return null;
+
+            String fileName = new File(absoluteFilePath).getName();
+            String parentDir = new File(absoluteFilePath).getParent();
+            String fileNameWithoutExt = fileName;
+            int dotIndex = fileName.lastIndexOf('.');
+            if (dotIndex > 0) {
+                fileNameWithoutExt = fileName.substring(0, dotIndex);
+            }
+            
+            String output = parentDir + "/" + fileNameWithoutExt;
+            
+            String command = "";
+            if (!compile.isEmpty()) {
+                command = compile.replace("{{file}}", "\"" + absoluteFilePath + "\"")
+                                .replace("{{output}}", "\"" + output + "\"");
+                if (!run.isEmpty()) {
+                    command += " && " + run.replace("{{file}}", "\"" + absoluteFilePath + "\"")
+                                           .replace("{{output}}", "\"" + output + "\"")
+                                           .replace("{{class_name}}", fileNameWithoutExt);
+                }
+            } else {
+                command = run.replace("{{file}}", "\"" + absoluteFilePath + "\"")
+                             .replace("{{class_name}}", fileNameWithoutExt);
+            }
+            
+            return command;
+        } catch (Exception e) {
+            Log.e(TAG, "Error building command", e);
+            return null;
+        }
+    }
+
+    /**
+     * Checks if a given extension is supported for execution.
+     *
+     * @param extension The file extension (including the dot).
+     * @return True if supported, false otherwise.
+     */
+    public boolean isExtensionSupported(String extension) {
+        if (extension == null) return false;
+        String configJson = loadConfigurationJson();
+        if (configJson == null) return false;
+        try {
+            JSONObject fullConfig = new JSONObject(configJson);
+            JSONObject env = fullConfig.optJSONObject("termux_programming_environment");
+            if (env == null) return false;
+            JSONObject languages = env.optJSONObject("languages");
+            if (languages == null) return false;
+
+            String[] categories = {"interpreted", "compiled", "shell_scripting"};
+            for (String category : categories) {
+                JSONObject catObj = languages.optJSONObject(category);
+                if (catObj == null) continue;
+                Iterator<String> langKeys = catObj.keys();
+                while (langKeys.hasNext()) {
+                    JSONObject lang = catObj.getJSONObject(langKeys.next());
+                    if (extension.equalsIgnoreCase(lang.optString("extension"))) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking extension support", e);
+        }
+        return false;
     }
 
     /**
@@ -92,13 +243,17 @@ public class CommandFetcher {
      *
      * @return The JSON configuration string, or null if it cannot be loaded.
      */
-    private String loadConfigurationJson() {
-        android.content.SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        String updatedConfig = prefs.getString(PREF_KEY_UPDATED_CONFIG, null);
-        if (updatedConfig != null) {
-            Log.d(TAG, "Loaded updated config from SharedPreferences.");
-            return updatedConfig;
+    public String loadConfigurationJson() {
+        try {
+            android.content.SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+            String updatedConfig = prefs.getString(PREF_KEY_UPDATED_CONFIG, null);
+            if (updatedConfig != null) {
+                return updatedConfig;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error reading from SharedPreferences", e);
         }
+
         try {
             InputStream is = context.getAssets().open(CONFIG_FILE_NAME);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
@@ -108,7 +263,6 @@ public class CommandFetcher {
                 sb.append(line);
             }
             reader.close();
-            Log.d(TAG, "Loaded default config from assets.");
             return sb.toString();
         } catch (IOException e) {
             Log.e(TAG, "Could not load " + CONFIG_FILE_NAME + " from assets.", e);

@@ -24,6 +24,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.ScaleGestureDetector;
+import android.view.ViewParent;
 import android.widget.MultiAutoCompleteTextView;
 
 import androidx.annotation.ColorInt;
@@ -214,6 +215,9 @@ public class CodeView extends AppCompatMultiAutoCompleteTextView implements Find
 	}
 
 	private void updateTextSizeInternal(float sizeSp) {
+		float currentSizeSp = getTextSize() / getResources().getDisplayMetrics().scaledDensity;
+		if (Math.abs(currentSizeSp - sizeSp) < 0.1f) return;
+
 		setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp);
 		float lineNumberSizePx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sizeSp, getResources().getDisplayMetrics());
 		setLineNumberTextSize(lineNumberSizePx);
@@ -241,9 +245,15 @@ public class CodeView extends AppCompatMultiAutoCompleteTextView implements Find
 			public boolean onScale(ScaleGestureDetector detector) {
 				scaleFactor *= detector.getScaleFactor();
 				scaleFactor = Math.max(MIN_SCALE, Math.min(scaleFactor, MAX_SCALE));
-				updateTextSizeInternal(baseSizeSp * scaleFactor);
-				saveScaleFactor(scaleFactor);
+				float newSize = baseSizeSp * scaleFactor;
+				updateTextSizeInternal(newSize);
 				return true;
+			}
+
+			@Override
+			public void onScaleEnd(ScaleGestureDetector detector) {
+				saveScaleFactor(scaleFactor);
+				super.onScaleEnd(detector);
 			}
 		});
 		setOnTouchListener((v, event) -> {
@@ -252,8 +262,11 @@ public class CodeView extends AppCompatMultiAutoCompleteTextView implements Find
 			if (pinchToZoom) {
 				scaleDetector.onTouchEvent(event);
 				if (event.getPointerCount() > 1 || scaleDetector.isInProgress()) {
-					if (v.getParent() != null) {
-						v.getParent().requestDisallowInterceptTouchEvent(true);
+					// Request all parents to stop intercepting, including nested scroll views
+					ViewParent parent = v.getParent();
+					while (parent != null) {
+						parent.requestDisallowInterceptTouchEvent(true);
+						parent = parent.getParent();
 					}
 					if (scaleDetector.isInProgress()) {
 						return true;

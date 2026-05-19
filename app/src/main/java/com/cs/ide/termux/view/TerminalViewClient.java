@@ -42,6 +42,10 @@ public interface TerminalViewClient {
 
     void copyModeChanged(boolean copyMode);
 
+    void onCopyTextToClipboard(String text);
+
+    void onPasteTextFromClipboard();
+
     boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession session);
 
     boolean onKeyUp(int keyCode, KeyEvent e);

@@ -266,4 +266,13 @@ public class TermuxAppSharedPreferences extends AppSharedPreferences {
                 false);
     }
 
+    public int getLastBootstrappedVersionCode() {
+        return SharedPreferenceUtils.getInt(mSharedPreferences, TERMUX_APP.KEY_LAST_BOOTSTRAPPED_VERSION_CODE,
+                TERMUX_APP.DEFAULT_VALUE_KEY_LAST_BOOTSTRAPPED_VERSION_CODE);
+    }
+
+    public void setLastBootstrappedVersionCode(int value) {
+        SharedPreferenceUtils.setInt(mSharedPreferences, TERMUX_APP.KEY_LAST_BOOTSTRAPPED_VERSION_CODE, value, false);
+    }
+
 }

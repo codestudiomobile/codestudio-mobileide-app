@@ -26,7 +26,7 @@ public class EnvironmentSetup {
      * @return The bin directory file.
      */
     public static File getBinDir(Context context) {
-        return new File(getEnvironmentRoot(context), "bin");
+        return new File(new File(getEnvironmentRoot(context), "usr"), "bin");
     }
 
     /**

@@ -43,6 +43,14 @@ public class TermuxTerminalViewClientBase implements TerminalViewClient {
     }
 
     @Override
+    public void onCopyTextToClipboard(String text) {
+    }
+
+    @Override
+    public void onPasteTextFromClipboard() {
+    }
+
+    @Override
     public boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession session) {
         return false;
     }

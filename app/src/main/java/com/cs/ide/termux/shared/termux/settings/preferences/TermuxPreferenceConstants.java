@@ -187,6 +187,12 @@ public final class TermuxPreferenceConstants {
         public static final String KEY_CRASH_REPORT_NOTIFICATIONS_ENABLED = "crash_report_notifications_enabled";
         public static final boolean DEFAULT_VALUE_CRASH_REPORT_NOTIFICATIONS_ENABLED = true;
 
+        /**
+         * The {@code int} value for the version code of the app that last successfully installed the bootstrap.
+         */
+        public static final String KEY_LAST_BOOTSTRAPPED_VERSION_CODE = "last_bootstrapped_version_code";
+        public static final int DEFAULT_VALUE_KEY_LAST_BOOTSTRAPPED_VERSION_CODE = -1;
+
     }
 
     /**

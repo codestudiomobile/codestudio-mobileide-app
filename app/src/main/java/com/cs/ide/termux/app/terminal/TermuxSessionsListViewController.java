@@ -27,87 +27,83 @@ import com.cs.ide.termux.terminal.TerminalSession;
 
 import java.util.List;
 
-public class TermuxSessionsListViewController extends ArrayAdapter<TermuxSession>
-        implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+public class TermuxSessionsListViewController extends ArrayAdapter<TermuxSession> implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
-    final TermuxActivity mActivity;
+	final TermuxActivity mActivity;
 
-    final StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
-    final StyleSpan italicSpan = new StyleSpan(Typeface.ITALIC);
+	final StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+	final StyleSpan italicSpan = new StyleSpan(Typeface.ITALIC);
 
-    public TermuxSessionsListViewController(TermuxActivity activity, List<TermuxSession> sessionList) {
-        super(activity.getApplicationContext(), R.layout.item_terminal_sessions_list, sessionList);
-        this.mActivity = activity;
-    }
+	public TermuxSessionsListViewController(TermuxActivity activity, List<TermuxSession> sessionList) {
+		super(activity.getApplicationContext(), R.layout.item_terminal_sessions_list, sessionList);
+		this.mActivity = activity;
+	}
 
-    @SuppressLint("SetTextI18n")
-    @NonNull
-    @Override
-    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-        View sessionRowView = convertView;
-        if (sessionRowView == null) {
-            LayoutInflater inflater = mActivity.getLayoutInflater();
-            sessionRowView = inflater.inflate(R.layout.item_terminal_sessions_list, parent, false);
-        }
+	@SuppressLint("SetTextI18n")
+	@NonNull
+	@Override
+	public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+		View sessionRowView = convertView;
+		if (sessionRowView == null) {
+			LayoutInflater inflater = mActivity.getLayoutInflater();
+			sessionRowView = inflater.inflate(R.layout.item_terminal_sessions_list, parent, false);
+		}
 
-        TextView sessionTitleView = sessionRowView.findViewById(R.id.session_title);
+		TextView sessionTitleView = sessionRowView.findViewById(R.id.session_title);
 
-        TerminalSession sessionAtRow = getItem(position).getTerminalSession();
-        if (sessionAtRow == null) {
-            sessionTitleView.setText("null session");
-            return sessionRowView;
-        }
+		TerminalSession sessionAtRow = getItem(position).getTerminalSession();
+		if (sessionAtRow == null) {
+			sessionTitleView.setText("null session");
+			return sessionRowView;
+		}
 
-        boolean shouldEnableDarkTheme = ThemeUtils.shouldEnableDarkTheme(mActivity,
-                NightMode.getAppNightMode().getName());
+		boolean shouldEnableDarkTheme = ThemeUtils.shouldEnableDarkTheme(mActivity, NightMode.getAppNightMode().getName());
 
-        if (shouldEnableDarkTheme) {
-            sessionTitleView.setBackground(
-                    ContextCompat.getDrawable(mActivity, R.drawable.session_background_black_selected));
-        }
+		if (shouldEnableDarkTheme) {
+			sessionTitleView.setBackground(
+					ContextCompat.getDrawable(mActivity, R.drawable.session_background_black_selected)
+			);
+		}
 
-        String name = sessionAtRow.mSessionName;
-        String sessionTitle = sessionAtRow.getTitle();
+		String name = sessionAtRow.mSessionName;
+		String sessionTitle = sessionAtRow.getTitle();
 
-        String numberPart = "[" + (position + 1) + "] ";
-        String sessionNamePart = (TextUtils.isEmpty(name) ? "" : name);
-        String sessionTitlePart = (TextUtils.isEmpty(sessionTitle) ? ""
-                : ((sessionNamePart.isEmpty() ? "" : "\n") + sessionTitle));
+		String numberPart = "[" + (position + 1) + "] ";
+		String sessionNamePart = (TextUtils.isEmpty(name) ? "" : name);
+		String sessionTitlePart = (TextUtils.isEmpty(sessionTitle) ? "" : ((sessionNamePart.isEmpty() ? "" : "\n") + sessionTitle));
 
-        String fullSessionTitle = numberPart + sessionNamePart + sessionTitlePart;
-        SpannableString fullSessionTitleStyled = new SpannableString(fullSessionTitle);
-        fullSessionTitleStyled.setSpan(boldSpan, 0, numberPart.length() + sessionNamePart.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        fullSessionTitleStyled.setSpan(italicSpan, numberPart.length() + sessionNamePart.length(),
-                fullSessionTitle.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+		String fullSessionTitle = numberPart + sessionNamePart + sessionTitlePart;
+		SpannableString fullSessionTitleStyled = new SpannableString(fullSessionTitle);
+		fullSessionTitleStyled.setSpan(boldSpan, 0, numberPart.length() + sessionNamePart.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+		fullSessionTitleStyled.setSpan(italicSpan, numberPart.length() + sessionNamePart.length(), fullSessionTitle.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        sessionTitleView.setText(fullSessionTitleStyled);
+		sessionTitleView.setText(fullSessionTitleStyled);
 
-        boolean sessionRunning = sessionAtRow.isRunning();
+		boolean sessionRunning = sessionAtRow.isRunning();
 
-        if (sessionRunning) {
-            sessionTitleView.setPaintFlags(sessionTitleView.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
-        } else {
-            sessionTitleView.setPaintFlags(sessionTitleView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-        }
-        int defaultColor = shouldEnableDarkTheme ? Color.WHITE : Color.BLACK;
-        int color = sessionRunning || sessionAtRow.getExitStatus() == 0 ? defaultColor : Color.RED;
-        sessionTitleView.setTextColor(color);
-        return sessionRowView;
-    }
+		if (sessionRunning) {
+			sessionTitleView.setPaintFlags(sessionTitleView.getPaintFlags() & ~Paint.STRIKE_THRU_TEXT_FLAG);
+		} else {
+			sessionTitleView.setPaintFlags(sessionTitleView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+		}
+		int defaultColor = shouldEnableDarkTheme ? Color.WHITE : Color.BLACK;
+		int color = sessionRunning || sessionAtRow.getExitStatus() == 0 ? defaultColor : Color.RED;
+		sessionTitleView.setTextColor(color);
+		return sessionRowView;
+	}
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        TermuxSession clickedSession = getItem(position);
-        mActivity.getTermuxTerminalSessionClient().setCurrentSession(clickedSession.getTerminalSession());
-        mActivity.getDrawer().closeDrawers();
-    }
+	@Override
+	public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		TermuxSession clickedSession = getItem(position);
+		mActivity.getTermuxTerminalSessionClient().setCurrentSession(clickedSession.getTerminalSession());
+		mActivity.getDrawer().closeDrawers();
+	}
 
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-        final TermuxSession selectedSession = getItem(position);
-        mActivity.getTermuxTerminalSessionClient().renameSession(selectedSession.getTerminalSession());
-        return true;
-    }
+	@Override
+	public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+		final TermuxSession selectedSession = getItem(position);
+		mActivity.getTermuxTerminalSessionClient().renameSession(selectedSession.getTerminalSession());
+		return true;
+	}
 
 }

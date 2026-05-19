@@ -19,8 +19,8 @@ import com.cs.ide.termux.terminal.WcWidth;
  */
 public final class TerminalRenderer {
 
-    final int mTextSize;
-    final Typeface mTypeface;
+    public final int mTextSize;
+    public final Typeface mTypeface;
     /**
      * The width of a single mono spaced character obtained by
      * {@link Paint#measureText(String)} on a single 'X'.
@@ -51,9 +51,10 @@ public final class TerminalRenderer {
         mTextPaint.setAntiAlias(true);
         mTextPaint.setTextSize(textSize);
 
-        mFontLineSpacing = (int) Math.ceil(mTextPaint.getFontSpacing());
-        mFontAscent = (int) Math.ceil(mTextPaint.ascent());
-        mFontLineSpacingAndAscent = mFontLineSpacing + mFontAscent;
+        Paint.FontMetrics fm = mTextPaint.getFontMetrics();
+        mFontLineSpacing = (int) Math.ceil(fm.bottom - fm.top);
+        mFontAscent = (int) Math.ceil(fm.ascent);
+        mFontLineSpacingAndAscent = (int) Math.ceil(mFontLineSpacing + fm.top);
         mFontWidth = mTextPaint.measureText("X");
 
         StringBuilder sb = new StringBuilder(" ");

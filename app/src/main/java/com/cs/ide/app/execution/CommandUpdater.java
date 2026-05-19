@@ -21,10 +21,12 @@ import java.util.concurrent.Executors;
  */
 public class CommandUpdater {
     private static final String TAG = "CommandUpdater";
-    private static final String VERSION_URL = "https://raw.githubusercontent.com/codestudiomobile/termux-commands/main/version.json";
+    private static final String VERSION_URL = "https://raw.githubusercontent.com/codestudiomobile/codestudio-commands/main/version.json";
     private static final String LOCAL_PREF_KEY = "updated_commands_json";
-    private static final String COMMANDS_URL = "https://raw.githubusercontent.com/codestudiomobile/termux-commands/main/commands.json";
+    private static final String COMMANDS_URL = "https://raw.githubusercontent.com/codestudiomobile/codestudio-commands/main/commands.json";
     private static final String PREF_NAME = "CommandConfigPrefs";
+    private static final String LAST_CHECK_KEY = "last_update_check_ms";
+    private static final long CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // Check once a day
 
     /**
      * Checks for updates to the command configuration in a background thread.
@@ -32,6 +34,11 @@ public class CommandUpdater {
      * @param context The application context.
      */
     public static void checkForUpdates(Context context) {
+        if (!shouldCheckForUpdate(context)) {
+            Log.i(TAG, "Skipping update check. Last check was recently.");
+            return;
+        }
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
@@ -39,18 +46,41 @@ public class CommandUpdater {
                 String localVersion = getLocalVersion(context);
                 if (!remoteVersion.equals(localVersion)) {
                     String newCommands = fetchRemoteCommands();
-                    saveToPrefs(context, newCommands);
-                    saveVersion(context, remoteVersion);
-                    Log.i(TAG, "Commands updated to version: " + remoteVersion);
+                    if (isValidJson(newCommands)) {
+                        saveToPrefs(context, newCommands);
+                        saveVersion(context, remoteVersion);
+                        Log.i(TAG, "Commands updated to version: " + remoteVersion);
+                    }
                 } else {
                     Log.i(TAG, "No update needed. Version unchanged.");
                 }
+                saveLastCheckTime(context);
             } catch (Exception e) {
                 Log.e(TAG, "Update failed: " + e.getMessage());
             } finally {
                 executor.shutdown();
             }
         });
+    }
+
+    private static boolean shouldCheckForUpdate(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        long lastCheck = prefs.getLong(LAST_CHECK_KEY, 0);
+        return (System.currentTimeMillis() - lastCheck) > CHECK_INTERVAL_MS;
+    }
+
+    private static void saveLastCheckTime(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putLong(LAST_CHECK_KEY, System.currentTimeMillis()).apply();
+    }
+
+    private static boolean isValidJson(String json) {
+        try {
+            new JSONObject(json);
+            return true;
+        } catch (JSONException e) {
+            return false;
+        }
     }
 
     // --- Private Helper Methods ---

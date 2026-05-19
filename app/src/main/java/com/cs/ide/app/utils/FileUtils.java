@@ -224,15 +224,20 @@ public class FileUtils {
                 return DocumentsContract.getDocumentId(uri);
             }
 
-            if (DocumentsContract.isDocumentUri(context, uri)) {
+            if (DocumentsContract.isDocumentUri(context, uri) || DocumentsContract.isTreeUri(uri)) {
                 // ExternalStorageProvider
                 if ("com.android.externalstorage.documents".equals(uri.getAuthority())) {
-                    final String docId = DocumentsContract.getDocumentId(uri);
+                    final String docId = DocumentsContract.isTreeUri(uri) ? 
+                            DocumentsContract.getTreeDocumentId(uri) : DocumentsContract.getDocumentId(uri);
                     final String[] split = docId.split(":");
                     final String type = split[0];
 
                     if ("primary".equalsIgnoreCase(type)) {
-                        return Environment.getExternalStorageDirectory() + "/" + split[1];
+                        String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+                        if (split.length > 1) {
+                            path += "/" + split[1];
+                        }
+                        return path;
                     }
                 }
                 // DownloadsProvider

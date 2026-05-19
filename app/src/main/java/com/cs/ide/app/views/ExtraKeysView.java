@@ -21,230 +21,240 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ExtraKeysView provides a paginated set of shortcut buttons for common coding symbols
+ * ExtraKeysView provides a paginated set of shortcut buttons for common coding
+ * symbols
  * and navigation keys. It can be used as a toolbar for the editor or terminal.
  */
 public class ExtraKeysView extends LinearLayout {
 
-    private OnKeyActionListener listener;
-    private ViewPager2 viewPager;
-    private View pageIndicator1;
-    private View pageIndicator2;
+	private OnKeyActionListener listener;
+	private ViewPager2 viewPager;
+	private View pageIndicator1;
+	private View pageIndicator2;
 
-    /**
-     * Interface for receiving key action events.
-     */
-    public interface OnKeyActionListener {
-        /**
-         * Called when a key is pressed.
-         *
-         * @param key The key string or command associated with the button.
-         */
-        void onKeyAction(String key);
-    }
+	/**
+	 * Interface for receiving key action events.
+	 */
+	public interface OnKeyActionListener {
+		/**
+		 * Called when a key is pressed.
+		 *
+		 * @param key The key string or command associated with the button.
+		 */
+		void onKeyAction(String key);
+	}
 
-    public ExtraKeysView(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init(context);
-    }
+	public ExtraKeysView(Context context) {
+		this(context, null);
+	}
 
-    private void init(Context context) {
-        setOrientation(VERTICAL);
+	public ExtraKeysView(Context context, @Nullable AttributeSet attrs) {
+		this(context, attrs, 0);
+	}
 
-        // ViewPager to hold pages of keys
-        viewPager = new ViewPager2(context);
-        int heightInPx = (int) (88 * context.getResources().getDisplayMetrics().density);
-        viewPager.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, heightInPx));
-        addView(viewPager);
+	public ExtraKeysView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+		super(context, attrs, defStyleAttr);
+		init(context);
+	}
 
-        // Page Indicator Container
-        LinearLayout indicatorContainer = new LinearLayout(context);
-        indicatorContainer.setOrientation(HORIZONTAL);
-        indicatorContainer.setGravity(android.view.Gravity.CENTER);
-        LayoutParams indicatorParams = new LayoutParams(LayoutParams.MATCH_PARENT, 8);
-        indicatorParams.setMargins(0, 4, 0, 4);
-        indicatorContainer.setLayoutParams(indicatorParams);
+	private void init(Context context) {
+		setOrientation(VERTICAL);
 
-        pageIndicator1 = new View(context);
-        LayoutParams p1 = new LayoutParams(40, 4);
-        p1.setMargins(8, 0, 8, 0);
-        pageIndicator1.setLayoutParams(p1);
-        pageIndicator1.setBackgroundColor(context.getColor(R.color.white));
+		// ViewPager to hold pages of keys
+		viewPager = new ViewPager2(context);
+		int heightInPx = (int) (88 * context.getResources().getDisplayMetrics().density);
+		viewPager.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, heightInPx));
+		addView(viewPager);
 
-        pageIndicator2 = new View(context);
-        LayoutParams p2 = new LayoutParams(40, 4);
-        p2.setMargins(8, 0, 8, 0);
-        pageIndicator2.setLayoutParams(p2);
-        pageIndicator2.setBackgroundColor(context.getColor(R.color.grey_500));
+		// Page Indicator Container
+		LinearLayout indicatorContainer = new LinearLayout(context);
+		indicatorContainer.setOrientation(HORIZONTAL);
+		indicatorContainer.setGravity(android.view.Gravity.CENTER);
+		LayoutParams indicatorParams = new LayoutParams(LayoutParams.MATCH_PARENT, 8);
+		indicatorParams.setMargins(0, 4, 0, 4);
+		indicatorContainer.setLayoutParams(indicatorParams);
 
-        indicatorContainer.addView(pageIndicator1);
-        indicatorContainer.addView(pageIndicator2);
-        addView(indicatorContainer);
+		pageIndicator1 = new View(context);
+		LayoutParams p1 = new LayoutParams(40, 4);
+		p1.setMargins(8, 0, 8, 0);
+		pageIndicator1.setLayoutParams(p1);
+		pageIndicator1.setBackgroundColor(context.getColor(R.color.white));
 
-        setupViewPager();
-    }
+		pageIndicator2 = new View(context);
+		LayoutParams p2 = new LayoutParams(40, 4);
+		p2.setMargins(8, 0, 8, 0);
+		pageIndicator2.setLayoutParams(p2);
+		pageIndicator2.setBackgroundColor(context.getColor(R.color.grey_500));
 
-    /**
-     * Sets the listener for key actions.
-     *
-     * @param listener The listener instance.
-     */
-    public void setOnKeyActionListener(OnKeyActionListener listener) {
-        this.listener = listener;
-    }
+		indicatorContainer.addView(pageIndicator1);
+		indicatorContainer.addView(pageIndicator2);
+		addView(indicatorContainer);
 
-    private void setupViewPager() {
-        List<List<SymbolItem>> pages = new ArrayList<>();
+		setupViewPager();
+	}
 
-        // Page 1: Common symbols and navigation
-        List<SymbolItem> page1 = new ArrayList<>();
-        page1.add(new SymbolItem("TAB", "Tab", R.drawable.symbol_tab));
-        page1.add(new SymbolItem("{}", null, R.drawable.symbol_curly_brackets));
-        page1.add(new SymbolItem("\"\"", null, R.drawable.symbol_double_quotes));
-        page1.add(new SymbolItem(";", null, R.drawable.symbol_semicolon));
-        page1.add(new SymbolItem("UNDO", null, R.drawable.symbol_undo));
-        page1.add(new SymbolItem("UP", null, R.drawable.symbol_arrow_up));
-        page1.add(new SymbolItem("REDO", null, R.drawable.symbol_redo));
+	/**
+	 * Sets the listener for key actions.
+	 *
+	 * @param listener The listener instance.
+	 */
+	public void setOnKeyActionListener(OnKeyActionListener listener) {
+		this.listener = listener;
+	}
 
-        page1.add(new SymbolItem("=", null, R.drawable.symbol_equal));
-        page1.add(new SymbolItem("\\", null, R.drawable.symbol_backslash));
-        page1.add(new SymbolItem("&", null, R.drawable.symbol_and));
-        page1.add(new SymbolItem(",", null, R.drawable.symbol_comma));
-        page1.add(new SymbolItem("LEFT", null, R.drawable.symbol_arrow_left));
-        page1.add(new SymbolItem("DOWN", null, R.drawable.symbol_arrow_down));
-        page1.add(new SymbolItem("RIGHT", null, R.drawable.symbol_arrow_right));
-        pages.add(page1);
+	private void setupViewPager() {
+		List<List<SymbolItem>> pages = new ArrayList<>();
 
-        // Page 2: Additional symbols
-        List<SymbolItem> page2 = new ArrayList<>();
-        page2.add(new SymbolItem("+", null, R.drawable.symbol_plus));
-        page2.add(new SymbolItem("-", null, R.drawable.symbol_minus));
-        page2.add(new SymbolItem("!", null, R.drawable.symbol_exclamation_mark));
-        page2.add(new SymbolItem("$", null, R.drawable.symbol_dollar));
-        page2.add(new SymbolItem("[]", null, R.drawable.symbol_square_brackets));
-        page2.add(new SymbolItem("''", null, R.drawable.symbol_apostrophe));
-        page2.add(new SymbolItem("()", null, R.drawable.symbol_parentheses));
+		// Page 1: Common symbols and navigation
+		List<SymbolItem> page1 = new ArrayList<>();
+		page1.add(new SymbolItem("TAB", "Tab", R.drawable.ic_symbol_tab));
+		page1.add(new SymbolItem("{}", null, R.drawable.ic_symbol_curly_brackets));
+		page1.add(new SymbolItem("\"\"", null, R.drawable.ic_symbol_double_quotes));
+		page1.add(new SymbolItem(";", null, R.drawable.ic_symbol_semicolon));
+		page1.add(new SymbolItem("UNDO", null, R.drawable.ic_symbol_undo));
+		page1.add(new SymbolItem("UP", null, R.drawable.ic_symbol_arrow_up));
+		page1.add(new SymbolItem("REDO", null, R.drawable.ic_symbol_redo));
 
-        page2.add(new SymbolItem("|", null, R.drawable.symbol_pipe));
-        page2.add(new SymbolItem("^", null, R.drawable.symbol_caret));
-        page2.add(new SymbolItem(".", null, R.drawable.symbol_dot));
-        page2.add(new SymbolItem("#", null, R.drawable.symbol_hash));
-        page2.add(new SymbolItem("%", null, R.drawable.symbol_percent));
-        page2.add(new SymbolItem("<", null, R.drawable.symbol_angle_brackets_left));
-        page2.add(new SymbolItem(">", null, R.drawable.symbol_angle_brackets_right));
-        pages.add(page2);
+		page1.add(new SymbolItem("=", null, R.drawable.ic_symbol_equal));
+		page1.add(new SymbolItem("\\", null, R.drawable.ic_symbol_backslash));
+		page1.add(new SymbolItem("&", null, R.drawable.ic_symbol_and));
+		page1.add(new SymbolItem(",", null, R.drawable.ic_symbol_comma));
+		page1.add(new SymbolItem("LEFT", null, R.drawable.ic_symbol_arrow_left));
+		page1.add(new SymbolItem("DOWN", null, R.drawable.ic_symbol_arrow_down));
+		page1.add(new SymbolItem("RIGHT", null, R.drawable.ic_symbol_arrow_right));
+		pages.add(page1);
 
-        viewPager.setAdapter(new SymbolsPagerAdapter(pages));
-        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageSelected(int position) {
-                if (position == 0) {
-                    pageIndicator1.setBackgroundColor(getContext().getColor(R.color.white));
-                    pageIndicator2.setBackgroundColor(getContext().getColor(R.color.grey_500));
-                } else {
-                    pageIndicator1.setBackgroundColor(getContext().getColor(R.color.grey_500));
-                    pageIndicator2.setBackgroundColor(getContext().getColor(R.color.white));
-                }
-            }
-        });
-    }
+		// Page 2: Additional symbols
+		List<SymbolItem> page2 = new ArrayList<>();
+		page2.add(new SymbolItem("+", null, R.drawable.ic_symbol_plus));
+		page2.add(new SymbolItem("-", null, R.drawable.ic_symbol_minus));
+		page2.add(new SymbolItem("!", null, R.drawable.ic_symbol_exclamation_mark));
+		page2.add(new SymbolItem("$", null, R.drawable.ic_symbol_dollar));
+		page2.add(new SymbolItem("[]", null, R.drawable.ic_symbol_square_brackets));
+		page2.add(new SymbolItem("''", null, R.drawable.ic_symbol_apostrophe));
+		page2.add(new SymbolItem("()", null, R.drawable.ic_symbol_parentheses));
 
-    private static class SymbolItem {
-        String key;
-        String displayText;
-        int iconRes;
+		page2.add(new SymbolItem("|", null, R.drawable.ic_symbol_pipe));
+		page2.add(new SymbolItem("^", null, R.drawable.ic_symbol_caret));
+		page2.add(new SymbolItem(".", null, R.drawable.ic_symbol_dot));
+		page2.add(new SymbolItem("#", null, R.drawable.ic_symbol_hash));
+		page2.add(new SymbolItem("%", null, R.drawable.ic_symbol_percent));
+		page2.add(new SymbolItem("<", null, R.drawable.ic_symbol_angle_brackets_left));
+		page2.add(new SymbolItem(">", null, R.drawable.ic_symbol_angle_brackets_right));
+		pages.add(page2);
 
-        SymbolItem(String key, String displayText, int iconRes) {
-            this.key = key;
-            this.displayText = displayText;
-            this.iconRes = iconRes;
-        }
-    }
+		viewPager.setAdapter(new SymbolsPagerAdapter(pages));
+		viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+			@Override
+			public void onPageSelected(int position) {
+				if (position == 0) {
+					pageIndicator1.setBackgroundColor(getContext().getColor(R.color.white));
+					pageIndicator2.setBackgroundColor(getContext().getColor(R.color.grey_500));
+				} else {
+					pageIndicator1.setBackgroundColor(getContext().getColor(R.color.grey_500));
+					pageIndicator2.setBackgroundColor(getContext().getColor(R.color.white));
+				}
+			}
+		});
+	}
 
-    private class SymbolsPagerAdapter extends RecyclerView.Adapter<SymbolsPagerAdapter.PageViewHolder> {
-        private final List<List<SymbolItem>> pages;
+	private static class SymbolItem {
+		String key;
+		String displayText;
+		int iconRes;
 
-        public SymbolsPagerAdapter(List<List<SymbolItem>> pages) {
-            this.pages = pages;
-        }
+		SymbolItem(String key, String displayText, int iconRes) {
+			this.key = key;
+			this.displayText = displayText;
+			this.iconRes = iconRes;
+		}
+	}
 
-        @NonNull
-        @Override
-        public PageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            RecyclerView recyclerView = new RecyclerView(parent.getContext());
-            recyclerView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            recyclerView.setLayoutManager(new GridLayoutManager(parent.getContext(), 7));
-            recyclerView.setOverScrollMode(OVER_SCROLL_NEVER);
-            return new PageViewHolder(recyclerView);
-        }
+	private class SymbolsPagerAdapter extends RecyclerView.Adapter<SymbolsPagerAdapter.PageViewHolder> {
+		private final List<List<SymbolItem>> pages;
 
-        @Override
-        public void onBindViewHolder(@NonNull PageViewHolder holder, int position) {
-            holder.recyclerView.setAdapter(new SymbolsAdapter(pages.get(position)));
-        }
+		public SymbolsPagerAdapter(List<List<SymbolItem>> pages) {
+			this.pages = pages;
+		}
 
-        @Override
-        public int getItemCount() {
-            return pages.size();
-        }
+		@NonNull
+		@Override
+		public PageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+			RecyclerView recyclerView = new RecyclerView(parent.getContext());
+			recyclerView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+					ViewGroup.LayoutParams.MATCH_PARENT));
+			recyclerView.setLayoutManager(new GridLayoutManager(parent.getContext(), 7));
+			recyclerView.setOverScrollMode(OVER_SCROLL_NEVER);
+			return new PageViewHolder(recyclerView);
+		}
 
-        class PageViewHolder extends RecyclerView.ViewHolder {
-            RecyclerView recyclerView;
+		@Override
+		public void onBindViewHolder(@NonNull PageViewHolder holder, int position) {
+			holder.recyclerView.setAdapter(new SymbolsAdapter(pages.get(position)));
+		}
 
-            PageViewHolder(RecyclerView view) {
-                super(view);
-                recyclerView = view;
-            }
-        }
-    }
+		@Override
+		public int getItemCount() {
+			return pages.size();
+		}
 
-    private class SymbolsAdapter extends RecyclerView.Adapter<SymbolsAdapter.SymbolViewHolder> {
-        private final List<SymbolItem> items;
+		class PageViewHolder extends RecyclerView.ViewHolder {
+			RecyclerView recyclerView;
 
-        public SymbolsAdapter(List<SymbolItem> items) {
-            this.items = items;
-        }
+			PageViewHolder(RecyclerView view) {
+				super(view);
+				recyclerView = view;
+			}
+		}
+	}
 
-        @NonNull
-        @Override
-        public SymbolViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_symbol_button, parent, false);
-            return new SymbolViewHolder(view);
-        }
+	private class SymbolsAdapter extends RecyclerView.Adapter<SymbolsAdapter.SymbolViewHolder> {
+		private final List<SymbolItem> items;
 
-        @Override
-        public void onBindViewHolder(@NonNull SymbolViewHolder holder, int position) {
-            SymbolItem item = items.get(position);
-            if (item.iconRes != -1) {
-                holder.icon.setVisibility(VISIBLE);
-                holder.text.setVisibility(GONE);
-                holder.icon.setImageResource(item.iconRes);
-            } else {
-                holder.icon.setVisibility(GONE);
-                holder.text.setVisibility(VISIBLE);
-                holder.text.setText(item.displayText);
-            }
-            holder.itemView.setOnClickListener(v -> {
-                if (listener != null) {
-                    v.post(() -> listener.onKeyAction(item.key));
-                }
-            });
-        }
+		public SymbolsAdapter(List<SymbolItem> items) {
+			this.items = items;
+		}
 
-        @Override
-        public int getItemCount() {
-            return items.size();
-        }
+		@NonNull
+		@Override
+		public SymbolViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+			View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_symbol_button, parent, false);
+			return new SymbolViewHolder(view);
+		}
 
-        class SymbolViewHolder extends RecyclerView.ViewHolder {
-            ImageView icon;
-            TextView text;
+		@Override
+		public void onBindViewHolder(@NonNull SymbolViewHolder holder, int position) {
+			SymbolItem item = items.get(position);
+			if (item.iconRes != -1) {
+				holder.icon.setVisibility(VISIBLE);
+				holder.text.setVisibility(GONE);
+				holder.icon.setImageResource(item.iconRes);
+			} else {
+				holder.icon.setVisibility(GONE);
+				holder.text.setVisibility(VISIBLE);
+				holder.text.setText(item.displayText);
+			}
+			holder.itemView.setOnClickListener(v -> {
+				if (listener != null) {
+					v.post(() -> listener.onKeyAction(item.key));
+				}
+			});
+		}
 
-            SymbolViewHolder(View view) {
-                super(view);
-                icon = view.findViewById(R.id.symbolIcon);
-                text = view.findViewById(R.id.symbolText);
-            }
-        }
-    }
+		@Override
+		public int getItemCount() {
+			return items.size();
+		}
+
+		class SymbolViewHolder extends RecyclerView.ViewHolder {
+			ImageView icon;
+			TextView text;
+
+			SymbolViewHolder(View view) {
+				super(view);
+				icon = view.findViewById(R.id.symbolIcon);
+				text = view.findViewById(R.id.symbolText);
+			}
+		}
+	}
 }

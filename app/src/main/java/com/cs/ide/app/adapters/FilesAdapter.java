@@ -215,7 +215,12 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FileViewHold
             FileItem item = fileList.get(pos);
             if (item.isDirectory) {
                 if (item.isExpanded) collapseFolder(pos);
-                else expandFolder(pos);
+                else {
+                    expandFolder(pos);
+                    if (context instanceof MainActivity) {
+                        ((MainActivity) context).updateOpenedFolder(item.uri);
+                    }
+                }
             } else if (onFileClickListener != null) {
                 if (context instanceof MainActivity) ((MainActivity) context).closeLeftNavigation();
                 onFileClickListener.onFileClicked(item.uri, item.displayName);

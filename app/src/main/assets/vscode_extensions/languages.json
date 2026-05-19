@@ -1,0 +1,92 @@
+{
+	"languages": [
+		{
+			"grammar": "textmate/cpp/syntaxes/c.tmLanguage.json",
+			"name": "c",
+			"scopeName": "source.c",
+			"languageConfiguration": "textmate/cpp/language-configuration.json",
+			"extensions": [
+				".c",
+				".h"
+			]
+		},
+		{
+			"grammar": "textmate/cpp/syntaxes/cpp.tmLanguage.json",
+			"name": "cpp",
+			"scopeName": "source.cpp",
+			"languageConfiguration": "textmate/cpp/language-configuration.json",
+			"extensions": [
+				".cpp",
+				".hpp",
+				".cc",
+				".cxx"
+			]
+		},
+		{
+			"grammar": "textmate/python/syntaxes/python.tmLanguage.json",
+			"name": "python",
+			"scopeName": "source.python",
+			"languageConfiguration": "textmate/python/language-configuration.json",
+			"extensions": [
+				".py"
+			]
+		},
+		{
+			"grammar": "textmate/java/syntaxes/java.tmLanguage.json",
+			"name": "java",
+			"scopeName": "source.java",
+			"languageConfiguration": "textmate/java/language-configuration.json",
+			"extensions": [
+				".java"
+			]
+		},
+		{
+			"grammar": "textmate/kotlin/syntaxes/kotlin.tmLanguage.json",
+			"name": "kotlin",
+			"scopeName": "source.kotlin",
+			"languageConfiguration": "textmate/kotlin/language-configuration.json",
+			"extensions": [
+				".kt",
+				".kts"
+			]
+		},
+		{
+			"grammar": "textmate/javascript/syntaxes/javascript.tmLanguage.json",
+			"name": "javascript",
+			"scopeName": "source.js",
+			"languageConfiguration": "textmate/javascript/language-configuration.json",
+			"extensions": [
+				".js"
+			]
+		},
+		{
+			"grammar": "textmate/html/syntaxes/html.tmLanguage.json",
+			"name": "html",
+			"scopeName": "text.html.basic",
+			"languageConfiguration": "textmate/html/language-configuration.json",
+			"extensions": [
+				".html",
+				".htm"
+			]
+		},
+		{
+			"grammar": "textmate/css/syntaxes/css.tmLanguage.json",
+			"name": "css",
+			"scopeName": "source.css",
+			"languageConfiguration": "textmate/css/language-configuration.json",
+			"extensions": [
+				".css"
+			]
+		},
+		{
+			"grammar": "textmate/shellscript/syntaxes/shell-unix-bash.tmLanguage.json",
+			"name": "shellscript",
+			"scopeName": "source.shell",
+			"languageConfiguration": "textmate/shellscript/language-configuration.json",
+			"extensions": [
+				".sh",
+				".bash"
+			]
+		}
+	]
+}

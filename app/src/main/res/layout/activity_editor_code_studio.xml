@@ -117,17 +117,11 @@
                 android:textColor="@color/ide_text_secondary"
                 android:textSize="12sp" />
 
-            <com.cs.ide.app.editor.CodeView
+            <io.github.rosemoe.sora.widget.CodeEditor
                 android:id="@+id/editorPreview"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
-                android:layout_marginTop="8dp"
-                android:background="@color/ide_surface"
-                android:clickable="false"
-                android:focusable="false"
-                android:padding="8dp"
-                android:text="@string/editor_preview_text"
-                android:textColor="@color/white" />
+                android:layout_marginTop="8dp" />
 
             <View
                 android:layout_width="match_parent"

@@ -370,6 +370,8 @@
     <string name="title_bootstrap_error_notification">%1$s Bootstrap Error</string>
     <string name="title_setup_storage_error_notification">%1$s Setup Storage Error</string>
 
+    <string name="default_banner_text">code studio mobile ide</string>
+
     <string name="msg_starting_installation">Starting installation…</string>
     <string name="msg_installation_failed">Installation failed</string>
     <string name="msg_installation_complete">Installation complete</string>
@@ -397,5 +399,6 @@
     <string name="pref_auto_indentation">Auto indentation</string>
     <string name="pref_syntax_highlighting">Syntax highlighting</string>
     <string name="pref_word_wrap">Word wrap</string>
+    <string name="private_tab_suffix">(Private)</string>
     <string name="editor_preview_text">// Editor Preview\npublic class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println(\"Hello Code Studio!\");\n    }\n}</string>
 </resources>

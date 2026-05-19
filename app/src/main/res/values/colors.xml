@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ===== Generic palette ===== -->
+    <!-- Generic Palette -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
@@ -28,13 +28,11 @@
     <color name="background_markdown_code_inline">#1F000000</color>
     <color name="background_markdown_code_block">#0F000000</color>
 
-    <!-- ===== Code Studio Mobile IDE / One Dark palette ===== -->
-    <!-- These mirror the original Code Studio Mobile IDE app's color tokens exactly -->
+    <!-- IDE Surface & Background Colors -->
     <color name="cc_primary">#FF313131</color>
     <color name="cc_primary_dark">#FF292929</color>
     <color name="cc_accent">#FFFFFFFF</color>
 
-    <!-- Editor / IDE surface colors -->
     <color name="ide_background">#FF333333</color>
     <color name="ide_surface">#FF282828</color>
     <color name="ide_toolbar">#FF2D2D2D</color>
@@ -42,14 +40,15 @@
     <color name="ide_button_pressed">#FF3E4451</color>
     <color name="ide_divider">#FF3C3C3C</color>
 
-    <!-- Text -->
+    <!-- Text & Editor UI -->
     <color name="ide_text_primary">#FFFFFFFF</color>
     <color name="ide_text_secondary">#FFBDBDBD</color>
+    <color name="ide_text_selected">#FF5C6370</color>
     <color name="ide_text_hint">#FF757575</color>
     <color name="ide_line_number">#FF5C6370</color>
     <color name="ide_current_line">#FF282828</color>
 
-    <!-- Syntax highlighting (One Dark) -->
+    <!-- Syntax Highlighting (One Dark Palette) -->
     <color name="syntax_keyword">#FFC678DD</color>
     <color name="syntax_string">#FF98C379</color>
     <color name="syntax_type">#FFE5C07B</color>
@@ -58,16 +57,15 @@
     <color name="syntax_preprocessor">#FF61AFEF</color>
     <color name="syntax_function">#FF61AFEF</color>
 
-    <!-- Status/progress accents -->
+    <!-- Status & Progress -->
     <color name="progress_ok">#FF4CAF50</color>
     <color name="progress_warn">#FFFFEB3B</color>
     <color name="progress_error">#FFF44336</color>
 
-    <!-- Legacy compat names expected by existing termux theme refs -->
+    <!-- Legacy Compatibility & System Overrides -->
     <color name="primary">#FF313131</color>
     <color name="primaryDark">#FF292929</color>
     <color name="accent">#FFFFFFFF</color>
-
     <color name="design_default_color_surface">#FF282828</color>
     <color name="design_default_color_on_surface">#FFFFFFFF</color>
     <color name="extra_keys_active_bg">#20FFFFFF</color>

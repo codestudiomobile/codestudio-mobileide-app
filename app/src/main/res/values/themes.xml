@@ -49,7 +49,7 @@
         <item name="extraKeysButtonTextColor">@color/white</item>
         <item name="extraKeysButtonActiveTextColor">@color/white</item>
         <item name="extraKeysButtonBackgroundColor">@android:color/transparent</item>
-        <!--        <item name="extraKeysButtonActiveBackgroundColor">@color/extra_keys_active_bg</item>-->
+        <item name="extraKeysButtonActiveBackgroundColor">@color/extra_keys_active_bg</item>
     </style>
 
     <style name="SubTitleStyle" parent="TextAppearance.Widget.AppCompat.Toolbar.Subtitle">
@@ -183,7 +183,7 @@
         <item name="extraKeysButtonTextColor">@color/white</item>
         <item name="extraKeysButtonActiveTextColor">@color/white</item>
         <item name="extraKeysButtonBackgroundColor">@android:color/transparent</item>
-        <!--        <item name="extraKeysButtonActiveBackgroundColor">#2D2D2D</item>-->
+        <item name="extraKeysButtonActiveBackgroundColor">#2D2D2D</item>
         <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
     </style>
 

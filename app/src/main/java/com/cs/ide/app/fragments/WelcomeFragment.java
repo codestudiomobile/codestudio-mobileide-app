@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -25,42 +26,34 @@ import java.util.List;
 
 /**
  * WelcomeFragment is the landing page shown to the user when no files are currently open.
- * It provides a quick-access dashboard for common IDE tasks such as opening folders,
- * managing language toolchains, and accessing settings.
+ * It provides a quick-access dashboard for common IDE tasks.
  */
 public class WelcomeFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
 	private final List<TextView> scalableTextViews = new ArrayList<>();
+	private ScaleGestureDetector scaleGestureDetector;
+	private float scaleFactor = 1.0f;
+	private int baseTextSizeSp;
 
 	/**
 	 * Static factory method to create a new instance of WelcomeFragment.
-	 *
-	 * @return A new instance of WelcomeFragment.
 	 */
 	public static WelcomeFragment newInstance() {
 		return new WelcomeFragment();
 	}
 
-	/**
-	 * Inflates the welcome screen layout.
-	 */
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		return inflater.inflate(R.layout.fragment_welcome_code_studio, container, false);
 	}
 
-	/**
-	 * Called after the view is created. Initializes the interaction logic for the welcome screen.
-	 *
-	 * @param view The inflated root view.
-	 * @param savedInstanceState Fragment state.
-	 */
 	@Override
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 
 		initScalableViews(view);
 		setupClickListeners(view);
+		setupZoomGesture(view);
 		applyPreferences();
 	}
 
@@ -89,16 +82,43 @@ public class WelcomeFragment extends Fragment implements SharedPreferences.OnSha
 		scalableTextViews.add(view.findViewById(R.id.openSettings));
 	}
 
+	private void setupZoomGesture(View view) {
+		scaleGestureDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+			@Override
+			public boolean onScale(ScaleGestureDetector detector) {
+				boolean pinchToZoom = requireContext().getSharedPreferences(AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE)
+						.getBoolean(AppPreferences.KEY_PINCH_TO_ZOOM, true);
+
+				if (pinchToZoom) {
+					scaleFactor *= detector.getScaleFactor();
+					scaleFactor = Math.max(0.5f, Math.min(scaleFactor, 3.0f));
+					updateTextSize();
+					return true;
+				}
+				return false;
+			}
+		});
+
+		view.findViewById(R.id.welcomeRoot).setOnTouchListener((v, event) -> {
+			scaleGestureDetector.onTouchEvent(event);
+			return true;
+		});
+	}
+
+	private void updateTextSize() {
+		for (TextView tv : scalableTextViews) {
+			if (tv != null) {
+				tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, (baseTextSizeSp + 4) * scaleFactor);
+			}
+		}
+	}
+
 	private void applyPreferences() {
 		if (!isAdded()) return;
 		SharedPreferences prefs = requireContext().getSharedPreferences(AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE);
-		int textSize = prefs.getInt(AppPreferences.KEY_EDITOR_TEXT_SIZE, AppPreferences.DEFAULT_TEXT_SIZE);
-		
-		for (TextView tv : scalableTextViews) {
-			if (tv != null) {
-				tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize + 4); // Slightly larger than editor text
-			}
-		}
+		baseTextSizeSp = prefs.getInt(AppPreferences.KEY_EDITOR_TEXT_SIZE, AppPreferences.DEFAULT_TEXT_SIZE);
+		scaleFactor = 1.0f; // Reset scale on manual preference change
+		updateTextSize();
 	}
 
 	@Override
@@ -108,56 +128,38 @@ public class WelcomeFragment extends Fragment implements SharedPreferences.OnSha
 		}
 	}
 
-	/**
-	 * Configures click listeners for various interactive elements on the welcome screen.
-	 * Each button/text link triggers an action in the MainActivity or opens a specific settings activity.
-	 *
-	 * @param view The fragment's root view.
-	 */
 	private void setupClickListeners(View view) {
-		// Action: Open a directory picker to load a project/folder
 		view.findViewById(R.id.openFolderText).setOnClickListener(v -> {
-			if (getActivity() instanceof MainActivity) {
+			if (getActivity() instanceof MainActivity)
 				((MainActivity) getActivity()).openDirectory();
-			}
 		});
 
-		// Action: Open the left navigation drawer to browse already loaded files
 		view.findViewById(R.id.openFilesText).setOnClickListener(v -> {
-			if (getActivity() instanceof MainActivity) {
+			if (getActivity() instanceof MainActivity)
 				((MainActivity) getActivity()).openLeftNavigation();
-			}
 		});
 
-		// Action: Navigate to the language toolchain management screen
 		view.findViewById(R.id.manageLanguagesSettings).setOnClickListener(v -> {
 			startActivity(new Intent(view.getContext(), ManageLanguagesActivity.class));
 		});
 
-		// Action: Navigate to editor-specific settings (e.g., startup behavior)
 		view.findViewById(R.id.openEditorSettings).setOnClickListener(v -> {
 			startActivity(new Intent(view.getContext(), EditorActivity.class));
 		});
 
-		// Action: Open general application settings
 		view.findViewById(R.id.openSettings).setOnClickListener(v -> {
-			if (getActivity() instanceof MainActivity) {
+			if (getActivity() instanceof MainActivity)
 				((MainActivity) getActivity()).openSettings();
-			}
 		});
 
-		// Action: Open a file picker for individual file access
 		view.findViewById(R.id.openFileFromInternalStorageText).setOnClickListener(v -> {
-			if (getActivity() instanceof MainActivity) {
+			if (getActivity() instanceof MainActivity)
 				((MainActivity) getActivity()).openFilePicker();
-			}
 		});
 
-		// Action: Trigger the creation of a new terminal session
 		view.findViewById(R.id.openNewTerminal).setOnClickListener(v -> {
-			if (getActivity() instanceof MainActivity) {
+			if (getActivity() instanceof MainActivity)
 				((MainActivity) getActivity()).openNewTerminal();
-			}
 		});
 	}
 }

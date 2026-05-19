@@ -21,115 +21,173 @@ import java.util.List;
 
 public class TermuxShellUtils {
 
-    private static final String LOG_TAG = "TermuxShellUtils";
+	private static final String LOG_TAG = "TermuxShellUtils";
 
-    /**
-     * Setup shell command arguments for the execute. The file interpreter may be
-     * prefixed to
-     * command arguments if needed.
-     */
-    @NonNull
-    public static String[] setupShellCommandArguments(@NonNull String executable, @Nullable String[] arguments) {
-        // The file to execute may either be:
-        // - An elf file, in which we execute it directly.
-        // - A script file without shebang, which we execute with our standard shell
-        // $PREFIX/bin/sh instead of the
-        // system /system/bin/sh. The system shell may vary and may not work at all due
-        // to LD_LIBRARY_PATH.
-        // - A file with shebang, which we try to handle with e.g. /bin/foo ->
-        // $PREFIX/bin/foo.
-        String interpreter = null;
-        try {
-            File file = new File(executable);
-            try (FileInputStream in = new FileInputStream(file)) {
-                byte[] buffer = new byte[256];
-                int bytesRead = in.read(buffer);
-                if (bytesRead > 4) {
-                    if (buffer[0] == 0x7F && buffer[1] == 'E' && buffer[2] == 'L' && buffer[3] == 'F') {
-                        // Elf file, do nothing.
-                    } else if (buffer[0] == '#' && buffer[1] == '!') {
-                        // Try to parse shebang.
-                        StringBuilder builder = new StringBuilder();
-                        for (int i = 2; i < bytesRead; i++) {
-                            char c = (char) buffer[i];
-                            if (c == ' ' || c == '\n') {
-                                if (builder.length() == 0) {
-                                    // Skip whitespace after shebang.
-                                } else {
-                                    // End of shebang.
-                                    String shebangExecutable = builder.toString();
-                                    if (shebangExecutable.startsWith("/usr") || shebangExecutable.startsWith("/bin")) {
-                                        String[] parts = shebangExecutable.split("/");
-                                        String binary = parts[parts.length - 1];
-                                        interpreter = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/" + binary;
-                                    }
-                                    break;
-                                }
-                            } else {
-                                builder.append(c);
-                            }
-                        }
-                    } else {
-                        // No shebang and no ELF, use standard shell.
-                        interpreter = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh";
-                    }
-                }
-            }
-        } catch (IOException e) {
-            // Ignore.
-        }
+	/**
+	 * Setup shell command arguments for to execute. The file interpreter may be
+	 * prefixed to
+	 * command arguments if needed.
+	 */
+	@NonNull
+	public static String[] setupShellCommandArguments(@NonNull String executable, @Nullable String[] arguments) {
+		// If the executable starts with the fake com.termux path, translate it to the real path for existence checks.
+		String realExecutable = executable;
+		if (executable.startsWith("/data/data/com.termux")) {
+			realExecutable = executable.replace("/data/data/com.termux", TermuxConstants.TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH);
+		}
 
-        List<String> result = new ArrayList<>();
-        if (interpreter != null)
-            result.add(interpreter);
-        result.add(executable);
-        if (arguments != null)
-            Collections.addAll(result, arguments);
-        return result.toArray(new String[0]);
-    }
+		// The file to execute may either be:
+		// - An elf file, in which we execute it directly.
+		// - A script file without shebang, which we execute with our standard shell
+		// $PREFIX/bin/sh instead of the
+		// system /system/bin/sh. The system shell may vary and may not work at all due
+		// to LD_LIBRARY_PATH.
+		// - A file with shebang, which we try to handle with e.g. /bin/foo ->
+		// $PREFIX/bin/foo.
+		String interpreter = null;
+		try {
+			File file = new File(realExecutable);
+			if (file.exists() && file.isFile()) {
+				try (FileInputStream in = new FileInputStream(file)) {
+					byte[] buffer = new byte[256];
+					int bytesRead = in.read(buffer);
+					if (bytesRead > 4) {
+						if (buffer[0] == 0x7F && buffer[1] == 'E' && buffer[2] == 'L' && buffer[3] == 'F') {
+							// Elf file, do nothing.
+						} else if (buffer[0] == '#' && buffer[1] == '!') {
+							// Try to parse shebang.
+							StringBuilder builder = new StringBuilder();
+							for (int i = 2; i < bytesRead; i++) {
+								char c = (char) buffer[i];
+								if (c == ' ' || c == '\n') {
+									if (builder.length() > 0) {
+										// End of shebang.
+										String shebangExecutable = builder.toString();
+										if (shebangExecutable.startsWith("/usr") || shebangExecutable.startsWith("/bin")) {
+											String[] parts = shebangExecutable.split("/");
+											String binary = parts[parts.length - 1];
+											interpreter = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/" + binary;
+										}
+										break;
+									}
+								} else {
+									builder.append(c);
+								}
+							}
+						} else {
+							// No shebang and no ELF, use standard shell.
+							interpreter = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh";
+						}
+					}
+				}
+			}
+		} catch (IOException e) {
+			// Ignore.
+		}
 
-    /**
-     * Clear jniLibs under {@link TermuxConstants#TERMUX_TMP_PREFIX_DIR_PATH}.
-     */
-    public static void clearTermuxTMPDIR(boolean onlyIfExists) {
-        // Existence check before clearing may be required since clearDirectory() will
-        // automatically
-        // re-create empty directory if doesn't exist, which should not be done for
-        // things like
-        // termux-reset (d6eb5e35). Moreover, TMPDIR must be a directory and not a
-        // symlink, this can
-        // also allow users who don't want TMPDIR to be cleared automatically on termux
-        // exit, since
-        // it may remove jniLibs still being used by background processes (#1159).
-        if (onlyIfExists && !FileUtils.directoryFileExists(TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH, false))
-            return;
+		List<String> commandToWrap = new ArrayList<>();
+		if (interpreter != null)
+			commandToWrap.add(interpreter);
+		commandToWrap.add(realExecutable);
+		if (arguments != null)
+			Collections.addAll(commandToWrap, arguments);
 
-        Error error;
+		String prootPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/proot";
+		if (new File(prootPath).exists() && !realExecutable.equals(prootPath)) {
+			List<String> result = new ArrayList<>();
+			result.add(prootPath);
 
-        TermuxAppSharedProperties properties = TermuxAppSharedProperties.getProperties();
-        int days = properties.getDeleteTMPDIRFilesOlderThanXDaysOnExit();
+			// 1. Root-faking (Simulates root permissions)
+			result.add("-0");
 
-        // Disable currently until FileUtils.deleteFilesOlderThanXDays() is fixed.
-        if (days > 0)
-            days = 0;
+			// 2. FORCE BIND subdirectories to make the parent /data/data/com.termux a virtual (writable) directory.
+			// This fixes "Permission denied" errors when dpkg tries to create the /data/data/com.termux directory.
+			result.add("-b");
+			result.add(TermuxConstants.TERMUX_FILES_DIR_PATH + ":/data/data/com.termux/files");
+			result.add("-b");
+			result.add(TermuxConstants.TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH + "/cache:/data/data/com.termux/cache");
 
-        if (days < 0) {
-            Logger.logInfo(LOG_TAG, "Not clearing termux $TMPDIR");
-        } else if (days == 0) {
-            error = FileUtils.clearDirectory("$TMPDIR",
-                    FileUtils.getCanonicalPath(TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH, null));
-            if (error != null) {
-                Logger.logErrorExtended(LOG_TAG, "Failed to clear termux $TMPDIR\n" + error);
-            }
-        } else {
-            error = FileUtils.deleteFilesOlderThanXDays("$TMPDIR",
-                    FileUtils.getCanonicalPath(TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH, null),
-                    TrueFileFilter.INSTANCE, days, true, FileTypes.FILE_TYPE_ANY_FLAGS);
-            if (error != null) {
-                Logger.logErrorExtended(LOG_TAG,
-                        "Failed to delete jniLibs from termux $TMPDIR older than " + days + " days\n" + error);
-            }
-        }
-    }
+			// 3. Keep essential Linux system structures mapped natively
+			result.add("-b");
+			result.add("/dev");
+			result.add("-b");
+			result.add("/proc");
+			result.add("-b");
+			result.add("/sys");
+			result.add("-b");
+			result.add("/system");
+			
+			// Additional bindings for robustness on modern Android
+			if (new File("/apex").exists()) {
+				result.add("-b");
+				result.add("/apex");
+			}
+			if (new File("/linkerconfig").exists()) {
+				result.add("-b");
+				result.add("/linkerconfig");
+			}
+			
+			// Bind storage for convenience
+			result.add("-b");
+			result.add("/sdcard");
+			result.add("-b");
+			result.add("/storage");
+
+			// 4. Append your wrapped commands
+			for (String cmd : commandToWrap) {
+				if (cmd != null) {
+					result.add(cmd);
+				}
+			}
+			return result.toArray(new String[0]);
+		} else {
+			return commandToWrap.toArray(new String[0]);
+		}
+	}
+
+
+	/**
+	 * Clear jniLibs under {@link TermuxConstants#TERMUX_TMP_PREFIX_DIR_PATH}.
+	 */
+	public static void clearTermuxTMPDIR(boolean onlyIfExists) {
+		// Existence check before clearing may be required since clearDirectory() will
+		// automatically
+		// re-create empty directory if doesn't exist, which should not be done for
+		// things like
+		// termux-reset (d6eb5e35). Moreover, TMPDIR must be a directory and not a
+		// symlink, this can
+		// also allow users who don't want TMPDIR to be cleared automatically on termux
+		// exit, since
+		// it may remove jniLibs still being used by background processes (#1159).
+		if (onlyIfExists && !FileUtils.directoryFileExists(TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH, false))
+			return;
+
+		Error error;
+
+		TermuxAppSharedProperties properties = TermuxAppSharedProperties.getProperties();
+		int days = properties.getDeleteTMPDIRFilesOlderThanXDaysOnExit();
+
+		// Disable currently until FileUtils.deleteFilesOlderThanXDays() is fixed.
+		if (days > 0)
+			days = 0;
+
+		if (days < 0) {
+			Logger.logInfo(LOG_TAG, "Not clearing Termux $TMPDIR");
+		} else if (days == 0) {
+			error = FileUtils.clearDirectory("$TMPDIR",
+					FileUtils.getCanonicalPath(TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH, null));
+			if (error != null) {
+				Logger.logErrorExtended(LOG_TAG, "Failed to clear Termux $TMPDIR\n" + error);
+			}
+		} else {
+			error = FileUtils.deleteFilesOlderThanXDays("$TMPDIR",
+					FileUtils.getCanonicalPath(TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH, null),
+					TrueFileFilter.INSTANCE, days, true, FileTypes.FILE_TYPE_ANY_FLAGS);
+			if (error != null) {
+				Logger.logErrorExtended(LOG_TAG,
+						"Failed to delete jniLibs from Termux $TMPDIR older than " + days + " days\n" + error);
+			}
+		}
+	}
 
 }

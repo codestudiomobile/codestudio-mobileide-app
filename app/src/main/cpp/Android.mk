@@ -3,6 +3,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := termux-bootstrap
 LOCAL_SRC_FILES := termux-bootstrap-zip.S termux-bootstrap.c
 LOCAL_LDLIBS := -llog -lc -landroid
+LOCAL_LDFLAGS += -Wl,-z,max-page-size=16384
 include $(BUILD_SHARED_LIBRARY)
 
 
@@ -10,10 +11,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := termux
 LOCAL_SRC_FILES := termux.c
 LOCAL_LDLIBS := -llog -lc -landroid
+LOCAL_LDFLAGS += -Wl,-z,max-page-size=16384
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := local-socket
 LOCAL_SRC_FILES := local-socket.cpp
-LOCAL_LDLIBS := -llog -lc -landroid -lstdc++
+LOCAL_LDLIBS := -llog
+LOCAL_LDFLAGS += -Wl,-z,max-page-size=16384
 include $(BUILD_SHARED_LIBRARY)

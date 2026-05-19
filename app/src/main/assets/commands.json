@@ -1,0 +1,161 @@
+{
+  "termux_programming_environment": {
+    "global_commands": {
+      "update_system": "pkg update && pkg upgrade -y",
+      "install_build_essentials": "pkg install build-essential binutils pkg-config -y"
+    },
+    "languages": {
+      "interpreted": {
+        "python": {
+          "package": "python",
+          "install": "pkg install python -y",
+          "check_installed": "dpkg -s python",
+          "extension": ".py",
+          "run": "python {{file}}",
+          "interactive_shell": "python",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/python.tmbundle/master/Syntaxes/Python.tmLanguage",
+          "scope_name": "source.python"
+        },
+        "nodejs": {
+          "package": "nodejs",
+          "install": "pkg install nodejs -y",
+          "check_installed": "dpkg -s nodejs",
+          "extension": ".js",
+          "run": "node {{file}}",
+          "interactive_shell": "node",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/javascript.tmbundle/master/Syntaxes/JavaScript.tmLanguage",
+          "scope_name": "source.js"
+        },
+        "ruby": {
+          "package": "ruby",
+          "install": "pkg install ruby -y",
+          "check_installed": "dpkg -s ruby",
+          "extension": ".rb",
+          "run": "ruby {{file}}",
+          "interactive_shell": "irb",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/ruby.tmbundle/master/Syntaxes/Ruby.tmLanguage",
+          "scope_name": "source.ruby"
+        },
+        "php": {
+          "package": "php",
+          "install": "pkg install php -y",
+          "check_installed": "dpkg -s php",
+          "extension": ".php",
+          "run": "php {{file}}",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/php.tmbundle/master/Syntaxes/PHP.plist",
+          "scope_name": "source.php"
+        },
+        "perl": {
+          "package": "perl",
+          "install": "pkg install perl -y",
+          "check_installed": "dpkg -s perl",
+          "extension": ".pl",
+          "run": "perl {{file}}",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/perl.tmbundle/master/Syntaxes/Perl.tmLanguage",
+          "scope_name": "source.perl"
+        },
+        "lua": {
+          "package": "lua54",
+          "install": "pkg install lua54 -y",
+          "check_installed": "dpkg -s lua54",
+          "extension": ".lua",
+          "run": "lua {{file}}",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/lua.tmbundle/master/Syntaxes/Lua.tmLanguage",
+          "scope_name": "source.lua"
+        }
+      },
+      "compiled": {
+        "c": {
+          "package": "clang",
+          "install": "pkg install clang -y",
+          "check_installed": "dpkg -s clang",
+          "extension": ".c",
+          "compile": "clang {{file}} -o {{output}}",
+          "run": "./{{output}}",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/c.tmbundle/master/Syntaxes/C.tmLanguage",
+          "scope_name": "source.c"
+        },
+        "cpp": {
+          "package": "clang",
+          "install": "pkg install clang -y",
+          "check_installed": "dpkg -s clang",
+          "extension": ".cpp",
+          "compile": "clang++ {{file}} -o {{output}}",
+          "run": "./{{output}}",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/c.tmbundle/master/Syntaxes/C%2B%2B.tmLanguage",
+          "scope_name": "source.cpp"
+        },
+        "rust": {
+          "package": "rust",
+          "install": "pkg install rust -y",
+          "check_installed": "dpkg -s rust",
+          "extension": ".rs",
+          "compile": "rustc {{file}} -o {{output}}",
+          "run": "./{{output}}",
+          "project_manager": "cargo",
+          "suggestion_pack": "https://raw.githubusercontent.com/dustypomerleau/rust-syntax/master/syntaxes/rust.tmLanguage.json",
+          "scope_name": "source.rust"
+        },
+        "golang": {
+          "package": "golang",
+          "install": "pkg install golang -y",
+          "check_installed": "dpkg -s golang",
+          "extension": ".go",
+          "compile": "go build -o {{output}} {{file}}",
+          "run": "./{{output}}",
+          "direct_run": "go run {{file}}",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/go.tmbundle/master/Syntaxes/Go.tmLanguage",
+          "scope_name": "source.go"
+        },
+        "java": {
+          "package": "openjdk-17",
+          "install": "pkg install openjdk-17 -y",
+          "check_installed": "dpkg -s openjdk-17",
+          "extension": ".java",
+          "compile": "javac {{file}}",
+          "run": "java {{class_name}}",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/java.tmbundle/master/Syntaxes/Java.tmLanguage",
+          "scope_name": "source.java"
+        },
+        "kotlin": {
+          "package": "kotlin",
+          "install": "pkg install kotlin -y",
+          "check_installed": "dpkg -s kotlin",
+          "extension": ".kt",
+          "compile": "kotlinc {{file}} -include-runtime -d {{output}}.jar",
+          "run": "java -jar {{output}}.jar",
+          "suggestion_pack": "https://raw.githubusercontent.com/nishtahir/language-kotlin/master/dist/Kotlin.tmLanguage",
+          "scope_name": "source.kotlin"
+        }
+      },
+      "web": {
+        "html": {
+          "extension": ".html",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/html.tmbundle/master/Syntaxes/HTML.tmLanguage",
+          "scope_name": "text.html.basic"
+        },
+        "css": {
+          "extension": ".css",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/css.tmbundle/master/Syntaxes/CSS.tmLanguage",
+          "scope_name": "source.css"
+        },
+        "bootstrap": {
+          "extension": ".html",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/html.tmbundle/master/Syntaxes/HTML.tmLanguage",
+          "scope_name": "text.html.basic"
+        }
+      },
+      "shell_scripting": {
+        "bash": {
+          "package": "bash",
+          "check_installed": "dpkg -s bash",
+          "extension": ".sh",
+          "run": "bash {{file}}",
+          "permission_fix": "chmod +x {{file}}",
+          "suggestion_pack": "https://raw.githubusercontent.com/textmate/shellscript.tmbundle/master/Syntaxes/Shell-Unix-Bash.tmLanguage",
+          "scope_name": "source.shell"
+        }
+      }
+    }
+  }
+}
