@@ -1,4 +1,11 @@
-# 1. Set PATH immediately so all subsequent commands are found
+# ==============================================================================
+# CodeStudio Bash Configuration (bash.bashrc)
+# ==============================================================================
+# Description: Core shell environment initialization. Handles pathing,
+#              IDE synchronization, storage setup, and prompt styling.
+# ==============================================================================
+
+# 1. Environment: Set PATH immediately for command availability
 export PATH=$PREFIX/bin:$PATH
 export LANG=en_US.UTF-8
 
@@ -57,7 +64,11 @@ if [ -f "$PREFIX/etc/termux/banner.txt" ]; then
 fi
 printf "\033[0m\n"
 
-PROMPT_TITLE="Code Studio Mobile IDE"
+if [ -f "$PREFIX/etc/termux/title.txt" ]; then
+    PROMPT_TITLE=$(cat "$PREFIX/etc/termux/title.txt")
+else
+    PROMPT_TITLE="Code Studio Mobile IDE"
+fi
 
 # 4. Final custom prompt (Correctly escaped for Bash)
 PS1='\[\033[34m\]┌──(\[\033[0m\]$PROMPT_TITLE\[\033[34m\])-[\[\033[32m\]\w\[\033[34m\]]\n\[\033[34m\]└─\[\033[0m\]\$ '

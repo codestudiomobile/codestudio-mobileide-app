@@ -1,24 +1,31 @@
 #!/bin/bash
+# ==============================================================================
+# CodeStudio ASCII Banner Customizer
+# ==============================================================================
+# Description: Generates a stylized ASCII art banner from input text and
+#              updates the terminal's greeting banner.
+# ==============================================================================
 
-# Check if an input string was provided
+# 1. Validation: Ensure input text is provided
 if [ -z "$1" ]; then
     echo "Usage: $0 \"your text here\""
     exit 1
 fi
 
-# Path to the banner file
+# Configuration: Path to the persistent banner metadata
 BANNER_FILE="$PREFIX/etc/termux/banner.txt"
 
-# Ensure the directory exists
+# 2. Preparation: Ensure environment structure is ready
 mkdir -p "$(dirname "$BANNER_FILE")"
 
-# Convert input to uppercase to match the style map
+# Normalize input to uppercase for character mapping
 input=$(echo "$1" | tr '[:lower:]' '[:upper:]')
 
-# Define the 6 rows for every letter of the alphabet (A-Z)
+# Initialization: Character row mappings (ASCII Font Definition)
 declare -A r1 r2 r3 r4 r5 r6
 
-# --- YOUR CUSTOM ALPHABET CHARACTER MAP ---
+# --- ASCII CHARACTER MAP (A-Z) ---
+# Each character is defined across 6 rows to form a block font.
 r1[A]="░█████═╗░" ; r2[A]="██║░░██║░" ; r3[A]="███████║░" ; r4[A]="██╔═╗██║░" ; r5[A]="██║░║██║░" ; r6[A]="╚═╝░╚══╝░"
 r1[B]="██████╗░░" ; r2[B]="██░░░██║░" ; r3[B]="██████║░░" ; r4[B]="██░░░██║░" ; r5[B]="██████╝░░" ; r6[B]="╚═════╝░░"
 r1[C]="░██████╗░" ; r2[C]="██╔════╝░" ; r3[C]="██║░░░░░░" ; r4[C]="██╚════╗░" ; r5[C]="╚██████║░" ; r6[C]="░╚═════╝░"
@@ -46,7 +53,7 @@ r1[X]="██╗░░░ ██╗░" ; r2[X]="░ ██╗ ██╔╝░" 
 r1[Y]="░██╗░░░██╗░" ; r2[Y]="░╚██╗░██╔╝░" ; r3[Y]="░░╚████╔╝░░" ; r4[Y]="░░░░██╔╝░░░" ; r5[Y]="░░░░██║░░░░" ; r6[Y]="░░░░╚═╝░░░░"
 r1[Z]="████████╗░" ; r2[Z]="░░░░░██╔╝░" ; r3[Z]="░░░██╔═╝░░" ; r4[Z]="░██══╝░░░░" ; r5[Z]="████████╗░" ; r6[Z]="╚═══════╝░"
 
-# Function to compile and print a single word block horizontally
+# Helper: Logic to compile and print a single word block horizontally
 print_word_block() {
     local word="$1"
     local line1="" line2="" line3="" line4="" line5="" line6=""
@@ -74,17 +81,18 @@ print_word_block() {
     echo "$line6"
 }
 
-# --- MAIN EXECUTION ---
+# --- CORE EXECUTION ---
 
-# Generate the banner and write it to the file
+# 3. Generation: Construct the ASCII banner and write to file
 {
-    # Loop dynamically word-by-word to break sentences on new lines
+    # Process word-by-word to maintain structural integrity across lines
     for word in $input; do
         print_word_block "$word"
-        echo "" # Inserts structural line spacing between word stacks
+        echo "" # Logical spacing between word blocks
     done
 } > "$BANNER_FILE"
 
+# 4. Synchronization: Reload bash configuration to apply changes
 if [ -f "$PREFIX/etc/bash.bashrc" ]; then
     source "$PREFIX/etc/bash.bashrc"
 fi

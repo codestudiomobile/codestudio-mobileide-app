@@ -1,6 +1,13 @@
 #!/bin/bash
+# ==============================================================================
+# CodeStudio Prompt Title Customizer
+# ==============================================================================
+# Description: Updates the terminal's prompt title both persistently and
+#              immediately. It modifies the core bash configuration and
+#              synchronizes with a dedicated title metadata file.
+# ==============================================================================
 
-# 1. Check if a title argument was provided
+# 1. Validation: Ensure a title is provided
 if [ -z "$1" ]; then
     echo "Error: No title provided."
     echo "Usage: apply-title \"Your New Title\""
@@ -8,24 +15,27 @@ if [ -z "$1" ]; then
 fi
 
 NEW_TITLE="$1"
-# We target bash.bashrc as it's the primary config used in CodeStudio
-BASHRC_FILE="$PREFIX/etc/bash.bashrc"
 
-# 2. Check if PROMPT_TITLE already exists in the file
-if grep -q 'PROMPT_TITLE=' "$BASHRC_FILE"; then
-    # If it exists, replace the existing line
-    # We use | as a delimiter in sed because the title might contain /
-    sed -i "s|PROMPT_TITLE=.*|PROMPT_TITLE=\"$NEW_TITLE\"|" "$BASHRC_FILE"
-    echo "Updated PROMPT_TITLE to: \"$NEW_TITLE\""
-else
-    # If it doesn't exist, append it to the end of the file
-    echo "" >> "$BASHRC_FILE"
-    echo "PROMPT_TITLE=\"$NEW_TITLE\"" >> "$BASHRC_FILE"
-    echo "Added PROMPT_TITLE=\"$NEW_TITLE\" to $BASHRC_FILE"
+# Automatically infer environment prefix if not explicitly set
+if [ -z "$PREFIX" ]; then
+    PREFIX="/data/data/com.cs.ide/files/usr"
 fi
 
-echo "Done! Please restart your terminal to see the changes."
+BASHRC_FILE="$PREFIX/etc/bash.bashrc"
+TITLE_FILE="$PREFIX/etc/termux/title.txt"
 
-if [ -f "$PREFIX/etc/bash.bashrc" ]; then
-    source "$PREFIX/etc/bash.bashrc"
+# 2. Persistence: Ensure the metadata directory exists and save the title
+mkdir -p "$(dirname "$TITLE_FILE")"
+
+# Save to dedicated metadata file for persistence across session initializations
+echo "$NEW_TITLE" > "$TITLE_FILE"
+
+# 3. Synchronization: Update the active bash.bashrc for immediate reflection
+if [ -f "$BASHRC_FILE" ]; then
+    # Patch the configuration variable if it exists
+    if grep -q 'PROMPT_TITLE=' "$BASHRC_FILE"; then
+        sed -i "s|PROMPT_TITLE=.*|PROMPT_TITLE=\"$NEW_TITLE\"|" "$BASHRC_FILE"
+    fi
+    # Force immediate reload of the configuration in the current context
+    source "$BASHRC_FILE"
 fi
