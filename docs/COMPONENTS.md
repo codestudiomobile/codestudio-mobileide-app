@@ -1,80 +1,141 @@
-# Project Components
+# 🛠️ CodeStudio Component Architecture & Testing Guide
 
-This document provides a technical overview of the key components that make up the CodeStudio Mobile
-IDE.
+Welcome to the deep dive of CodeStudio! This document is designed to give you a hands-on
+understanding of every moving part in this IDE. Whether you're a developer or a curious user, you
+can use this guide to manually test and verify each component.
 
-## 1. Core IDE Components (`com.cs.ide.app`)
+---
 
-### MainActivity
+## 1. The Command Center: `MainActivity` & `TabManager`
 
-The central hub of the application. It manages the multi-tab interface, the file explorer, and
-coordinates between the editor and terminal fragments.
+**What it is:** The heart of CodeStudio. It manages the lifecycle of the app, the sidebar
+navigation, and the multi-tab editing experience.
 
-- **Tab Management**: Uses `ViewPager2` and a custom `TabManager` to handle multiple open files.
-- **File Explorer**: Provides a side-drawer navigation for workspace files using the Storage Access
-  Framework.
+### 🔍 Technical Highlights:
 
-### TextFragment (The Editor)
+- **Multi-Tab Engine**: Uses `ViewPager2` to swap between open files seamlessly.
+- **Drawer Navigation**: Integrated with Android's Storage Access Framework (SAF) to browse your
+  local device and cloud storage.
 
-The primary code editing component.
+### 🕹️ How to Test it Yourself:
 
-- **Editor Engine**: Powered by `io.github.rosemoe.sora.widget.CodeEditor`.
-- **Language Support**: Integrated with `SoraLanguageManager` which loads TextMate grammars and VS
-  Code themes.
-- **Features**: Auto-save, undo/redo, search/replace, and extra key shortcuts.
+1. **Launch**: Open CodeStudio. You should see the `MainActivity` initialize.
+2. **Sidebar**: Swipe from the left edge. Browse through your `/sdcard` or project folders.
+3. **Multi-Tasking**: Open multiple files (e.g., a `.java` and a `.py`). Tap the tabs at the top to
+   switch between them. Verify that the state (cursor position) is maintained.
 
-### ExecutionManager
+---
 
-Handles the execution of source files. It detects the language of the file and routes the execution
-to the appropriate compiler or interpreter within the terminal environment.
+## 2. The Professional Editor: `TextFragment` (Sora Editor)
 
-### SoraLanguageManager
+**What it is:** A high-performance code editor capable of handling large files with syntax
+highlighting and smart features.
 
-Handles language-specific configurations. It maps file extensions to appropriate syntax highlighters
-and loads language packs from assets or external storage.
+### 🔍 Technical Highlights:
 
-## 2. Terminal & Shell (`com.cs.ide.termux`)
+- **Engine**: Powered by `Sora Editor`.
+- **Theming**: Supports VS Code `.tmTheme` files.
+- **Syntax**: Uses TextMate grammars (`.tmLanguage.json`) pre-bundled in `assets/vscode_extensions`.
 
-### TerminalFragment
+### 🕹️ How to Test it Yourself:
 
-Provides the shell interface. It communicates with a backend `TermuxService` to manage terminal
-sessions.
+1. **Syntax Check**: Open a `.js` or `.php` file. Verify that keywords are colored correctly based
+   on the language.
+2. **Shortcuts**: Use the "Extra Keys" bar above the keyboard (Tab, Ctrl, Arrows).
+3. **Auto-Save**: Make a change, close the tab, and reopen it. Your changes should be there!
 
-- **Environment**: Automatically initializes a PRoot environment to provide a standard Linux
-  filesystem structure.
-- **Interoperability**: Shares environment variables like `OPENED_FOLDER` with the IDE to keep the
-  terminal and editor in sync. The terminal automatically opens in the currently active folder in
-  the editor, providing a seamless integrated development experience.
-- **Status**: *Under Development*. The PRoot implementation is still being refined. Users might not
-  experience the full terminal experience gracefully, as some path mappings and system calls are
-  currently being optimized.
+---
 
-### TermuxService
+## 3. The Powerhouse: `TerminalFragment` & `TermuxService`
 
-A foreground service that maintains active terminal sessions even when the app is in the background.
+**What it is:** A fully integrated Linux terminal that lives right inside your IDE.
 
-## 3. Background Services
+### 🔍 Technical Highlights:
 
-### AptBackgroundService
+- **Sync Technology**: The terminal automatically `cd`s into the directory of the file you are
+  currently editing.
+- **Persistence**: `TermuxService` keeps your terminal session alive even if you switch apps to look
+  up a tutorial.
 
-A dedicated service for managing package installations.
+### 🕹️ How to Test it Yourself:
 
-- **Operation**: Executes `pkg` and `apt` commands.
-- **Feedback**: Provides real-time progress updates via a system notification and broadcasts events
-  to the UI.
-- **Status**: *Under Development*. Improvements to error handling and dependency resolution are
-  ongoing.
+1. **Sync Test**: Open a file in a specific folder. Swipe to the terminal tab. Run `pwd`. It should
+   match the folder of your file!
+2. **Interactive Shell**: Run `top` or `htop`. Use `Ctrl+C` from the extra keys to stop it.
+3. **Persistence**: Open a terminal, run a long command (like `ping google.com`), switch to Chrome,
+   then come back. The terminal should still be running.
 
-## 4. UI & Customization
+---
 
-### ManageLanguagesActivity
+## 4. Smart Execution: `ExecutionManager` & `TermuxRunner`
 
-A user interface for discovering and installing additional language runtimes and tools.
+**What it is:** The bridge between your code and the terminal. It knows how to run your files based
+on their extension.
 
-- **Package List**: Dynamically fetches available packages.
-- **Installation**: Leverages `AptBackgroundService` for background downloads.
+### 🔍 Technical Highlights:
 
-### WorkspaceInitializer
+- **Language Detection**: Automatically maps `.py` to `python`, `.js` to `node`, etc.
+- **Command Injection**: Sends the correct run command directly to the active terminal session.
 
-Ensures the local environment is correctly set up on the first launch, creating necessary
-directories and symlinks.
+### 🕹️ How to Test it Yourself:
+
+1. **Python Run**: Create a `test.py` with `print("Hello CodeStudio")`.
+2. **The "Play" Button**: Tap the Play icon in the top toolbar.
+3. **Verify**: The IDE should automatically switch to the terminal and you should see
+   `python test.py` executed with the output visible.
+
+---
+
+## 5. Package Management: `AptBackgroundService`
+
+**What it is:** Handles the installation of compilers and tools without freezing the UI.
+
+### 🔍 Technical Highlights:
+
+- **Notification Updates**: Shows real-time installation progress in the Android notification tray.
+- **UI Integration**: `ManageLanguagesActivity` provides a "Store-like" experience for installing
+  runtimes.
+
+### 🕹️ How to Test it Yourself:
+
+1. **Go to Settings**: Navigate to "Manage Languages".
+2. **Install a Tool**: Try installing `clang` or `nodejs`.
+3. **Monitor**: Pull down your notification bar. You should see the `apt` progress. Once finished,
+   try running `node -v` in the terminal to verify.
+
+---
+
+## 6. PRoot Environment & `WorkspaceInitializer`
+
+**What it is:** The magic that makes a standard Linux environment possible on a non-rooted Android
+device.
+
+### 🔍 Technical Highlights:
+
+- **Path Mapping**: Virtualizes paths so that `/usr/bin` works correctly within the app's private
+  storage.
+- **Setup**: `WorkspaceInitializer` runs on first launch to extract the bootstrap Linux environment.
+
+### 🕹️ How to Test it Yourself:
+
+1. **System Check**: In the terminal, run `ls /usr`. Even though you aren't root, you should see a
+   Linux-like directory structure.
+2. **Link Test**: Run `which python`. It should point to a path within the CodeStudio internal
+   environment.
+
+---
+
+## 7. Customization Engine
+
+**What it is:** Allows users to make the IDE their own.
+
+### 🕹️ How to Test it Yourself:
+
+1. **Banners**: Go to `CUSTOMIZATION.md` and follow the steps to change the terminal header.
+2. **Themes**: Change the app theme in Settings. Notice how the Material 3 "Dynamic Color" adapts to
+   your wallpaper (on Android 12+).
+
+---
+
+> **Tip for Developers**: Most of the core logic resides in `app/src/main/java/com/cs/ide/app`. If
+> you want to add a new language, check out `SoraLanguageManager.java`.
