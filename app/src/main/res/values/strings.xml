@@ -407,4 +407,10 @@
     <string name="pref_word_wrap">Word wrap</string>
     <string name="private_tab_suffix">(Private)</string>
     <string name="editor_preview_text">// Editor Preview\npublic class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println(\"Hello Code Studio!\");\n    }\n}</string>
+
+    <string name="title_customization">Customization</string>
+    <string name="label_banner_text">Banner Text</string>
+    <string name="label_title_text">Title Text</string>
+    <string name="action_apply">Apply</string>
+    <string name="preview">Preview</string>
 </resources>

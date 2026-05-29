@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/customizationLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cc_primary_dark"
+    android:orientation="vertical"
+    tools:context="com.cs.ide.app.activities.CustomizationActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/cc_primary_dark"
+        android:elevation="0dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/CodeStudio.PopupMenu"
+        app:title="@string/title_customization"
+        app:titleTextColor="@color/white" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/label_title_text"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/etTitleText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/label_title_text"
+                android:textColor="@color/white"
+                android:textColorHint="@color/ide_text_hint"
+                android:backgroundTint="@color/white"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/label_banner_text"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/etBannerText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/label_banner_text"
+                android:textColor="@color/white"
+                android:textColorHint="@color/ide_text_hint"
+                android:backgroundTint="@color/white"
+                android:importantForAutofill="no"
+                android:inputType="text" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/preview"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/white"
+                android:layout_marginVertical="8dp" />
+
+            <TextView
+                android:id="@+id/tvTitlePreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvBannerPreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/white"
+                android:typeface="monospace"
+                android:textSize="8sp" />
+
+            <Button
+                android:id="@+id/btnApply"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="@string/action_apply"
+                android:backgroundTint="@color/white"
+                android:textColor="@color/cc_primary_dark" />
+
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
