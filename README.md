@@ -23,7 +23,7 @@ workspace where your code and terminal breathe together.
 ## 📁 Project Structure
 
 For a detailed breakdown of the internal components, see [COMPONENTS.md](./docs/COMPONENTS.md). To
-track our development roadmap and progress, see [WORKFLOW.md](./WORKFLOW.md).
+track our development roadmap and progress, see [WORKFLOW.md](././docs/WORKFLOW.md).
 
 - `app/src/main/java/com/cs/ide/app`: Core IDE logic, activities, and fragments.
 - `app/src/main/java/com/cs/ide/termux`: Terminal and Linux environment integration.
@@ -38,7 +38,7 @@ See [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) for instructions.
 ## 🚧 Development Status
 
 CodeStudio is currently under active development. For a detailed roadmap of past progress and
-upcoming milestones, please see our [WORKFLOW.md](./WORKFLOW.md).
+upcoming milestones, please see our [WORKFLOW.md](././docs/WORKFLOW.md).
 
 Some modules may be experimental:
 
