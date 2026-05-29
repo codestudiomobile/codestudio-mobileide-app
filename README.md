@@ -40,10 +40,14 @@ See [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) for instructions.
 CodeStudio is currently under active development. For a detailed roadmap of past progress and
 upcoming milestones, please see our [WORKFLOW.md](./docs/WORKFLOW.md).
 
-Some modules may be experimental:
+- **Package Management**: Fully functional with automatic package name patching and `apt`
+  integration.
+- **Code Execution**: Stable "One-Tap" execution for multiple languages directly from the editor.
+- **Current Focus**: Creating **Abstraction Layers** to provide a cleaner, non-intimidating
+  interface for terminal-based processes.
 
-- **Language Packs**: Automated installation of certain language runtimes is currently being
-  refined.
+Experimental features:
+
 - **LSP Support**: Integration of Language Server Protocol is in the early stages.
 
 ## 📥 Download
