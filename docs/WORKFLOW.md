@@ -1,7 +1,7 @@
 # Project Development Workflow
 
 This document tracks the progress of CodeStudio Mobile IDE and outlines the upcoming milestones. For
-an overview of the project and its features, please see the [README.md](./README.md).
+an overview of the project and its features, please see the [README.md](../README.md).
 
 ---
 
