@@ -85,64 +85,22 @@ public class TermuxShellUtils {
 			// Ignore.
 		}
 
-		List<String> commandToWrap = new ArrayList<>();
+		List<String> result = new ArrayList<>();
 		if (interpreter != null)
-			commandToWrap.add(interpreter);
-		commandToWrap.add(realExecutable);
-		if (arguments != null)
-			Collections.addAll(commandToWrap, arguments);
+			result.add(interpreter);
+		result.add(realExecutable);
 
-		String prootPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/proot";
-		if (new File(prootPath).exists() && !realExecutable.equals(prootPath)) {
-			List<String> result = new ArrayList<>();
-			result.add(prootPath);
-
-			// 1. Root-faking (Simulates root permissions)
-			result.add("-0");
-
-			// 2. FORCE BIND subdirectories to make the parent /data/data/com.termux a virtual (writable) directory.
-			// This fixes "Permission denied" errors when dpkg tries to create the /data/data/com.termux directory.
-			result.add("-b");
-			result.add(TermuxConstants.TERMUX_FILES_DIR_PATH + ":/data/data/com.termux/files");
-			result.add("-b");
-			result.add(TermuxConstants.TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH + "/cache:/data/data/com.termux/cache");
-
-			// 3. Keep essential Linux system structures mapped natively
-			result.add("-b");
-			result.add("/dev");
-			result.add("-b");
-			result.add("/proc");
-			result.add("-b");
-			result.add("/sys");
-			result.add("-b");
-			result.add("/system");
-			
-			// Additional bindings for robustness on modern Android
-			if (new File("/apex").exists()) {
-				result.add("-b");
-				result.add("/apex");
-			}
-			if (new File("/linkerconfig").exists()) {
-				result.add("-b");
-				result.add("/linkerconfig");
-			}
-			
-			// Bind storage for convenience
-			result.add("-b");
-			result.add("/sdcard");
-			result.add("-b");
-			result.add("/storage");
-
-			// 4. Append your wrapped commands
-			for (String cmd : commandToWrap) {
-				if (cmd != null) {
-					result.add(cmd);
+		// Clean sub-arguments by replacing the fake com.termux path with the real package path
+		if (arguments != null) {
+			for (int i = 0; i < arguments.length; i++) {
+				if (arguments[i] != null && arguments[i].contains("/data/data/com.termux")) {
+					arguments[i] = arguments[i].replace("/data/data/com.termux", TermuxConstants.TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH);
 				}
 			}
-			return result.toArray(new String[0]);
-		} else {
-			return commandToWrap.toArray(new String[0]);
+			Collections.addAll(result, arguments);
 		}
+
+		return result.toArray(new String[0]);
 	}
 
 

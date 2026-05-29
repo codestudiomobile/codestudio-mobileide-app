@@ -434,19 +434,19 @@ public final class TermuxInstaller {
 	}
 
 	private static void setupBanner(Activity activity, boolean applyDefault) {
-		Logger.logInfo(LOG_TAG, "Setting up banner.");
+		Logger.logInfo(LOG_TAG, "Setting up banner and title scripts.");
 		try {
 			// Ensure config directory exists
 			File configDir = new File(TermuxConstants.TERMUX_CONFIG_PREFIX_DIR_PATH);
 			if (!configDir.exists()) configDir.mkdirs();
 
-			// 1. Setup apply-banner.sh script
 			File binDir = new File(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH);
 			if (!binDir.exists()) binDir.mkdirs();
 
+			// 1. Setup apply-banner.sh script
 			File bannerScript = new File(binDir, "apply-banner");
 			try (InputStream in = activity.getAssets().open("apply-banner.sh");
-				 OutputStream out = new FileOutputStream(bannerScript)) {
+			     OutputStream out = new FileOutputStream(bannerScript)) {
 				byte[] buffer = new byte[8192];
 				int read;
 				while ((read = in.read(buffer)) != -1) {
@@ -455,13 +455,25 @@ public final class TermuxInstaller {
 			}
 			Os.chmod(bannerScript.getAbsolutePath(), 0700);
 
+			// 2. Setup apply-title.sh script
+			File titleScript = new File(binDir, "apply-title");
+			try (InputStream in = activity.getAssets().open("apply-title.sh");
+			     OutputStream out = new FileOutputStream(titleScript)) {
+				byte[] buffer = new byte[8192];
+				int read;
+				while ((read = in.read(buffer)) != -1) {
+					out.write(buffer, 0, read);
+				}
+			}
+			Os.chmod(titleScript.getAbsolutePath(), 0700);
+
 			if (applyDefault) {
-				// 2. Apply initial banner using the script
+				// 3. Apply initial banner using the script
 				String bannerText = activity.getString(R.string.default_banner_text);
 				String bashPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/bash";
 
-				// We use bash to run the script and provide necessary environment
-				ProcessBuilder pb = new ProcessBuilder(bashPath, bannerScript.getAbsolutePath(), bannerText);
+				String[] command = new String[]{bashPath, bannerScript.getAbsolutePath(), bannerText};
+				ProcessBuilder pb = new ProcessBuilder(command);
 				pb.environment().put("PREFIX", TermuxConstants.TERMUX_PREFIX_DIR_PATH);
 				pb.environment().put("HOME", TermuxConstants.TERMUX_HOME_DIR_PATH);
 				pb.environment().put("LD_LIBRARY_PATH", TermuxConstants.TERMUX_LIB_PREFIX_DIR_PATH);

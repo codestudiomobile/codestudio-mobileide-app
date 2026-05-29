@@ -513,7 +513,6 @@ public final class TermuxConstants {
 	public static final File TERMUX_HOME_DIR = new File(TERMUX_HOME_DIR_PATH);
 
 
-
 	/*
 	 * Termux app and plugin preferences and properties file paths.
 	 */
