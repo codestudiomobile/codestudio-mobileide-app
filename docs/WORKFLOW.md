@@ -19,19 +19,7 @@ an overview of the project and its features, please see the [README.md](../READM
 
 ## 🚀 Future Roadmap (What's Next)
 
-### 1. PRoot Environment Implementation
-
-**Status: Upcoming**
-The next major step is the full implementation of the PRoot environment. This involves:
-
-- **Environment Simulation**: Using PRoot to simulate a standard Linux filesystem structure (e.g.,
-  `/data/data/com.termux`).
-- **Root-Faking**: Implementing `-0` root-faking and `link2symlink` to bypass Android's filesystem
-  permission restrictions.
-- **Path Bindings**: Mapping internal app directories to virtual system paths to ensure
-  compatibility with standard Linux binaries.
-
-### 2. Advanced Package Management
+### 1. Advanced Package Management
 
 **Status: Upcoming**
 Enhancing the package management experience to make it seamless for mobile users:
@@ -43,7 +31,7 @@ Enhancing the package management experience to make it seamless for mobile users
 - **Repository Management**: Managing Termux mirrors and ensuring stable connections for package
   downloads.
 
-### 3. Auto-Running with Abstracted Output
+### 2. Auto-Running with Abstracted Output
 
 **Status: Upcoming**
 Simplifying the user experience by abstracting complex terminal processes:
@@ -55,7 +43,7 @@ Simplifying the user experience by abstracting complex terminal processes:
 - **Background Processing**: Handling long-running tasks like compilations in the background with
   graceful progress indicators.
 
-### 4. Final Cleanups, Checks, and Bug Fixes
+### 3. Final Cleanups, Checks, and Bug Fixes
 
 **Status: Final Phase**
 Ensuring the stability and reliability of the IDE:
@@ -66,5 +54,4 @@ Ensuring the stability and reliability of the IDE:
   components.
 - **Community Feedback & Bug Squashing**: Addressing reported issues and polishing the UI for a
   production-ready release.
-- **Security Audits**: Ensuring the PRoot and shell environments are secure and respect user data
-  privacy.
+- **Security Audits**: Ensuring the shell environment is secure and respects user data privacy.

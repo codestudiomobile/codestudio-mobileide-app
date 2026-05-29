@@ -38,16 +38,13 @@ See [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) for instructions.
 ## 🚧 Development Status
 
 CodeStudio is currently under active development. For a detailed roadmap of past progress and
-upcoming milestones, please see our [WORKFLOW.md](././docs/WORKFLOW.md).
+upcoming milestones, please see our [WORKFLOW.md](./docs/WORKFLOW.md).
 
 Some modules may be experimental:
 
 - **Language Packs**: Automated installation of certain language runtimes is currently being
   refined.
 - **LSP Support**: Integration of Language Server Protocol is in the early stages.
-- **PRoot Environment**: The PRoot integration is under active development. You may encounter issues
-  with certain system paths or specialized commands, and the terminal experience may not yet be
-  fully graceful.
 
 ## 📥 Download
 

@@ -105,29 +105,10 @@ on their extension.
 
 ---
 
-## 6. PRoot Environment & `WorkspaceInitializer`
+## 6. Workspace Initialization & Customization
 
-**What it is:** The magic that makes a standard Linux environment possible on a non-rooted Android
-device.
-
-### 🔍 Technical Highlights:
-
-- **Path Mapping**: Virtualizes paths so that `/usr/bin` works correctly within the app's private
-  storage.
-- **Setup**: `WorkspaceInitializer` runs on first launch to extract the bootstrap Linux environment.
-
-### 🕹️ How to Test it Yourself:
-
-1. **System Check**: In the terminal, run `ls /usr`. Even though you aren't root, you should see a
-   Linux-like directory structure.
-2. **Link Test**: Run `which python`. It should point to a path within the CodeStudio internal
-   environment.
-
----
-
-## 7. Customization Engine
-
-**What it is:** Allows users to make the IDE their own.
+**What it is:** Ensures the local environment is correctly set up on the first launch and allows
+users to make the IDE their own.
 
 ### 🕹️ How to Test it Yourself:
 
