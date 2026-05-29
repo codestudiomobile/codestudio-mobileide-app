@@ -250,8 +250,37 @@ public final class TermuxInstaller {
 						FileUtils.writeTextToFile("am script", amScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), amContent, false);
 						Os.chmod(amScript.getAbsolutePath(), 0700);
 						Logger.logInfo(LOG_TAG, "Created custom am script at " + amScript.getAbsolutePath());
+
+						// Create package patcher script and apt hook
+						// Create the post-install patcher script
+						File patcherScript = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/termux-patch-packages");
+						String patcherContent = "#!/system/bin/sh\n" +
+								"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
+								"exec /system/bin/app_process / com.cs.ide.termux.app.TermuxPackagePatcher \"$@\"\n";
+						FileUtils.writeTextToFile("patcher script", patcherScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), patcherContent, false);
+						Os.chmod(patcherScript.getAbsolutePath(), 0700);
+
+						// Create the pre-install deb patcher script
+						File debPatcherScript = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/termux-patch-debs");
+						String debPatcherContent = "#!/system/bin/sh\n" +
+								"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
+								"exec /system/bin/app_process / com.cs.ide.termux.app.TermuxPackagePatcher --stdin\n";
+						FileUtils.writeTextToFile("deb patcher script", debPatcherScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), debPatcherContent, false);
+						Os.chmod(debPatcherScript.getAbsolutePath(), 0700);
+
+						// Create apt hook directory if it doesn't exist
+						File aptConfDir = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/etc/apt/apt.conf.d");
+						if (!aptConfDir.exists()) aptConfDir.mkdirs();
+
+						// Create the apt hook
+						File aptHook = new File(aptConfDir, "99termux-patcher");
+						String aptHookContent = "DPkg::Pre-Install-Pkgs {\"" + TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/termux-patch-debs\";};\n" +
+								"DPkg::Tools::options::\"" + TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/termux-patch-debs\"::Version \"2\";\n" +
+								"DPkg::Post-Invoke {\"" + TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/termux-patch-packages\";};\n";
+						FileUtils.writeTextToFile("apt hook", aptHook.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), aptHookContent, false);
+						Logger.logInfo(LOG_TAG, "Created package patchers and apt hook at " + aptHook.getAbsolutePath());
 					} catch (Exception e) {
-						Logger.logError(LOG_TAG, "Failed to create am.jar/am script: " + e.getMessage());
+						Logger.logError(LOG_TAG, "Failed to create am.jar/am script or package patcher: " + e.getMessage());
 					}
 
 					Logger.logInfo(LOG_TAG, "Moving termux prefix staging to prefix directory.");
