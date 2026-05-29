@@ -64,13 +64,18 @@ if [ -f "$PREFIX/etc/termux/banner.txt" ]; then
 fi
 printf "\033[0m\n"
 
-if [ -f "$PREFIX/etc/termux/title.txt" ]; then
-    PROMPT_TITLE=$(cat "$PREFIX/etc/termux/title.txt")
-else
-    PROMPT_TITLE="Code Studio Mobile IDE"
+# 4. Prompt Logic: Dynamic Title Resolution
+# This function is executed before every prompt to ensure the title is up-to-date.
+_update_prompt_title() {
+    PROMPT_TITLE=$(cat "$PREFIX/etc/termux/title.txt" 2>/dev/null || echo "Code Studio Mobile IDE")
+}
+
+# Add the update function to PROMPT_COMMAND
+if [[ ! "$PROMPT_COMMAND" =~ _update_prompt_title ]]; then
+    PROMPT_COMMAND="_update_prompt_title${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
 fi
 
-# 4. Final custom prompt (Correctly escaped for Bash)
+# Define the final custom prompt using the resolved variable
 PS1='\[\033[34m\]┌──(\[\033[0m\]$PROMPT_TITLE\[\033[34m\])-[\[\033[32m\]\w\[\033[34m\]]\n\[\033[34m\]└─\[\033[0m\]\$ '
 
 # Show storage warning if access was denied

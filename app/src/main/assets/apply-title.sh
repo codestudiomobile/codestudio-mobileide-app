@@ -2,9 +2,9 @@
 # ==============================================================================
 # CodeStudio Prompt Title Customizer
 # ==============================================================================
-# Description: Updates the terminal's prompt title both persistently and
-#              immediately. It modifies the core bash configuration and
-#              synchronizes with a dedicated title metadata file.
+# Description: Updates the terminal's prompt title. It writes the new title
+#              to a metadata file which is dynamically read by the shell's
+#              prompt (PS1) configuration.
 # ==============================================================================
 
 # 1. Validation: Ensure a title is provided
@@ -21,21 +21,14 @@ if [ -z "$PREFIX" ]; then
     PREFIX="/data/data/com.cs.ide/files/usr"
 fi
 
-BASHRC_FILE="$PREFIX/etc/bash.bashrc"
 TITLE_FILE="$PREFIX/etc/termux/title.txt"
 
-# 2. Persistence: Ensure the metadata directory exists and save the title
+# 2. Update Title: Ensure the metadata directory exists and save the title
 mkdir -p "$(dirname "$TITLE_FILE")"
 
-# Save to dedicated metadata file for persistence across session initializations
+# Save to dedicated metadata file.
+# Because the shell prompt is configured to read this file dynamically,
+# the change will reflect immediately in all open terminals.
 echo "$NEW_TITLE" > "$TITLE_FILE"
 
-# 3. Synchronization: Update the active bash.bashrc for immediate reflection
-if [ -f "$BASHRC_FILE" ]; then
-    # Patch the configuration variable if it exists
-    if grep -q 'PROMPT_TITLE=' "$BASHRC_FILE"; then
-        sed -i "s|PROMPT_TITLE=.*|PROMPT_TITLE=\"$NEW_TITLE\"|" "$BASHRC_FILE"
-    fi
-    # Force immediate reload of the configuration in the current context
-    source "$BASHRC_FILE"
-fi
+# No need to source bashrc or sed variables anymore; the prompt handles it.
