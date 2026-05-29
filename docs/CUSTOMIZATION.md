@@ -41,23 +41,49 @@ how the default banner looks when you open a new terminal:
 ╚══════╝░░╚═════╝░░░░░╚═════╝░
 ```
 
-### How to Apply a Custom Banner
+### How to Customize the Banner and Prompt Visually (Recommended)
 
-You can use the built-in `apply-banner` command inside the terminal:
+CodeStudio provides a dedicated, rich graphical interface to update your terminal banner and prompt
+title without writing any terminal commands:
 
-1. Open a new terminal.
+1. Open the sidebar navigation menu and select **Settings**.
+2. Tap **Customize Terminal** to open **`CustomizationActivity`**.
+3. In the panel:
+    * **Prompt Title Input**: Enter your desired prompt name. A live visual preview showing
+      `Prompt Preview: [Your Name] $` will update instantly in real time.
+    * **Banner Text Input**: Type the text you want to display as your greeting banner. The utility
+      will stitch block letters from a 2D Unicode lookup map (`asciiMap`) and display a direct
+      preview of the final block ASCII art banner.
+4. Tap **Apply Customization**. CodeStudio will persistently save these strings in
+   `SharedPreferences`, copy the customization scripts (`apply-banner.sh` and `apply-title.sh`) into
+   internal private executables directory, and execute them inside the Termux pseudo-terminal
+   context to apply changes instantly.
+5. All currently active terminal sessions and any newly spawned terminal tabs will immediately
+   reflect your personalized prompt title and ASCII greeting banner without requiring a manual shell
+   restart!
+
+---
+
+### How to Apply a Custom Banner via CLI
+
+You can also run the built-in customizer command directly inside the terminal:
+
+1. Open an active terminal tab.
 2. Run the following command:
    ```bash
    apply-banner "YOUR TEXT HERE"
    ```
-3. Restart the terminal to see the changes.
+3. The ASCII block letter generator will compile the block characters horizontally and write them to
+   the persistent configuration folder.
+4. Open a new terminal tab to see your new custom banner instantly.
 
 ### Manual Customization
 
-The banner text is stored in:
+The banner text layout is stored persistently in Termux's local configuration path:
 `$PREFIX/etc/termux/banner.txt`
 
-You can manually edit this file with any text or ASCII art you prefer:
+You can manually edit this file with any custom ASCII art or system variables using standard
+editors:
 
 ```bash
 nano $PREFIX/etc/termux/banner.txt
@@ -67,49 +93,54 @@ nano $PREFIX/etc/termux/banner.txt
 
 ## 2. Custom Prompt Title
 
-The prompt title is the name displayed in the terminal prompt (e.g., `(Code Studio Mobile IDE)`).
+The prompt title is the name displayed inside the brackets of the interactive prompt (e.g.,
+`(Code Studio Mobile IDE)`).
 
 ### Default Appearance
 
-The default prompt is a two-line Material-style prompt that looks like this:
+The terminal displays a customized two-line Material prompt layout:
 
 ```text
 ┌──(Code Studio Mobile IDE)-[~]
 └─$ 
 ```
 
-- **Blue Elements**: The borders (`┌──`, `)-[`, `]`, `└─`) are blue.
-- **Green Elements**: The current working directory (`~`) is green.
-- **White/Standard**: The prompt title and the final `$` are the default text color.
+* **Blue Elements**: The frame structure borders (`┌──`, `)-[`, `]`, `└─`) are formatted in light
+  blue.
+* **Green Elements**: The current working directory (`~`) is rendered in light green.
+* **Prompt Variable**: The prompt title is read dynamically from `$PROMPT_TITLE`.
 
-### How to Change the Prompt Title
+### How to Change the Prompt Title via CLI
 
-You can use the built-in `apply-title` command inside the terminal:
+To update your terminal prompt title via the command line:
 
-1. Open a new terminal.
+1. Open an active terminal tab.
 2. Run the following command:
    ```bash
    apply-title "YOUR NEW TITLE"
    ```
-3. Restart the terminal to see the changes.
+3. The prompt customizer writes this name to `$PREFIX/etc/termux/title.txt`.
+4. Because the core environment initialization script (`.bashrc`) hooks into the shell's
+   `PROMPT_COMMAND` execution chain, the terminal reads this file before every new prompt line. *
+   *Your prompt updates immediately across all open terminal tabs without requiring a shell restart!
+   **
 
 ### Manual Customization
 
-The prompt configuration is defined in the `.bashrc` file.
+The dynamic title resolution is defined in the `.bashrc` initialization file:
 
-1. Open the `.bashrc` file in the editor or via terminal:
+1. Open the `.bashrc` configuration file in the IDE editor or via terminal:
    ```bash
    nano $HOME/.bashrc
    ```
-2. Look for the `PROMPT_TITLE` variable:
+2. Locate the prompt update handler and title loader:
    ```bash
-   PROMPT_TITLE="Code Studio Mobile IDE"
+   _update_prompt_title() {
+       PROMPT_TITLE=$(cat "$PREFIX/etc/termux/title.txt" 2>/dev/null || echo "Code Studio Mobile IDE")
+   }
    ```
-3. Change the value to your desired title:
-   ```bash
-   PROMPT_TITLE="My Project"
-   ```
-4. Save the file and restart your terminal session.
+3. You can modify these variables or append custom prompt parameters to `PS1` manually. Save your
+   changes and reload your shell.
 
 ---
 

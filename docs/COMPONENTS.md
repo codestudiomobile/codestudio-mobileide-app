@@ -61,26 +61,46 @@ on their extension. **This component is fully functional.**
 
 ## 5. Package Management: `AptBackgroundService` & `TermuxPackagePatcher`
 
-**What it is:** Handles the installation and patching of Linux packages. **This component is fully
-functional.**
+**What it is:** Handles the installation, patching, and binary translation of Linux packages from
+official repositories. **This component is fully functional.**
 
 ### 🔍 Technical Highlights:
 
-- **Dynamic Patching**: Uses `TermuxPackagePatcher` to swap hardcoded paths (replacing `com.termux`
-  with `com.cs.ide`) inside binary and script files during installation.
-- **APT/DPkg Hooks**: Intercepts package installations via pre-install and post-invoke hooks to
-  ensure 100% compatibility with official Termux repositories.
+- **Dynamic Binary Translation**: Standard Termux binaries hardcode search paths referring to
+  `/data/data/com.termux`. Because `com.termux` and Code Studio's package name `com.cs.ide` are both
+  exactly **10 characters** long, the `TermuxPackagePatcher` performs a safe, direct byte-level
+  string replacement (`System.arraycopy`) on raw compiled ELF files and shell scripts. This patches
+  paths without altering file sizes, string offsets, or ELF memory headers.
+- **Debian Re-Packaging Hooks**: Intercepts `apt-get` downloads natively via pre-install and
+  post-invoke streams. It extracts `.deb` packages using `dpkg-deb -R`, renames internal folders
+  containing `com.termux`, modifies file content strings, restores maintainer scripts executable
+  permissions (`chmod 0755` via POSIX `android.system.Os.chmod` system calls), and repacks the
+  patched tree back to `.deb` using `dpkg-deb -b`.
 - **Background Processing**: `AptBackgroundService` handles long-running downloads and installations
-  with real-time notification updates.
+  in a foreground service, sending real-time notifications with speed and stage parameters.
 
 ---
 
 ## 6. Workspace Initialization & Customization
 
-**What it is:** Ensures the local environment is correctly set up on the first launch and allows
-users to make the IDE their own.
+**What it is:** Ensures the local Linux environment directory structures, home mount points, and
+symlinks are set up on launch, and exposes graphical dashboards for personalization.
+
+### 🔍 Technical Highlights:
+
+- **Visual Personalization (`CustomizationActivity.java`)**: A dedicated configuration layout
+  featuring real-time input fields and high-fidelity previews. As you type, the visual banner
+  preview renders block letter ASCII art dynamically by stitching row coordinates from an internal
+  Java `asciiMap`.
+- **Dynamic CLI Injections**: Tapping Apply saves variables and executes `apply-banner.sh` and
+  `apply-title.sh` inside the Termux virtualized `/bin/bash` shell via `ProcessBuilder`, modifying
+  prompt titles (`PS1` and `PROMPT_COMMAND` in `.bashrc`) and greeting banners across all open
+  terminal sessions immediately.
 
 ---
+
+For a comprehensive, native-level architectural and NDK systems deep-dive, see
+the [Comprehensive Architecture Analysis Document](./code_studio_architecture_analysis.md).
 
 ## 🚀 Next Step: Abstraction Layers
 

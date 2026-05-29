@@ -15,16 +15,27 @@ an overview of the project and its features, please see the [README.md](../READM
   support.
 - **Extension Infrastructure**: Added support for loading and managing VS Code language extensions.
 - **Advanced Package Management**:
-    - Implemented a robust `TermuxPackagePatcher` that dynamically replaces package names (e.g.,
-      `com.termux` to `com.cs.ide`) during installation.
-    - Integrated `apt` and `dpkg` hooks to automatically patch `.deb` files and installed packages.
-    - Ensured full permission compatibility for official Termux packages within the app's private
-      data directory.
-- **Integrated Code Execution**:
-    - Implemented "One-Tap Execution" allowing users to run Python, Node.js, C++, and other
-      languages directly from the editor.
+    - Implemented a robust `TermuxPackagePatcher` and `TermuxPatcher` byte-replacement engine.
+    - Standardized string translations matching exactly **10 characters** (from `com.termux` to
+      `com.cs.ide`), successfully updating pre-compiled ELF binary absolute paths without shifting
+      string offsets, section layouts, or structure boundaries.
+    - Integrated `apt` and `dpkg` hooks to automatically intercept, extract (`dpkg-deb -R`), patch,
+      permission-chmod (`0755` via Os.chmod), and repack (`dpkg-deb -b`) debian packages.
+- **Interactive Code Execution**:
+    - Implemented "One-Tap Execution" to copy external SAF files into isolated private storage (
+      `bin_exec_cache`) and compile/execute them using resolved build command configurations (
+      `commands.json`).
     - Successfully mapped file extensions to their respective runtimes within the Termux
       environment.
+- **Terminal Environment Personalization**:
+    - Integrated a visual configuration controller **`CustomizationActivity.java`** featuring
+      instant prompts preview and alphanumeric ASCII art block text generators.
+    - Deployed custom shell scripts `apply-title.sh` and `apply-banner.sh` executing dynamically
+      inside `/bin/bash` processes to inject environment customizers.
+- **PTY/NDK Native Emulation Layer**:
+    - Deployed JNI Pseudo-Terminal bindings (`termux.c` NDK code) managing multiplexer forks (
+      `/dev/ptmx`), POSIX slave redirects, and dynamic column/row resizing using Linux system
+      calls (`ioctl(TIOCSWINSZ)`).
 
 ---
 

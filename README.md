@@ -22,18 +22,33 @@ workspace where your code and terminal breathe together.
 
 ## 📁 Project Structure
 
-For a detailed breakdown of the internal components, see [COMPONENTS.md](./docs/COMPONENTS.md). To
-track our development roadmap and progress, see [WORKFLOW.md](././docs/WORKFLOW.md).
+For an exhaustive, deep-dive breakdown of the entire system architecture (including JNI, PTY
+management, NDK layers, and packaging pipelines),
+see [code_studio_architecture_analysis.md](./docs/code_studio_architecture_analysis.md).
 
-- `app/src/main/java/com/cs/ide/app`: Core IDE logic, activities, and fragments.
-- `app/src/main/java/com/cs/ide/termux`: Terminal and Linux environment integration.
-- `app/src/main/assets/vscode_extensions`: Pre-bundled language support files.
+Additional developer resources:
+
+- [COMPONENTS.md](./docs/COMPONENTS.md): Quick component-level testing and manual verification
+  guide.
+- [WORKFLOW.md](./docs/WORKFLOW.md): Development timeline, progress tracking, and abstraction
+  roadmap.
+
+Core code locations:
+
+- `app/src/main/java/com/cs/ide/app`: Core IDE logic, text editors, fragments, and activities (
+  including `CustomizationActivity.java` and `MainActivity.java`).
+- `app/src/main/java/com/cs/ide/termux`: Terminal rendering, view, and Linux environment bindings.
+- `app/src/main/cpp`: NDK Pseudo-Terminal (PTY) system forks, socket channels, and bootstrap
+  loading.
 
 ## 🛠️ Customization
 
-CodeStudio is highly customizable. You can personalize your terminal experience with custom banners
-and prompt titles.
-See [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) for instructions.
+CodeStudio features a robust console personalization engine. You can dynamically update your
+interactive terminal greetings (ASCII banners) and prompt titles visually via the built-in *
+*`CustomizationActivity`** (accessible from Settings) or directly in-shell using `apply-banner` and
+`apply-title` CLI commands.
+
+For step-by-step styling instructions, see [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md).
 
 ## 🚧 Development Status
 
