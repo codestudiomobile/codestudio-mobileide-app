@@ -1,16 +1,14 @@
 package com.cs.ide.termux.app;
 
+import android.util.Log;
 import androidx.annotation.Keep;
-
 import com.cs.ide.termux.shared.termux.TermuxConstants;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.util.Date;
 
 /**
  * CLI tool to patch packages by replacing 'com.termux' with the app's package name.
@@ -19,6 +17,7 @@ import java.util.Date;
 @Keep
 public class TermuxPackagePatcher {
 
+	private static final String TAG = "TermuxPackagePatcher";
 	private static PrintWriter logWriter;
 
 	public static void main(String[] args) {
@@ -42,12 +41,13 @@ public class TermuxPackagePatcher {
 				TermuxPatcher.patchDirectory(prefixDir);
 			}
 			log("Finished successfully.");
+			System.out.println("Termux Package Patcher: Success");
 		} catch (Exception e) {
 			log("FATAL ERROR: " + e.getMessage());
 			if (logWriter != null) {
 				e.printStackTrace(logWriter);
 			}
-			System.err.println("Termux Package Patcher: Error - " + e.getMessage());
+			System.err.println("Termux Package Patcher: Failure - " + e.getMessage());
 			System.exit(1);
 		} finally {
 			if (logWriter != null) {
@@ -69,10 +69,9 @@ public class TermuxPackagePatcher {
 	}
 
 	private static void log(String message) {
-		String msg = "[" + new Date() + "] " + message;
-		System.out.println(msg);
+		Log.d(TAG, message);
 		if (logWriter != null) {
-			logWriter.println(msg);
+			logWriter.println(message);
 			logWriter.flush();
 		}
 	}
