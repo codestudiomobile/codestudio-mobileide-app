@@ -1,7 +1,6 @@
 package com.cs.ide.termux.view;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -60,6 +59,9 @@ public final class TerminalView extends View {
 	 */
 	public final static int KEY_EVENT_SOURCE_SOFT_KEYBOARD = 0;
 	private static final String LOG_TAG = "TerminalView";
+	private static final int SELECTION_HANDLE_NONE = 0;
+	private static final int SELECTION_HANDLE_LEFT = 1;
+	private static final int SELECTION_HANDLE_RIGHT = 2;
 	/**
 	 * Log terminal view key and IME events.
 	 */
@@ -83,7 +85,6 @@ public final class TerminalView extends View {
 	 */
 	int mTopRow;
 	float mScaleFactor = 1.f;
-
 	boolean mCopyMode;
 	int mSelX1 = -1, mSelY1 = -1, mSelX2 = -1, mSelY2 = -1;
 	/**
@@ -98,10 +99,6 @@ public final class TerminalView extends View {
 	private Drawable mHandleLeft;
 	private Drawable mHandleRight;
 	private ActionMode mActionMode;
-	private static final int SELECTION_HANDLE_NONE = 0;
-	private static final int SELECTION_HANDLE_LEFT = 1;
-	private static final int SELECTION_HANDLE_RIGHT = 2;
-	private int mDraggingHandle = SELECTION_HANDLE_NONE;
 	private final ActionMode.Callback mActionModeCallback = new ActionMode.Callback2() {
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
@@ -159,9 +156,13 @@ public final class TerminalView extends View {
 				y2 = tmp;
 			}
 
+			// Adjust x2 to the right edge of the selection
+			x2 += Math.round(mRenderer.mFontWidth);
+
 			outRect.set(x1, y1, x2, y2);
 		}
 	};
+	private int mDraggingHandle = SELECTION_HANDLE_NONE;
 	private Handler mTerminalCursorBlinkerHandler;
 	private TerminalCursorBlinkerRunnable mTerminalCursorBlinkerRunnable;
 	private int mTerminalCursorBlinkerRate;
@@ -673,12 +674,20 @@ public final class TerminalView extends View {
 				int y2 = getPointY(mSelY2 + 1);
 
 				if (mSelY1 > mSelY2 || (mSelY1 == mSelY2 && mSelX1 > mSelX2)) {
-					int tmp = x1; x1 = x2; x2 = tmp;
-					tmp = y1; y1 = y2; y2 = tmp;
+					int tmp = x1;
+					x1 = x2;
+					x2 = tmp;
+					tmp = y1;
+					y1 = y2;
+					y2 = tmp;
 				}
 
-				Rect leftHandleRect = new Rect(x1 - mHandleLeft.getIntrinsicWidth(), y1, x1, y1 + mHandleLeft.getIntrinsicHeight());
-				Rect rightHandleRect = new Rect(x2, y2, x2 + mHandleRight.getIntrinsicWidth(), y2 + mHandleRight.getIntrinsicHeight());
+				// x2 currently points to the left edge of the last selected character.
+				// Move it to the right edge for proper handle placement.
+				x2 += Math.round(mRenderer.mFontWidth);
+
+				Rect leftHandleRect = new Rect(x1 - mHandleLeft.getIntrinsicWidth() * 3 / 4, y1, x1 + mHandleLeft.getIntrinsicWidth() / 4, y1 + mHandleLeft.getIntrinsicHeight());
+				Rect rightHandleRect = new Rect(x2 - mHandleRight.getIntrinsicWidth() / 4, y2, x2 + mHandleRight.getIntrinsicWidth() * 3 / 4, y2 + mHandleRight.getIntrinsicHeight());
 
 				leftHandleRect.inset(-20, -20);
 				rightHandleRect.inset(-20, -20);
@@ -689,9 +698,7 @@ public final class TerminalView extends View {
 					mDraggingHandle = SELECTION_HANDLE_RIGHT;
 				} else {
 					mDraggingHandle = SELECTION_HANDLE_NONE;
-					int[] columnAndRow = getColumnAndRow(event, true);
-					mSelX2 = columnAndRow[0];
-					mSelY2 = columnAndRow[1];
+					setCopyMode(false);
 				}
 			} else if (action == MotionEvent.ACTION_MOVE) {
 				int[] columnAndRow = getColumnAndRow(event, true);
@@ -711,18 +718,17 @@ public final class TerminalView extends View {
 						mSelX1 = columnAndRow[0];
 						mSelY1 = columnAndRow[1];
 					}
-				} else {
-					mSelX2 = columnAndRow[0];
-					mSelY2 = columnAndRow[1];
 				}
 			}
 
-			invalidate();
-			if (action == MotionEvent.ACTION_UP) {
-				mDraggingHandle = SELECTION_HANDLE_NONE;
-				updateFloatingToolbarVisibility(event);
+			if (mCopyMode) {
+				invalidate();
+				if (action == MotionEvent.ACTION_UP) {
+					mDraggingHandle = SELECTION_HANDLE_NONE;
+					updateFloatingToolbarVisibility(event);
+				}
+				return true;
 			}
-			return true;
 		}
 
 		if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
@@ -1026,11 +1032,11 @@ public final class TerminalView extends View {
 				// Draw handles
 				int hx1 = getPointX(x1);
 				int hy1 = getPointY(y1 + 1);
-				int hx2 = getPointX(x2);
+				int hx2 = getPointX(x2) + Math.round(mRenderer.mFontWidth);
 				int hy2 = getPointY(y2 + 1);
 
-				mHandleLeft.setBounds(hx1 - mHandleLeft.getIntrinsicWidth(), hy1, hx1, hy1 + mHandleLeft.getIntrinsicHeight());
-				mHandleRight.setBounds(hx2, hy2, hx2 + mHandleRight.getIntrinsicWidth(), hy2 + mHandleRight.getIntrinsicHeight());
+				mHandleLeft.setBounds(hx1 - mHandleLeft.getIntrinsicWidth() * 3 / 4, hy1, hx1 + mHandleLeft.getIntrinsicWidth() / 4, hy1 + mHandleLeft.getIntrinsicHeight());
+				mHandleRight.setBounds(hx2 - mHandleRight.getIntrinsicWidth() / 4, hy2, hx2 + mHandleRight.getIntrinsicWidth() * 3 / 4, hy2 + mHandleRight.getIntrinsicHeight());
 
 				mHandleLeft.draw(canvas);
 				mHandleRight.draw(canvas);
