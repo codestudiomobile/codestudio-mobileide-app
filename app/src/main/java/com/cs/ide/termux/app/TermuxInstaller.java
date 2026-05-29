@@ -246,7 +246,11 @@ public final class TermuxInstaller {
 						File amScript = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/am");
 						String amContent = "#!/system/bin/sh\n" +
 								"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
-								"exec /system/bin/app_process / com.cs.ide.termuxam.Am \"$@\"\n";
+								"export ANDROID_DATA=\"" + TermuxConstants.TERMUX_FILES_DIR_PATH + "/usr/tmp\"\n" +
+								"unset LD_LIBRARY_PATH\n" +
+								"unset LD_PRELOAD\n" +
+								"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
+								"exec /system/bin/app_process /system/bin com.cs.ide.termuxam.Am \"$@\"\n";
 						FileUtils.writeTextToFile("am script", amScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), amContent, false);
 						Os.chmod(amScript.getAbsolutePath(), 0700);
 						Logger.logInfo(LOG_TAG, "Created custom am script at " + amScript.getAbsolutePath());
@@ -256,7 +260,11 @@ public final class TermuxInstaller {
 						File patcherScript = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/termux-patch-packages");
 						String patcherContent = "#!/system/bin/sh\n" +
 								"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
-								"exec /system/bin/app_process / com.cs.ide.termux.app.TermuxPackagePatcher \"$@\"\n";
+								"export ANDROID_DATA=\"" + TermuxConstants.TERMUX_FILES_DIR_PATH + "/usr/tmp\"\n" +
+								"unset LD_LIBRARY_PATH\n" +
+								"unset LD_PRELOAD\n" +
+								"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
+								"exec /system/bin/app_process /system/bin com.cs.ide.termux.app.TermuxPackagePatcher \"$@\"\n";
 						FileUtils.writeTextToFile("patcher script", patcherScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), patcherContent, false);
 						Os.chmod(patcherScript.getAbsolutePath(), 0700);
 
@@ -264,7 +272,11 @@ public final class TermuxInstaller {
 						File debPatcherScript = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/termux-patch-debs");
 						String debPatcherContent = "#!/system/bin/sh\n" +
 								"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
-								"exec /system/bin/app_process / com.cs.ide.termux.app.TermuxPackagePatcher --stdin\n";
+								"export ANDROID_DATA=\"" + TermuxConstants.TERMUX_FILES_DIR_PATH + "/usr/tmp\"\n" +
+								"unset LD_LIBRARY_PATH\n" +
+								"unset LD_PRELOAD\n" +
+								"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
+								"exec /system/bin/app_process /system/bin com.cs.ide.termux.app.TermuxPackagePatcher --stdin\n";
 						FileUtils.writeTextToFile("deb patcher script", debPatcherScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), debPatcherContent, false);
 						Os.chmod(debPatcherScript.getAbsolutePath(), 0700);
 

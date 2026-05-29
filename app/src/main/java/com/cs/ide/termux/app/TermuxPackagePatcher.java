@@ -1,8 +1,11 @@
 package com.cs.ide.termux.app;
 
 import android.util.Log;
+
 import androidx.annotation.Keep;
+
 import com.cs.ide.termux.shared.termux.TermuxConstants;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -40,7 +43,7 @@ public class TermuxPackagePatcher {
 				File prefixDir = new File(TermuxConstants.TERMUX_PREFIX_DIR_PATH);
 				TermuxPatcher.patchDirectory(prefixDir);
 			}
-			log("Finished successfully.");
+			log("Patching finished successfully.");
 			System.out.println("Termux Package Patcher: Success");
 		} catch (Exception e) {
 			log("FATAL ERROR: " + e.getMessage());
@@ -228,6 +231,9 @@ public class TermuxPackagePatcher {
 		pb.redirectErrorStream(true);
 		String pathEnv = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + ":" + System.getenv("PATH") + ":/system/bin:/system/xbin";
 		pb.environment().put("PATH", pathEnv);
+		pb.environment().put("LD_LIBRARY_PATH", TermuxConstants.TERMUX_LIB_PREFIX_DIR_PATH);
+		pb.environment().put("PREFIX", TermuxConstants.TERMUX_PREFIX_DIR_PATH);
+		pb.environment().put("TMPDIR", TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH);
 		Process p = pb.start();
 		try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
 			String line;

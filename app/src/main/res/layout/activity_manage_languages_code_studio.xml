@@ -71,7 +71,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:text="@string/msg_installing_package"
-            android:textColor="@color/ide_text_primary"
+            android:textColor="#FFFFFF"
             android:textStyle="bold" />
 
         <ProgressBar

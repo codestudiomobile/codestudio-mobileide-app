@@ -17,26 +17,36 @@ import com.cs.ide.app.fragments.TextFragment;
 import com.cs.ide.app.fragments.WelcomeFragment;
 import com.cs.ide.app.utils.AppPreferences;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ViewPagerAdapter manages the lifecycle of fragments displayed in the main activity's tabbed editor.
  * It maps file URIs and names to their corresponding fragment representations (TextFragment, WelcomeFragment, etc.).
  */
 public class ViewPagerAdapter extends FragmentStateAdapter {
-	/** Special URI representing the internal welcome screen. */
+	/**
+	 * Special URI representing the internal welcome screen.
+	 */
 	public static final Uri WELCOME_URI = Uri.parse("app://com.cs.ide/welcome");
-	/** Special URI representing a new, unsaved "Untitled" file. */
+	/**
+	 * Special URI representing a new, unsaved "Untitled" file.
+	 */
 	public static final Uri UNTITLED_FILE_URI = Uri.parse("app://com.cs.ide/untitled");
-	
-	/** List of display names for the currently open tabs. */
+
+	/**
+	 * List of display names for the currently open tabs.
+	 */
 	public final List<String> fileNames;
-	/** List of URIs for the currently open tabs. */
+	/**
+	 * List of URIs for the currently open tabs.
+	 */
 	public final List<Uri> fileUris;
-	/** List of boolean flags indicating if a tab is private (not persisted). */
+	/**
+	 * List of boolean flags indicating if a tab is private (not persisted).
+	 */
 	public final List<Boolean> isPrivateTab;
-	
+
 	private final FragmentActivity activity;
 	private final SharedPreferences preferences;
 
@@ -189,7 +199,8 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		if (fileUri.toString().startsWith("app://com.cs.ide/compile")) {
 			String command = fileUri.getQueryParameter("command");
 			String cwd = fileUri.getQueryParameter("cwd");
-			return CompileResultFragment.newInstance(command, cwd, fileUri);
+			String sessionDir = fileUri.getQueryParameter("session_dir");
+			return CompileResultFragment.newInstance(command, cwd, fileUri, sessionDir);
 		}
 		if (fileUri.equals(UNTITLED_FILE_URI)) {
 			return TextFragment.newInstance(UNTITLED_FILE_URI);
@@ -247,6 +258,26 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		isPrivateTab.add(isPrivate);
 		notifyItemInserted(fileUris.size() - 1);
 		return fileUris.size() - 1;
+	}
+
+	/**
+	 * Inserts a tab at a specific index and returns its position.
+	 *
+	 * @param index     The index to insert at.
+	 * @param uri       The URI to add.
+	 * @param fileName  The name to display.
+	 * @param isPrivate Whether the tab should be private.
+	 * @return The index of the added tab.
+	 */
+	public int insertTab(int index, Uri uri, String fileName, boolean isPrivate) {
+		if (index < 0 || index > fileUris.size()) {
+			return addTab(uri, fileName, isPrivate);
+		}
+		fileUris.add(index, uri);
+		fileNames.add(index, fileName);
+		isPrivateTab.add(index, isPrivate);
+		notifyItemInserted(index);
+		return index;
 	}
 
 	/**
@@ -347,8 +378,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 			Uri uri = fileUris.get(i);
 			if (!uri.equals(WELCOME_URI) && !uri.equals(UNTITLED_FILE_URI) && !fileNames.get(i).startsWith(runPrefix)) {
 				Fragment fragment = getFragment(i);
-				if (fragment instanceof TextFragment) {
-					TextFragment textFragment = (TextFragment) fragment;
+				if (fragment instanceof TextFragment textFragment) {
 					if (!textFragment.isSaved() && (content = textFragment.getContents()) != null) {
 						filesToSave.add(new FilesAdapter.FileContentItem(uri, content));
 					}

@@ -31,161 +31,167 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
  */
 public class EditorActivity extends AppCompatActivity {
 
-    // UI Components - Switches
-    private SwitchCompat openEditorOnStartup;
-    private SwitchCompat openWelcomeScreenOnStartup;
-    private SwitchCompat pinchToZoomSwitch;
-    private SwitchCompat showLineNumbersSwitch;
-    private SwitchCompat autoIndentationSwitch;
-    private SwitchCompat syntaxHighlightingSwitch;
-    private SwitchCompat wordWrapSwitch;
+	// UI Components - Switches
+	private SwitchCompat openEditorOnStartup;
+	private SwitchCompat openWelcomeScreenOnStartup;
+	private SwitchCompat pinchToZoomSwitch;
+	private SwitchCompat showLineNumbersSwitch;
+	private SwitchCompat autoIndentationSwitch;
+	private SwitchCompat syntaxHighlightingSwitch;
+	private SwitchCompat wordWrapSwitch;
 
-    // UI Components - Others
-    private SeekBar textSizeSeekBar;
-    private TextView textSizeValue;
-    private CodeEditor editorPreview;
-    private View rootLayout;
+	// UI Components - Others
+	private SeekBar textSizeSeekBar;
+	private TextView textSizeValue;
+	private CodeEditor editorPreview;
+	private View rootLayout;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_editor_code_studio);
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_editor_code_studio);
 
-        setupToolbar();
-        initViews();
-        loadPreferences();
-        
-        SharedPreferences prefs = getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE);
-        setupListeners(prefs);
-        setupEditorPreview();
-    }
+		setupToolbar();
+		initViews();
+		loadPreferences();
 
-    private void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-    }
+		SharedPreferences prefs = getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE);
+		setupListeners(prefs);
+		setupEditorPreview();
+	}
 
-    private void initViews() {
-        rootLayout = findViewById(R.id.editorLayout);
-        if (rootLayout != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(rootLayout, DisplayManager::setupDynamicMarginHandling);
-        }
+	private void setupToolbar() {
+		Toolbar toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		if (getSupportActionBar() != null) {
+			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		}
+	}
 
-        openEditorOnStartup = findViewById(R.id.openEditorOnStartup);
-        openWelcomeScreenOnStartup = findViewById(R.id.openWelcomeScreenOnStartup);
-        pinchToZoomSwitch = findViewById(R.id.pinchToZoomSwitch);
-        showLineNumbersSwitch = findViewById(R.id.showLineNumbersSwitch);
-        autoIndentationSwitch = findViewById(R.id.autoIndentationSwitch);
-        syntaxHighlightingSwitch = findViewById(R.id.syntaxHighlightingSwitch);
-        wordWrapSwitch = findViewById(R.id.wordWrapSwitch);
-        
-        textSizeSeekBar = findViewById(R.id.textSizeSeekBar);
-        textSizeValue = findViewById(R.id.textSizeValue);
-        editorPreview = findViewById(R.id.editorPreview);
-    }
+	private void initViews() {
+		rootLayout = findViewById(R.id.editorLayout);
+		if (rootLayout != null) {
+			ViewCompat.setOnApplyWindowInsetsListener(rootLayout, DisplayManager::setupDynamicMarginHandling);
+		}
 
-    private void loadPreferences() {
-        SharedPreferences prefs = getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE);
+		openEditorOnStartup = findViewById(R.id.openEditorOnStartup);
+		openWelcomeScreenOnStartup = findViewById(R.id.openWelcomeScreenOnStartup);
+		pinchToZoomSwitch = findViewById(R.id.pinchToZoomSwitch);
+		showLineNumbersSwitch = findViewById(R.id.showLineNumbersSwitch);
+		autoIndentationSwitch = findViewById(R.id.autoIndentationSwitch);
+		syntaxHighlightingSwitch = findViewById(R.id.syntaxHighlightingSwitch);
+		wordWrapSwitch = findViewById(R.id.wordWrapSwitch);
 
-        openEditorOnStartup.setChecked(prefs.getBoolean(AppPreferences.KEY_EDITOR_STARTUP, true));
-        openWelcomeScreenOnStartup.setChecked(prefs.getBoolean(AppPreferences.KEY_WELCOME_STARTUP, true));
-        pinchToZoomSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_PINCH_TO_ZOOM, true));
-        showLineNumbersSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_SHOW_LINE_NUMBERS, true));
-        autoIndentationSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_AUTO_INDENTATION, true));
-        syntaxHighlightingSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_SYNTAX_HIGHLIGHTING, true));
-        wordWrapSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_WORD_WRAP, false));
+		textSizeSeekBar = findViewById(R.id.textSizeSeekBar);
+		textSizeValue = findViewById(R.id.textSizeValue);
+		editorPreview = findViewById(R.id.editorPreview);
+	}
 
-        int textSize = prefs.getInt(AppPreferences.KEY_EDITOR_TEXT_SIZE, AppPreferences.DEFAULT_TEXT_SIZE);
-        textSizeSeekBar.setProgress(textSize - 8);
-        textSizeValue.setText(String.valueOf(textSize));
-        
-        editorPreview.setTextSize(textSize);
-        editorPreview.setLineNumberEnabled(showLineNumbersSwitch.isChecked());
-        editorPreview.setWordwrap(wordWrapSwitch.isChecked());
-    }
+	private void loadPreferences() {
+		SharedPreferences prefs = getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE);
 
-    private void setupListeners(SharedPreferences prefs) {
-        openEditorOnStartup.setOnCheckedChangeListener((v, checked) -> 
-            prefs.edit().putBoolean(AppPreferences.KEY_EDITOR_STARTUP, checked).apply());
-        
-        openWelcomeScreenOnStartup.setOnCheckedChangeListener((v, checked) -> 
-            prefs.edit().putBoolean(AppPreferences.KEY_WELCOME_STARTUP, checked).apply());
-        
-        pinchToZoomSwitch.setOnCheckedChangeListener((v, checked) -> 
-            prefs.edit().putBoolean(AppPreferences.KEY_PINCH_TO_ZOOM, checked).apply());
+		openEditorOnStartup.setChecked(prefs.getBoolean(AppPreferences.KEY_EDITOR_STARTUP, true));
+		openWelcomeScreenOnStartup.setChecked(prefs.getBoolean(AppPreferences.KEY_WELCOME_STARTUP, true));
+		pinchToZoomSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_PINCH_TO_ZOOM, true));
+		showLineNumbersSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_SHOW_LINE_NUMBERS, true));
+		autoIndentationSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_AUTO_INDENTATION, true));
+		syntaxHighlightingSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_SYNTAX_HIGHLIGHTING, true));
+		wordWrapSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_WORD_WRAP, false));
 
-        showLineNumbersSwitch.setOnCheckedChangeListener((v, checked) -> {
-            prefs.edit().putBoolean(AppPreferences.KEY_SHOW_LINE_NUMBERS, checked).apply();
-            editorPreview.setLineNumberEnabled(checked);
-        });
+		int textSize = prefs.getInt(AppPreferences.KEY_EDITOR_TEXT_SIZE, AppPreferences.DEFAULT_TEXT_SIZE);
+		textSizeSeekBar.setProgress(textSize - 8);
+		textSizeValue.setText(String.valueOf(textSize));
 
-        autoIndentationSwitch.setOnCheckedChangeListener((v, checked) -> 
-            prefs.edit().putBoolean(AppPreferences.KEY_AUTO_INDENTATION, checked).apply());
+		editorPreview.setTextSize(textSize);
+		editorPreview.setLineNumberEnabled(showLineNumbersSwitch.isChecked());
+		editorPreview.setWordwrap(wordWrapSwitch.isChecked());
+	}
 
-        syntaxHighlightingSwitch.setOnCheckedChangeListener((v, checked) -> 
-            prefs.edit().putBoolean(AppPreferences.KEY_SYNTAX_HIGHLIGHTING, checked).apply());
+	private void setupListeners(SharedPreferences prefs) {
+		openEditorOnStartup.setOnCheckedChangeListener((v, checked) ->
+				prefs.edit().putBoolean(AppPreferences.KEY_EDITOR_STARTUP, checked).apply());
 
-        wordWrapSwitch.setOnCheckedChangeListener((v, checked) -> {
-            prefs.edit().putBoolean(AppPreferences.KEY_WORD_WRAP, checked).apply();
-            editorPreview.setWordwrap(checked);
-        });
+		openWelcomeScreenOnStartup.setOnCheckedChangeListener((v, checked) ->
+				prefs.edit().putBoolean(AppPreferences.KEY_WELCOME_STARTUP, checked).apply());
 
-        textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int size = progress + 8;
-                textSizeValue.setText(String.valueOf(size));
-                prefs.edit().putInt(AppPreferences.KEY_EDITOR_TEXT_SIZE, size).apply();
-                editorPreview.setTextSize(size);
-            }
+		pinchToZoomSwitch.setOnCheckedChangeListener((v, checked) ->
+				prefs.edit().putBoolean(AppPreferences.KEY_PINCH_TO_ZOOM, checked).apply());
 
-            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-    }
+		showLineNumbersSwitch.setOnCheckedChangeListener((v, checked) -> {
+			prefs.edit().putBoolean(AppPreferences.KEY_SHOW_LINE_NUMBERS, checked).apply();
+			editorPreview.setLineNumberEnabled(checked);
+		});
 
-    private void setupEditorPreview() {
-        editorPreview.setText(getString(R.string.editor_preview_text));
-        editorPreview.setEditorLanguage(new EmptyLanguage());
-        editorPreview.setEditable(false);
+		autoIndentationSwitch.setOnCheckedChangeListener((v, checked) ->
+				prefs.edit().putBoolean(AppPreferences.KEY_AUTO_INDENTATION, checked).apply());
 
-        try {
-            Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/JetBrainsMono-Regular.ttf");
-            editorPreview.setTypefaceText(typeface);
-            editorPreview.setTypefaceLineNumber(typeface);
-        } catch (Exception ignored) {}
+		syntaxHighlightingSwitch.setOnCheckedChangeListener((v, checked) ->
+				prefs.edit().putBoolean(AppPreferences.KEY_SYNTAX_HIGHLIGHTING, checked).apply());
 
-        editorPreview.subscribeAlways(ColorSchemeUpdateEvent.class, (event) -> applyPreviewTheme(event.getColorScheme()));
-    }
+		wordWrapSwitch.setOnCheckedChangeListener((v, checked) -> {
+			prefs.edit().putBoolean(AppPreferences.KEY_WORD_WRAP, checked).apply();
+			editorPreview.setWordwrap(checked);
+		});
 
-    private void applyPreviewTheme(EditorColorScheme scheme) {
-        scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
-        scheme.setColor(EditorColorScheme.TEXT_NORMAL, ContextCompat.getColor(this, R.color.ide_text_primary));
-        scheme.setColor(EditorColorScheme.LINE_NUMBER, ContextCompat.getColor(this, R.color.ide_line_number));
-        scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
-        scheme.setColor(EditorColorScheme.CURRENT_LINE, ContextCompat.getColor(this, R.color.ide_current_line));
-        scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.WHITE);
-        scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.WHITE);
-        scheme.setColor(EditorColorScheme.TEXT_SELECTED, Color.GRAY);
+		textSizeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				int size = progress + 8;
+				textSizeValue.setText(String.valueOf(size));
+				prefs.edit().putInt(AppPreferences.KEY_EDITOR_TEXT_SIZE, size).apply();
+				editorPreview.setTextSize(size);
+			}
 
-        scheme.setColor(EditorColorScheme.KEYWORD, ContextCompat.getColor(this, R.color.syntax_keyword));
-        scheme.setColor(EditorColorScheme.LITERAL, ContextCompat.getColor(this, R.color.syntax_string));
-        scheme.setColor(EditorColorScheme.COMMENT, ContextCompat.getColor(this, R.color.syntax_comment));
-        scheme.setColor(EditorColorScheme.OPERATOR, ContextCompat.getColor(this, R.color.syntax_keyword));
-        scheme.setColor(EditorColorScheme.ANNOTATION, ContextCompat.getColor(this, R.color.syntax_type));
-        scheme.setColor(EditorColorScheme.FUNCTION_NAME, ContextCompat.getColor(this, R.color.syntax_function));
-        scheme.setColor(EditorColorScheme.IDENTIFIER_NAME, ContextCompat.getColor(this, R.color.syntax_function));
-    }
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+			}
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+			}
+		});
+	}
+
+	private void setupEditorPreview() {
+		editorPreview.setText(getString(R.string.editor_preview_text));
+		editorPreview.setEditorLanguage(new EmptyLanguage());
+		editorPreview.setEditable(false);
+
+		try {
+			Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/JetBrainsMono-Regular.ttf");
+			editorPreview.setTypefaceText(typeface);
+			editorPreview.setTypefaceLineNumber(typeface);
+		} catch (Exception ignored) {
+		}
+
+		editorPreview.subscribeAlways(ColorSchemeUpdateEvent.class, (event) -> applyPreviewTheme(event.getColorScheme()));
+	}
+
+	private void applyPreviewTheme(EditorColorScheme scheme) {
+		scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
+		scheme.setColor(EditorColorScheme.TEXT_NORMAL, ContextCompat.getColor(this, R.color.ide_text_primary));
+		scheme.setColor(EditorColorScheme.LINE_NUMBER, ContextCompat.getColor(this, R.color.ide_line_number));
+		scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
+		scheme.setColor(EditorColorScheme.CURRENT_LINE, ContextCompat.getColor(this, R.color.ide_current_line));
+		scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.WHITE);
+		scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.WHITE);
+		scheme.setColor(EditorColorScheme.TEXT_SELECTED, ContextCompat.getColor(this, R.color.ide_text_selected));
+
+		scheme.setColor(EditorColorScheme.KEYWORD, ContextCompat.getColor(this, R.color.syntax_keyword));
+		scheme.setColor(EditorColorScheme.LITERAL, ContextCompat.getColor(this, R.color.syntax_string));
+		scheme.setColor(EditorColorScheme.COMMENT, ContextCompat.getColor(this, R.color.syntax_comment));
+		scheme.setColor(EditorColorScheme.OPERATOR, ContextCompat.getColor(this, R.color.syntax_keyword));
+		scheme.setColor(EditorColorScheme.ANNOTATION, ContextCompat.getColor(this, R.color.syntax_type));
+		scheme.setColor(EditorColorScheme.FUNCTION_NAME, ContextCompat.getColor(this, R.color.syntax_function));
+		scheme.setColor(EditorColorScheme.IDENTIFIER_NAME, ContextCompat.getColor(this, R.color.syntax_function));
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+		if (item.getItemId() == android.R.id.home) {
+			finish();
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 }

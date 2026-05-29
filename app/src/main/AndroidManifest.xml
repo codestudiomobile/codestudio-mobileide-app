@@ -2,9 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.cs.ide"
-    android:installLocation="internalOnly"
-    android:sharedUserId="com.cs.ide"
-    android:sharedUserLabel="@string/shared_user_label">
+    android:installLocation="internalOnly">
 
     <!-- Permissions -->
     <uses-permission android:name="com.cs.ide.permission.RUN_COMMAND" />
@@ -51,7 +49,7 @@
         android:allowBackup="false"
         android:banner="@drawable/ic_banner"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:extractNativeLibs="false"
+        android:extractNativeLibs="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -59,6 +57,7 @@
         android:roundIcon="@drawable/ic_code_studio_round"
         android:supportsRtl="false"
         android:theme="@style/Theme.CodeStudio"
+        android:testOnly="false"
         tools:targetApi="28">
 
         <!-- Main IDE Activities -->
@@ -196,6 +195,12 @@
             tools:ignore="ForegroundServicePermission" />
         <service
             android:name="com.cs.ide.app.services.AptBackgroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:ignore="ForegroundServicePermission" />
+        <service
+            android:name="com.cs.ide.app.services.LanguageManagerService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse"

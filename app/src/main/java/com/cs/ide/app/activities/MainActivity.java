@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	// --- UI Elements ---
 	private DrawerLayout drawerLayout;
 	private TabLayout tabLayout;
-	private ViewPager2 viewPager;
+	public ViewPager2 viewPager;
 	/**
 	 * Runnable task for periodic auto-save of open files.
 	 */
@@ -943,8 +943,6 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	public void runFile(FileItem item) {
 		ExecutionManager.runFile(this, item);
-		int pos = viewPagerAdapter.getItemCount() - 1;
-		viewPager.setCurrentItem(pos, true);
 	}
 
 	private void handleRunFile() {

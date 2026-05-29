@@ -375,6 +375,12 @@
     <string name="msg_starting_installation">Starting installation…</string>
     <string name="msg_installation_failed">Installation failed</string>
     <string name="msg_installation_complete">Installation complete</string>
+    <string name="msg_queued_packages">%d packages in queue</string>
+    <string name="msg_retrying">Retrying %1$s… (%2$d/3)</string>
+    <string name="msg_failed_internet">Failed due to internet issue: %1$s</string>
+    <string name="msg_download_slow">Server issue or slow internet detected for %1$s</string>
+    <string name="msg_package_installed_success">%1$s installed successfully!</string>
+    <string name="msg_package_uninstalled_success">%1$s uninstalled successfully!</string>
     <string name="title_package_manager">Package Manager</string>
     <string name="channel_name_package_manager">Package Manager Service Channel</string>
 

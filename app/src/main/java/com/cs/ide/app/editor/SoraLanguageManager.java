@@ -9,7 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.cs.ide.app.execution.CommandFetcher;
-import com.cs.ide.app.services.AptBackgroundService;
+import com.cs.ide.app.services.LanguageManagerService;
 import com.itsaky.androidide.treesitter.TSLanguage;
 
 import org.apache.commons.io.IOUtils;
@@ -494,11 +494,13 @@ public class SoraLanguageManager {
 					"curl -L " + url + " -o " + langDir.getAbsolutePath() + "/pack.zip && unzip -o " + langDir.getAbsolutePath() + "/pack.zip -d " + langDir.getAbsolutePath() :
 					"curl -L \"" + url + "\" -o " + langDir.getAbsolutePath() + "/" + url.substring(url.lastIndexOf("/") + 1);
 
-				Intent intent = new Intent(context, AptBackgroundService.class);
-				intent.setAction(AptBackgroundService.ACTION_INSTALL);
-				intent.putExtra(AptBackgroundService.EXTRA_PACKAGE, "custom_command:" + command);
+				Intent intent = new Intent(context, LanguageManagerService.class);
+				intent.setAction(LanguageManagerService.ACTION_INSTALL_PACKAGE);
+				intent.putExtra(LanguageManagerService.EXTRA_PACKAGE_KEY, "lang_" + langName);
+				intent.putExtra(LanguageManagerService.EXTRA_PACKAGE_NAME, langName);
+				intent.putExtra(LanguageManagerService.EXTRA_COMMAND, command);
 				context.startService(intent);
-				Toast.makeText(context, "Installing " + langName + "...", Toast.LENGTH_SHORT).show();
+				Toast.makeText(context, "Installing " + langName + "…", Toast.LENGTH_SHORT).show();
 			}
 		} catch (Exception e) {
 			Log.e(TAG, "Error starting installation", e);

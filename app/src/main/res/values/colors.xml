@@ -43,7 +43,7 @@
     <!-- Text & Editor UI -->
     <color name="ide_text_primary">#FFFFFFFF</color>
     <color name="ide_text_secondary">#FFBDBDBD</color>
-    <color name="ide_text_selected">#FF5C6370</color>
+    <color name="ide_text_selected">#FFBDBDBD</color>
     <color name="ide_text_hint">#FF757575</color>
     <color name="ide_line_number">#FF5C6370</color>
     <color name="ide_current_line">#FF282828</color>
