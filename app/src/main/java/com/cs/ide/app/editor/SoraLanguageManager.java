@@ -89,11 +89,16 @@ public class SoraLanguageManager {
 	 */
 	private final Map<String, String> langIdToConfigPathMap = new HashMap<>();
 
+	private volatile boolean isInitialized = false;
+
 	public SoraLanguageManager(Context context) {
 		this.context = context;
 		this.commandFetcher = new CommandFetcher(context);
-		initTextMateIfNeeded();
-		loadVSCodeExtensions();
+		new Thread(() -> {
+			initTextMateIfNeeded();
+			loadVSCodeExtensions();
+			isInitialized = true;
+		}).start();
 	}
 
 	private void initTextMateIfNeeded() {
@@ -229,6 +234,11 @@ public class SoraLanguageManager {
 	}
 
 	public void applyLanguage(CodeEditor editor, String extension) {
+		if (!isInitialized) {
+			// If not initialized, try again in 500ms
+			editor.postDelayed(() -> applyLanguage(editor, extension), 500);
+			return;
+		}
 		try {
 			ensureThemeApplied(editor);
 		} catch (Exception e) {

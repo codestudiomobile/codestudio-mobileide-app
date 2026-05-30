@@ -38,6 +38,17 @@ an overview of the project and its features, please see the [README.md](../READM
     - Optimized Storage Access Framework (SAF) interactions with direct `DocumentsContract` cursor
       queries, ensuring 60 FPS responsiveness during rapid file navigation and large-scale saving
       operations.
+    - Implemented a zero-block UI strategy for the Sora Editor, offloading text-to-byte
+      conversions and disk writes to background executors to prevent ANRs on large files.
+- **Enhanced Asset & UI Logic**:
+    - Standardized 28 symbol and navigation icons into a unified 24x24 Vector Drawable engine for
+      the ExtraKeys toolbar.
+    - Optimized `SoraLanguageManager` with asynchronous TextMate grammar initialization and VS Code
+      extension loading.
+    - Built a robust HTML/Web execution path using temporary external cache directories and
+      `StrictMode` bypasses for universal browser compatibility.
+    - Refined the "Save As" logic to pre-fill current file names and perform smart change
+      validation before committing to disk.
 - **PTY/NDK Native Emulation Layer**:
     - Deployed JNI Pseudo-Terminal bindings (`termux.c` NDK code) managing multiplexer forks (
       `/dev/ptmx`), POSIX slave redirects, and dynamic column/row resizing using Linux system

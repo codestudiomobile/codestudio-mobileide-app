@@ -539,12 +539,19 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		viewPager.setCurrentItem(position, false); // Disable animation to prevent back-and-forth glitch
 		updateSubtitleForTab(position);
 
-		Uri uri = (position < viewPagerAdapter.fileUris.size()) ? viewPagerAdapter.fileUris.get(position) : null;
-		runMenuVisible = (uri != null && extensionAllowsRun(uri));
+		if (position < viewPagerAdapter.fileUris.size()) {
+			Uri uri = viewPagerAdapter.fileUris.get(position);
+			runMenuVisible = (uri != null && extensionAllowsRun(uri));
 
-		if (uri != null) {
-			setSelectedFileItem(FileUtils.getFileItemFromUri(this, uri));
-			updateOpenedFolder(uri);
+			if (uri != null) {
+				executor.execute(() -> {
+					FileItem item = FileUtils.getFileItemFromUri(this, uri);
+					runOnUiThread(() -> setSelectedFileItem(item));
+					updateOpenedFolder(uri);
+				});
+			}
+		} else {
+			runMenuVisible = false;
 		}
 
 		boolean isPrivate = (position < viewPagerAdapter.isPrivateTab.size() && viewPagerAdapter.isPrivateTab.get(position));
@@ -1040,10 +1047,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 		Fragment fragment = viewPagerAdapter.getFragment(position);
 		if (fragment instanceof TextFragment textFragment && !textFragment.isSaved()) {
-			// Fetch contents on UI thread but process saving in background
-			byte[] content = textFragment.getContents();
-			if (content != null && !viewPagerAdapter.fileNames.get(position).startsWith(getString(R.string.run_prefix, ""))) {
+			io.github.rosemoe.sora.text.Content text = textFragment.getEditorText();
+			if (text != null && !viewPagerAdapter.fileNames.get(position).startsWith(getString(R.string.run_prefix, ""))) {
 				executor.execute(() -> {
+					byte[] content = text.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
 					FilesAdapter.saveFileContentAsync(this, uri, content);
 					runOnUiThread(() -> {
 						textFragment.setSaved(true);
@@ -1073,11 +1080,16 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 				if (uri.toString().startsWith(ViewPagerAdapter.UNTITLED_URI_PREFIX)) {
 					handleSaveAs();
 				} else {
-					byte[] content = textFragment.getContents();
-					if (content != null) {
-						FilesAdapter.saveFileContentAsync(this, uri, content);
-						textFragment.setSaved(true);
-						Toast.makeText(this, R.string.file_saved_successfully, Toast.LENGTH_SHORT).show();
+					io.github.rosemoe.sora.text.Content text = textFragment.getEditorText();
+					if (text != null) {
+						executor.execute(() -> {
+							byte[] content = text.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+							FilesAdapter.saveFileContentAsync(this, uri, content);
+							runOnUiThread(() -> {
+								textFragment.setSaved(true);
+								Toast.makeText(this, R.string.file_saved_successfully, Toast.LENGTH_SHORT).show();
+							});
+						});
 					}
 				}
 			} else {
@@ -1090,21 +1102,19 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	private void saveAllOpenFiles() {
 		if (viewPagerAdapter == null) return;
-		boolean savedAny = false;
 		for (int i = 0; i < viewPagerAdapter.getItemCount(); i++) {
 			Fragment fragment = viewPagerAdapter.getFragment(i);
 			if (fragment instanceof TextFragment textFragment && !textFragment.isSaved()) {
-				byte[] content = textFragment.getContents();
+				io.github.rosemoe.sora.text.Content text = textFragment.getEditorText();
 				Uri uri = viewPagerAdapter.fileUris.get(i);
-				if (content != null && uri != null && !uri.equals(ViewPagerAdapter.WELCOME_URI) && !uri.toString().startsWith(ViewPagerAdapter.UNTITLED_URI_PREFIX)) {
-					FilesAdapter.saveFileContentAsync(this, uri, content);
-					textFragment.setSaved(true);
-					savedAny = true;
+				if (text != null && uri != null && !uri.equals(ViewPagerAdapter.WELCOME_URI) && !uri.toString().startsWith(ViewPagerAdapter.UNTITLED_URI_PREFIX)) {
+					executor.execute(() -> {
+						byte[] content = text.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+						FilesAdapter.saveFileContentAsync(this, uri, content);
+						runOnUiThread(() -> textFragment.setSaved(true));
+					});
 				}
 			}
-		}
-		if (savedAny) {
-			Toast.makeText(this, R.string.file_saved_successfully, Toast.LENGTH_SHORT).show();
 		}
 	}
 

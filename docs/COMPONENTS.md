@@ -57,6 +57,9 @@ on their extension. **This component is fully functional.**
 
 - **One-Tap Execution**: Implements "One-Tap" logic that detects file extensions (Python, Node.js,
   C++, etc.) and executes the appropriate runtime in the synchronized terminal.
+- **Web Preview Engine**: Features a specialized path for HTML/HTM files that copies content to an
+  external cache and launches it via a filtered `ACTION_VIEW` intent (excluding the IDE itself to
+  prevent recursive windows).
 - **Environment Awareness**: Ensures that the terminal environment is fully initialized with correct
   PATHs before execution.
 
@@ -91,6 +94,9 @@ symlinks are set up on launch, and exposes graphical dashboards for personalizat
 
 ### 🔍 Technical Highlights:
 
+- **Vector Asset Engine**: The `ExtraKeysView` symbols (arrows, brackets, operators) have been
+  standardized into 24x24 Vector Drawables, ensuring sharp rendering at any scale and high
+  performance.
 - **Visual Personalization (`CustomizationActivity.java`)**: A dedicated configuration layout
   featuring real-time input fields and high-fidelity previews. As you type, the visual banner
   preview renders block letter ASCII art dynamically by stitching row coordinates from an internal

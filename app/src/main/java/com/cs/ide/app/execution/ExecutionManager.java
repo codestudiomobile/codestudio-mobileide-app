@@ -37,23 +37,23 @@ public class ExecutionManager {
 			return;
 		}
 
-		final String fileName = (item.displayName != null) ? item.displayName : FileUtils.getFileName(activity, item.uri);
-		String mimeType = activity.getMimeType(item.uri);
-		boolean isHtml = (mimeType != null && (mimeType.equals("text/html") || mimeType.equals("application/xhtml+xml")));
-		if (!isHtml) {
-			String fileNameLower = fileName.toLowerCase();
-			if (fileNameLower.endsWith(".html") || fileNameLower.endsWith(".htm")) {
-				isHtml = true;
-			}
-		}
-
-		if (isHtml) {
-			runHtmlWithCache(activity, item, fileName);
-			return;
-		}
-
 		// Perform everything in background to keep UI smooth
 		new Thread(() -> {
+			final String fileName = (item.displayName != null) ? item.displayName : FileUtils.getFileName(activity, item.uri);
+			String mimeType = activity.getMimeType(item.uri);
+			boolean isHtml = (mimeType != null && (mimeType.equals("text/html") || mimeType.equals("application/xhtml+xml")));
+			if (!isHtml) {
+				String fileNameLower = fileName.toLowerCase();
+				if (fileNameLower.endsWith(".html") || fileNameLower.endsWith(".htm")) {
+					isHtml = true;
+				}
+			}
+
+			if (isHtml) {
+				runHtmlWithCache(activity, item, fileName);
+				return;
+			}
+
 			String absolutePath = FileUtils.getAbsolutePathFromUri(activity, item.uri);
 
 			// 1. HIGH-SPEED PATH: Direct Filesystem Execution
@@ -352,11 +352,29 @@ public class ExecutionManager {
 			}
 		}
 
-		try {
-			context.startActivity(intent);
-		} catch (Exception e) {
-			Log.e(TAG, "Failed to open HTML in browser", e);
+		// Filter out this app from handled activities to avoid opening a new window of the same app
+		String myPackage = context.getPackageName();
+		android.content.pm.PackageManager pm = context.getPackageManager();
+		java.util.List<android.content.pm.ResolveInfo> resolveInfos = pm.queryIntentActivities(intent, 0);
+		java.util.List<Intent> targetedIntents = new java.util.ArrayList<>();
+
+		for (android.content.pm.ResolveInfo info : resolveInfos) {
+			if (!info.activityInfo.packageName.equalsIgnoreCase(myPackage)) {
+				Intent targetedIntent = new Intent(Intent.ACTION_VIEW);
+				targetedIntent.setDataAndType(fileUri, "text/html");
+				targetedIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+				targetedIntent.setPackage(info.activityInfo.packageName);
+				targetedIntents.add(targetedIntent);
+			}
+		}
+
+		if (targetedIntents.isEmpty()) {
 			Toast.makeText(context, R.string.no_app_found_to_view, Toast.LENGTH_LONG).show();
+		} else {
+			Intent chooserIntent = Intent.createChooser(targetedIntents.remove(0), "Open HTML with...");
+			chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedIntents.toArray(new android.os.Parcelable[0]));
+			chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			context.startActivity(chooserIntent);
 		}
 	}
 

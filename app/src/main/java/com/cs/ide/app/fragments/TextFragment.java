@@ -47,6 +47,7 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	private SoraLanguageManager languageManager;
 	private boolean isSaved = true;
 	private Uri fileUri;
+	private String fileName;
 	private ScaleGestureDetector scaleGestureDetector;
 	private float scaleFactor = 1.0f;
 	private int baseTextSize;
@@ -256,8 +257,19 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	 */
 	private void detectAndApplyLanguage() {
 		if (fileUri == null) return;
-		String fileName = com.cs.ide.app.utils.FileUtils.getFileName(requireContext(), fileUri);
-		if (fileName == null) return;
+		if (fileName == null) {
+			// If not yet cached, fetch in background or just use temporary
+			new Thread(() -> {
+				String name = com.cs.ide.app.utils.FileUtils.getFileName(requireContext(), fileUri);
+				if (isAdded()) {
+					getActivity().runOnUiThread(() -> {
+						this.fileName = name;
+						detectAndApplyLanguage();
+					});
+				}
+			}).start();
+			return;
+		}
 
 		int lastDotIndex = fileName.lastIndexOf('.');
 		String extension = lastDotIndex > 0 ? fileName.substring(lastDotIndex) : "";
@@ -361,6 +373,15 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 			Log.e(TAG, "Error getting contents from editor", e);
 			return null;
 		}
+	}
+
+	/**
+	 * Gets the editor's text content object.
+	 *
+	 * @return The Content object.
+	 */
+	public Content getEditorText() {
+		return fileContent != null ? fileContent.getText() : null;
 	}
 
 	/**

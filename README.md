@@ -16,11 +16,13 @@ workspace where your code and terminal breathe together.
 - **Package Management**: Built-in `apt` and `pkg` management for installing compilers, runtimes,
   and utilities (Python, Node.js, C++, etc.).
 - **Modern UI**: Material Design 3 interface with dynamic themes and customizable layouts. The
-  interface is highly optimized for performance, ensuring smooth transitions and responsiveness even
-  under heavy file operations.
+  interface is highly optimized for performance, with asynchronous metadata loading and
+  background text processing to ensure a 60 FPS experience and zero UI thread blocking.
 - **File Management**: Advanced file explorer with support for Android Storage Access Framework (
-  SAF). Features a multi-threaded architecture for high-speed file discovery, loading, and saving
-  without UI lag.
+  SAF). Features a multi-threaded architecture for high-speed file discovery, and a smart "Save As"
+  workflow that maintains your workspace layout.
+- **Web Development**: Built-in support for running HTML files directly in external browsers with
+  automatic compatibility patching for modern Android versions.
 - **Workspace Support**: Organize your projects into workspaces for better productivity.
 
 ## 📁 Project Structure
