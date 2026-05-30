@@ -20,225 +20,64 @@ import java.util.List;
  */
 public final class TermuxConstants {
 
-
-	/*
-	 * Termux organization variables.
-	 */
-
-	/**
-	 * Termux GitHub organization name
-	 */
-	public static final String TERMUX_GITHUB_ORGANIZATION_NAME = "termux"; // Default: "termux"
-	/**
-	 * Termux GitHub organization url
-	 */
-	public static final String TERMUX_GITHUB_ORGANIZATION_URL = "https://github.com" + "/" + TERMUX_GITHUB_ORGANIZATION_NAME; // Default: "https://github.com/termux"
-	/**
-	 * F-Droid packages base url
-	 */
-	public static final String FDROID_PACKAGES_BASE_URL = "https://f-droid.org/en/packages"; // Default: "https://f-droid.org/en/packages"
-	/*
-	 * Termux and its plugin app and package names and urls.
-	 */
-	/**
-	 * Termux app name
-	 */
-	public static final String TERMUX_APP_NAME = "Termux"; // Default: "Termux"
-	/**
-	 * Termux package name
-	 */
-	public static final String TERMUX_PACKAGE_NAME = "com.cs.ide"; // Default: "com.termux"
-	/**
-	 * Termux GitHub repo name
-	 */
-	public static final String TERMUX_GITHUB_REPO_NAME = "termux-app"; // Default: "termux-app"
-	/**
-	 * Termux GitHub repo url
-	 */
-	public static final String TERMUX_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-app"
-	/**
-	 * Termux GitHub issues repo url
-	 */
-	public static final String TERMUX_GITHUB_ISSUES_REPO_URL = TERMUX_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-app/issues"
-	/**
-	 * Termux GitHub wiki repo url
-	 */
-	public static final String TERMUX_GITHUB_WIKI_REPO_URL = TERMUX_GITHUB_REPO_URL + "/wiki"; // Default: "https://github.com/termux/termux-app/wiki"
-	/**
-	 * Termux F-Droid package url
-	 */
-	public static final String TERMUX_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_PACKAGE_NAME; // Default: "https://f-droid.org/en/packages/com.termux"
-	/**
-	 * Termux:API app name
-	 */
-	public static final String TERMUX_API_APP_NAME = "Termux:API"; // Default: "Termux:API"
-	/**
-	 * Termux:API app package name
-	 */
-	public static final String TERMUX_API_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".api"; // Default: "com.termux.api"
-	/**
-	 * Termux:API F-Droid package url
-	 */
-	public static final String TERMUX_API_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_API_PACKAGE_NAME; // Default: "https://f-droid.org/en/packages/com.termux.api"
-	/**
-	 * Termux:API app default SharedPreferences file basename without extension
-	 */
-	public static final String TERMUX_API_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_API_PACKAGE_NAME + "_preferences"; // Default: "com.termux.api_preferences"
-	/**
-	 * Termux:API GitHub repo name
-	 */
-	public static final String TERMUX_API_GITHUB_REPO_NAME = "termux-api"; // Default: "termux-api"
-	/**
-	 * Termux:API GitHub repo url
-	 */
-	public static final String TERMUX_API_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_API_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-api"
-	/**
-	 * Termux:API GitHub issues repo url
-	 */
-	public static final String TERMUX_API_GITHUB_ISSUES_REPO_URL = TERMUX_API_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-api/issues"
-	/**
-	 * Termux:Boot app name
-	 */
-	public static final String TERMUX_BOOT_APP_NAME = "Termux:Boot"; // Default: "Termux:Boot"
-	/**
-	 * Termux:Boot app package name
-	 */
-	public static final String TERMUX_BOOT_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".boot"; // Default: "com.termux.boot"
-	/**
-	 * Termux:Boot F-Droid package url
-	 */
-	public static final String TERMUX_BOOT_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_BOOT_PACKAGE_NAME; // Default: "https://f-droid.org/en/packages/com.termux.boot"
-	/**
-	 * Termux:Boot app default SharedPreferences file basename without extension
-	 */
-	public static final String TERMUX_BOOT_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_BOOT_PACKAGE_NAME + "_preferences"; // Default: "com.termux.boot_preferences"
-	/**
-	 * Termux:Boot GitHub repo name
-	 */
-	public static final String TERMUX_BOOT_GITHUB_REPO_NAME = "termux-boot"; // Default: "termux-boot"
-	/**
-	 * Termux:Boot GitHub repo url
-	 */
-	public static final String TERMUX_BOOT_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_BOOT_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-boot"
-	/**
-	 * Termux:Boot GitHub issues repo url
-	 */
-	public static final String TERMUX_BOOT_GITHUB_ISSUES_REPO_URL = TERMUX_BOOT_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-boot/issues"
-	/**
-	 * Termux:Float app name
-	 */
-	public static final String TERMUX_FLOAT_APP_NAME = "Termux:Float"; // Default: "Termux:Float"
-	/**
-	 * Termux:Float app package name
-	 */
-	public static final String TERMUX_FLOAT_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".window"; // Default: "com.termux.window"
-	/**
-	 * Termux:Float F-Droid package url
-	 */
-	public static final String TERMUX_FLOAT_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_FLOAT_PACKAGE_NAME; // Default: "https://f-droid.org/en/packages/com.termux.window"
-	/**
-	 * Termux:Float app default SharedPreferences file basename without extension
-	 */
-	public static final String TERMUX_FLOAT_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_FLOAT_PACKAGE_NAME + "_preferences"; // Default: "com.termux.window_preferences"
-	/**
-	 * Termux:Float GitHub repo name
-	 */
-	public static final String TERMUX_FLOAT_GITHUB_REPO_NAME = "termux-float"; // Default: "termux-float"
-	/**
-	 * Termux:Float GitHub repo url
-	 */
-	public static final String TERMUX_FLOAT_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_FLOAT_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-float"
-	/**
-	 * Termux:Float GitHub issues repo url
-	 */
-	public static final String TERMUX_FLOAT_GITHUB_ISSUES_REPO_URL = TERMUX_FLOAT_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-float/issues"
-	/**
-	 * Termux:Styling app name
-	 */
-	public static final String TERMUX_STYLING_APP_NAME = "Termux:Styling"; // Default: "Termux:Styling"
-	/**
-	 * Termux:Styling app package name
-	 */
-	public static final String TERMUX_STYLING_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".styling"; // Default: "com.termux.styling"
-	/**
-	 * Termux:Styling F-Droid package url
-	 */
-	public static final String TERMUX_STYLING_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_STYLING_PACKAGE_NAME; // Default: "https://f-droid.org/en/packages/com.termux.styling"
-	/**
-	 * Termux:Styling app default SharedPreferences file basename without extension
-	 */
-	public static final String TERMUX_STYLING_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_STYLING_PACKAGE_NAME + "_preferences"; // Default: "com.termux.styling_preferences"
-	/**
-	 * Termux:Styling GitHub repo name
-	 */
-	public static final String TERMUX_STYLING_GITHUB_REPO_NAME = "termux-styling"; // Default: "termux-styling"
-	/**
-	 * Termux:Styling GitHub repo url
-	 */
-	public static final String TERMUX_STYLING_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_STYLING_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-styling"
-	/**
-	 * Termux:Styling GitHub issues repo url
-	 */
-	public static final String TERMUX_STYLING_GITHUB_ISSUES_REPO_URL = TERMUX_STYLING_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-styling/issues"
-	/**
-	 * Termux:Tasker app name
-	 */
-	public static final String TERMUX_TASKER_APP_NAME = "Termux:Tasker"; // Default: "Termux:Tasker"
-	/**
-	 * Termux:Tasker app package name
-	 */
-	public static final String TERMUX_TASKER_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".tasker"; // Default: "com.termux.tasker"
-	/**
-	 * Termux:Tasker F-Droid package url
-	 */
-	public static final String TERMUX_TASKER_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_TASKER_PACKAGE_NAME; // Default: "https://f-droid.org/en/packages/com.termux.tasker"
-	/**
-	 * Termux:Tasker app default SharedPreferences file basename without extension
-	 */
-	public static final String TERMUX_TASKER_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_TASKER_PACKAGE_NAME + "_preferences"; // Default: "com.termux.tasker_preferences"
-	/**
-	 * Termux:Tasker GitHub repo name
-	 */
-	public static final String TERMUX_TASKER_GITHUB_REPO_NAME = "termux-tasker"; // Default: "termux-tasker"
-	/**
-	 * Termux:Tasker GitHub repo url
-	 */
-	public static final String TERMUX_TASKER_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_TASKER_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-tasker"
-	/**
-	 * Termux:Tasker GitHub issues repo url
-	 */
-	public static final String TERMUX_TASKER_GITHUB_ISSUES_REPO_URL = TERMUX_TASKER_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-tasker/issues"
-
-
-
-
-
-	/*
-	 * Termux plugin apps lists.
-	 */
-	/**
-	 * Termux:Widget app name
-	 */
-	public static final String TERMUX_WIDGET_APP_NAME = "Termux:Widget"; // Default: "Termux:Widget"
-	/**
-	 * Termux:Widget app package name
-	 */
-	public static final String TERMUX_WIDGET_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".widget"; // Default: "com.termux.widget"
-
-
-
-
-
-	/*
-	 * Termux APK releases.
-	 */
-	/**
-	 * Termux:Widget F-Droid package url
-	 */
-	public static final String TERMUX_WIDGET_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_WIDGET_PACKAGE_NAME; // Default: "https://f-droid.org/en/packages/com.termux.widget"
+	/* Termux organization and GitHub variables */
+	public static final String TERMUX_GITHUB_ORGANIZATION_NAME = "termux";
+	public static final String TERMUX_GITHUB_ORGANIZATION_URL = "https://github.com/" + TERMUX_GITHUB_ORGANIZATION_NAME;
+	public static final String FDROID_PACKAGES_BASE_URL = "https://f-droid.org/en/packages";
+	/* App and Package names/URLs */
+	public static final String TERMUX_APP_NAME = "Termux";
+	public static final String TERMUX_PACKAGE_NAME = "com.cs.ide";
+	public static final String TERMUX_GITHUB_REPO_NAME = "termux-app";
+	public static final String TERMUX_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_GITHUB_REPO_NAME;
+	public static final String TERMUX_GITHUB_ISSUES_REPO_URL = TERMUX_GITHUB_REPO_URL + "/issues";
+	public static final String TERMUX_GITHUB_WIKI_REPO_URL = TERMUX_GITHUB_REPO_URL + "/wiki";
+	public static final String TERMUX_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_PACKAGE_NAME;
+	/* Plugin App Names and Packages */
+	public static final String TERMUX_API_APP_NAME = "Termux:API";
+	public static final String TERMUX_API_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".api";
+	public static final String TERMUX_API_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_API_PACKAGE_NAME;
+	public static final String TERMUX_API_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_API_PACKAGE_NAME + "_preferences";
+	public static final String TERMUX_API_GITHUB_REPO_NAME = "termux-api";
+	public static final String TERMUX_API_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_API_GITHUB_REPO_NAME;
+	public static final String TERMUX_API_GITHUB_ISSUES_REPO_URL = TERMUX_API_GITHUB_REPO_URL + "/issues";
+	public static final String TERMUX_BOOT_APP_NAME = "Termux:Boot";
+	public static final String TERMUX_BOOT_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".boot";
+	public static final String TERMUX_BOOT_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_BOOT_PACKAGE_NAME;
+	public static final String TERMUX_BOOT_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_BOOT_PACKAGE_NAME + "_preferences";
+	public static final String TERMUX_BOOT_GITHUB_REPO_NAME = "termux-boot";
+	public static final String TERMUX_BOOT_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_BOOT_GITHUB_REPO_NAME;
+	public static final String TERMUX_BOOT_GITHUB_ISSUES_REPO_URL = TERMUX_BOOT_GITHUB_REPO_URL + "/issues";
+	public static final String TERMUX_FLOAT_APP_NAME = "Termux:Float";
+	public static final String TERMUX_FLOAT_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".window";
+	public static final String TERMUX_FLOAT_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_FLOAT_PACKAGE_NAME;
+	public static final String TERMUX_FLOAT_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_FLOAT_PACKAGE_NAME + "_preferences";
+	public static final String TERMUX_FLOAT_GITHUB_REPO_NAME = "termux-float";
+	public static final String TERMUX_FLOAT_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_FLOAT_GITHUB_REPO_NAME;
+	public static final String TERMUX_FLOAT_GITHUB_ISSUES_REPO_URL = TERMUX_FLOAT_GITHUB_REPO_URL + "/issues";
+	/* Plugin App Names and Packages */
+	public static final String TERMUX_STYLING_APP_NAME = "Termux:Styling";
+	public static final String TERMUX_STYLING_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".styling";
+	public static final String TERMUX_STYLING_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_STYLING_PACKAGE_NAME;
+	public static final String TERMUX_STYLING_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_STYLING_PACKAGE_NAME + "_preferences";
+	public static final String TERMUX_STYLING_GITHUB_REPO_NAME = "termux-styling";
+	public static final String TERMUX_STYLING_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_STYLING_GITHUB_REPO_NAME;
+	public static final String TERMUX_STYLING_GITHUB_ISSUES_REPO_URL = TERMUX_STYLING_GITHUB_REPO_URL + "/issues";
+	public static final String TERMUX_TASKER_APP_NAME = "Termux:Tasker";
+	public static final String TERMUX_TASKER_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".tasker";
+	public static final String TERMUX_TASKER_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_TASKER_PACKAGE_NAME;
+	public static final String TERMUX_TASKER_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_TASKER_PACKAGE_NAME + "_preferences";
+	public static final String TERMUX_TASKER_GITHUB_REPO_NAME = "termux-tasker";
+	public static final String TERMUX_TASKER_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_TASKER_GITHUB_REPO_NAME;
+	public static final String TERMUX_TASKER_GITHUB_ISSUES_REPO_URL = TERMUX_TASKER_GITHUB_REPO_URL + "/issues";
+	/* Termux Widget constants */
+	public static final String TERMUX_WIDGET_APP_NAME = "Termux:Widget";
+	public static final String TERMUX_WIDGET_PACKAGE_NAME = TERMUX_PACKAGE_NAME + ".widget";
+	public static final String TERMUX_WIDGET_FDROID_PACKAGE_URL = FDROID_PACKAGES_BASE_URL + "/" + TERMUX_WIDGET_PACKAGE_NAME;
+	public static final String TERMUX_WIDGET_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_WIDGET_PACKAGE_NAME + "_preferences";
 	/*
 	 * Termux packages urls.
 	 */
+	/* Termux Plugin App Lists */
 	public static final List<String> TERMUX_PLUGIN_APP_PACKAGE_NAMES_LIST = Arrays.asList(
 			TERMUX_API_PACKAGE_NAME,
 			TERMUX_BOOT_PACKAGE_NAME,
@@ -246,22 +85,9 @@ public final class TermuxConstants {
 			TERMUX_STYLING_PACKAGE_NAME,
 			TERMUX_TASKER_PACKAGE_NAME,
 			TERMUX_WIDGET_PACKAGE_NAME);
-	/**
-	 * Termux:Widget app default SharedPreferences file basename without extension
-	 */
-	public static final String TERMUX_WIDGET_DEFAULT_PREFERENCES_FILE_BASENAME_WITHOUT_EXTENSION = TERMUX_WIDGET_PACKAGE_NAME + "_preferences"; // Default: "com.termux.widget_preferences"
-	/**
-	 * Termux:Widget GitHub repo name
-	 */
-	public static final String TERMUX_WIDGET_GITHUB_REPO_NAME = "termux-widget"; // Default: "termux-widget"
-	/**
-	 * Termux:Widget GitHub repo url
-	 */
-	public static final String TERMUX_WIDGET_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_WIDGET_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-widget"
-	/**
-	 * Termux:Widget GitHub issues repo url
-	 */
-	public static final String TERMUX_WIDGET_GITHUB_ISSUES_REPO_URL = TERMUX_WIDGET_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-widget/issues"
+	public static final String TERMUX_WIDGET_GITHUB_REPO_NAME = "termux-widget";
+	public static final String TERMUX_WIDGET_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_WIDGET_GITHUB_REPO_NAME;
+	public static final String TERMUX_WIDGET_GITHUB_ISSUES_REPO_URL = TERMUX_WIDGET_GITHUB_REPO_URL + "/issues";
 	public static final List<String> TERMUX_PLUGIN_APP_NAMES_LIST = Arrays.asList(
 			TERMUX_API_APP_NAME,
 			TERMUX_BOOT_APP_NAME,
@@ -269,247 +95,70 @@ public final class TermuxConstants {
 			TERMUX_STYLING_APP_NAME,
 			TERMUX_TASKER_APP_NAME,
 			TERMUX_WIDGET_APP_NAME);
-	/**
-	 * F-Droid APK release
-	 */
-	public static final String APK_RELEASE_FDROID = "F-Droid"; // Default: "F-Droid"
-	/**
-	 * F-Droid APK release signing certificate SHA-256 digest
-	 */
-	public static final String APK_RELEASE_FDROID_SIGNING_CERTIFICATE_SHA256_DIGEST = "228FB2CFE90831C1499EC3CCAF61E96E8E1CE70766B9474672CE427334D41C42"; // Default: "228FB2CFE90831C1499EC3CCAF61E96E8E1CE70766B9474672CE427334D41C42"
-	/**
-	 * GitHub APK release
-	 */
-	public static final String APK_RELEASE_GITHUB = "Github"; // Default: "Github"
-	/**
-	 * GitHub APK release signing certificate SHA-256 digest
-	 */
-	public static final String APK_RELEASE_GITHUB_SIGNING_CERTIFICATE_SHA256_DIGEST = "B6DA01480EEFD5FBF2CD3771B8D1021EC791304BDD6C4BF41D3FAABAD48EE5E1"; // Default: "B6DA01480EEFD5FBF2CD3771B8D1021EC791304BDD6C4BF41D3FAABAD48EE5E1"
-	/**
-	 * Google Play Store APK release
-	 */
-	public static final String APK_RELEASE_GOOGLE_PLAYSTORE = "Google Play Store"; // Default: "Google Play Store"
-	/**
-	 * Google Play Store APK release signing certificate SHA-256 digest
-	 */
-	public static final String APK_RELEASE_GOOGLE_PLAYSTORE_SIGNING_CERTIFICATE_SHA256_DIGEST = "738F0A30A04D3C8A1BE304AF18D0779BCF3EA88FB60808F657A3521861C2EBF9"; // Default: "738F0A30A04D3C8A1BE304AF18D0779BCF3EA88FB60808F657A3521861C2EBF9"
-	/**
-	 * Termux Devs APK release
-	 */
-	public static final String APK_RELEASE_TERMUX_DEVS = "Termux Devs"; // Default: "Termux Devs"
-	/**
-	 * Termux Devs APK release signing certificate SHA-256 digest
-	 */
-	public static final String APK_RELEASE_TERMUX_DEVS_SIGNING_CERTIFICATE_SHA256_DIGEST = "F7A038EB551F1BE8FDF388686B784ABAB4552A5D82DF423E3D8F1B5CBE1C69AE"; // Default: "F7A038EB551F1BE8FDF388686B784ABAB4552A5D82DF423E3D8F1B5CBE1C69AE"
-
-
-
-
-
+	/* APK Release Types and Signing Digests */
+	public static final String APK_RELEASE_FDROID = "F-Droid";
+	public static final String APK_RELEASE_FDROID_SIGNING_CERTIFICATE_SHA256_DIGEST = "228FB2CFE90831C1499EC3CCAF61E96E8E1CE70766B9474672CE427334D41C42";
+	public static final String APK_RELEASE_GITHUB = "Github";
+	public static final String APK_RELEASE_GITHUB_SIGNING_CERTIFICATE_SHA256_DIGEST = "B6DA01480EEFD5FBF2CD3771B8D1021EC791304BDD6C4BF41D3FAABAD48EE5E1";
+	public static final String APK_RELEASE_GOOGLE_PLAYSTORE = "Google Play Store";
+	public static final String APK_RELEASE_GOOGLE_PLAYSTORE_SIGNING_CERTIFICATE_SHA256_DIGEST = "738F0A30A04D3C8A1BE304AF18D0779BCF3EA88FB60808F657A3521861C2EBF9";
+	public static final String APK_RELEASE_TERMUX_DEVS = "Termux Devs";
+	public static final String APK_RELEASE_TERMUX_DEVS_SIGNING_CERTIFICATE_SHA256_DIGEST = "F7A038EB551F1BE8FDF388686B784ABAB4552A5D82DF423E3D8F1B5CBE1C69AE";
 	/*
 	 * Termux miscellaneous urls.
 	 */
-	/**
-	 * Termux Packages GitHub repo name
-	 */
-	public static final String TERMUX_PACKAGES_GITHUB_REPO_NAME = "termux-packages"; // Default: "termux-packages"
-	/**
-	 * Termux Packages GitHub repo url
-	 */
-	public static final String TERMUX_PACKAGES_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_PACKAGES_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-packages"
-	/**
-	 * Termux Packages GitHub issues repo url
-	 */
-	public static final String TERMUX_PACKAGES_GITHUB_ISSUES_REPO_URL = TERMUX_PACKAGES_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-packages/issues"
-	/**
-	 * Termux Packages wiki repo url
-	 */
-	public static final String TERMUX_PACKAGES_GITHUB_WIKI_REPO_URL = TERMUX_PACKAGES_GITHUB_REPO_URL + "/wiki"; // Default: "https://github.com/termux/termux-packages/wiki"
-	/**
-	 * Termux API apt package name
-	 */
-	public static final String TERMUX_API_APT_PACKAGE_NAME = "termux-api"; // Default: "termux-api"
-	/**
-	 * Termux API apt GitHub repo name
-	 */
-	public static final String TERMUX_API_APT_GITHUB_REPO_NAME = "termux-api-package"; // Default: "termux-api-package"
-	/**
-	 * Termux API apt GitHub repo url
-	 */
-	public static final String TERMUX_API_APT_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_API_APT_GITHUB_REPO_NAME; // Default: "https://github.com/termux/termux-api-package"
-	/**
-	 * Termux API apt GitHub issues repo url
-	 */
-	public static final String TERMUX_API_APT_GITHUB_ISSUES_REPO_URL = TERMUX_API_APT_GITHUB_REPO_URL + "/issues"; // Default: "https://github.com/termux/termux-api-package/issues"
-	/**
-	 * Termux Site
-	 */
-	public static final String TERMUX_SITE = TERMUX_APP_NAME + " Site"; // Default: "Termux Site"
-	/**
-	 * Termux Site url
-	 */
-	public static final String TERMUX_SITE_URL = "https://termux.dev"; // Default: "https://termux.dev"
-	/**
-	 * Termux Wiki
-	 */
-	public static final String TERMUX_WIKI = TERMUX_APP_NAME + " Wiki"; // Default: "Termux Wiki"
+	/* Termux Repository and Documentation URLs */
+	public static final String TERMUX_PACKAGES_GITHUB_REPO_NAME = "termux-packages";
+	public static final String TERMUX_PACKAGES_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_PACKAGES_GITHUB_REPO_NAME;
+	public static final String TERMUX_PACKAGES_GITHUB_ISSUES_REPO_URL = TERMUX_PACKAGES_GITHUB_REPO_URL + "/issues";
+	public static final String TERMUX_PACKAGES_GITHUB_WIKI_REPO_URL = TERMUX_PACKAGES_GITHUB_REPO_URL + "/wiki";
+	public static final String TERMUX_API_APT_PACKAGE_NAME = "termux-api";
+	public static final String TERMUX_API_APT_GITHUB_REPO_NAME = "termux-api-package";
+	public static final String TERMUX_API_APT_GITHUB_REPO_URL = TERMUX_GITHUB_ORGANIZATION_URL + "/" + TERMUX_API_APT_GITHUB_REPO_NAME;
+	public static final String TERMUX_API_APT_GITHUB_ISSUES_REPO_URL = TERMUX_API_APT_GITHUB_REPO_URL + "/issues";
+	public static final String TERMUX_SITE = TERMUX_APP_NAME + " Site";
+	public static final String TERMUX_SITE_URL = "https://termux.dev";
+	public static final String TERMUX_WIKI = TERMUX_APP_NAME + " Wiki";
+	public static final String TERMUX_WIKI_URL = "https://wiki.termux.com";
+	public static final String TERMUX_SUPPORT_EMAIL_URL = "support@termux.dev";
+	public static final String TERMUX_SUPPORT_EMAIL_MAILTO_URL = "mailto:" + TERMUX_SUPPORT_EMAIL_URL;
+	public static final String TERMUX_REDDIT_SUBREDDIT = "r/termux";
+	public static final String TERMUX_REDDIT_SUBREDDIT_URL = "https://www.reddit.com/r/termux";
+	public static final String TERMUX_DONATE_URL = TERMUX_SITE_URL + "/donate";
 
-
-
-
-
-	/*
-	 * Termux app core directory paths.
-	 */
-	/**
-	 * Termux Wiki url
-	 */
-	public static final String TERMUX_WIKI_URL = "https://wiki.termux.com"; // Default: "https://wiki.termux.com"
-	/**
-	 * Termux support email url
-	 */
-	public static final String TERMUX_SUPPORT_EMAIL_URL = "support@termux.dev"; // Default: "support@termux.dev"
-	/**
-	 * Termux support email mailto url
-	 */
-	public static final String TERMUX_SUPPORT_EMAIL_MAILTO_URL = "mailto:" + TERMUX_SUPPORT_EMAIL_URL; // Default: "mailto:support@termux.dev"
-	/**
-	 * Termux Reddit subreddit
-	 */
-	public static final String TERMUX_REDDIT_SUBREDDIT = "r/termux"; // Default: "r/termux"
-	/**
-	 * Termux Reddit subreddit url
-	 */
-	public static final String TERMUX_REDDIT_SUBREDDIT_URL = "https://www.reddit.com/r/termux"; // Default: "https://www.reddit.com/r/termux"
-	/**
-	 * Termux donate url
-	 */
-	public static final String TERMUX_DONATE_URL = TERMUX_SITE_URL + "/donate"; // Default: "https://termux.dev/donate"
-	/**
-	 * Termux app internal private app data directory path
-	 */
+	/* Internal Directory Paths */
 	@SuppressLint("SdCardPath")
-	public static final String TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH = "/data/data/" + TERMUX_PACKAGE_NAME; // Default: "/data/data/com.termux"
-	/**
-	 * Termux app internal private app data directory
-	 */
+	public static final String TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH = "/data/data/" + TERMUX_PACKAGE_NAME;
 	public static final File TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR = new File(TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH);
-	/**
-	 * Termux app Files directory path
-	 */
-	public static final String TERMUX_FILES_DIR_PATH = TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH + "/files"; // Default: "/data/data/com.termux/files"
-	/**
-	 * Termux app Files directory
-	 */
+	public static final String TERMUX_FILES_DIR_PATH = TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH + "/files";
 	public static final File TERMUX_FILES_DIR = new File(TERMUX_FILES_DIR_PATH);
-	/**
-	 * Termux app $PREFIX directory path
-	 */
-	public static final String TERMUX_PREFIX_DIR_PATH = TERMUX_FILES_DIR_PATH + "/usr"; // Default: "/data/data/com.termux/files/usr"
-	/**
-	 * Termux app $PREFIX directory
-	 */
+	public static final String TERMUX_PREFIX_DIR_PATH = TERMUX_FILES_DIR_PATH + "/usr";
 	public static final File TERMUX_PREFIX_DIR = new File(TERMUX_PREFIX_DIR_PATH);
-	/**
-	 * Termux app $PREFIX/bin directory path
-	 */
-	public static final String TERMUX_BIN_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/bin"; // Default: "/data/data/com.termux/files/usr/bin"
-	/**
-	 * Termux app $PREFIX/bin directory
-	 */
+	public static final String TERMUX_BIN_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/bin";
 	public static final File TERMUX_BIN_PREFIX_DIR = new File(TERMUX_BIN_PREFIX_DIR_PATH);
-	/**
-	 * Termux app $PREFIX/etc directory path
-	 */
-	public static final String TERMUX_ETC_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/etc"; // Default: "/data/data/com.termux/files/usr/etc"
-	/**
-	 * Termux app $PREFIX/etc directory
-	 */
+	public static final String TERMUX_ETC_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/etc";
 	public static final File TERMUX_ETC_PREFIX_DIR = new File(TERMUX_ETC_PREFIX_DIR_PATH);
-	/**
-	 * Termux app config $PREFIX directory path
-	 */
-	public static final String TERMUX_CONFIG_PREFIX_DIR_PATH = TERMUX_ETC_PREFIX_DIR_PATH + "/termux"; // Default: "/data/data/com.termux/files/usr/etc/termux"
-	/**
-	 * Termux app config $PREFIX directory
-	 */
+	public static final String TERMUX_CONFIG_PREFIX_DIR_PATH = TERMUX_ETC_PREFIX_DIR_PATH + "/termux";
 	public static final File TERMUX_CONFIG_PREFIX_DIR = new File(TERMUX_CONFIG_PREFIX_DIR_PATH);
-	/**
-	 * Termux app environment file path
-	 */
-	public static final String TERMUX_ENV_FILE_PATH = TERMUX_CONFIG_PREFIX_DIR_PATH + "/termux.env"; // Default: "/data/data/com.termux/files/usr/etc/termux/termux.env"
-	/**
-	 * Termux app environment temp file path
-	 */
-	public static final String TERMUX_ENV_TEMP_FILE_PATH = TERMUX_CONFIG_PREFIX_DIR_PATH + "/termux.env.tmp"; // Default: "/data/data/com.termux/files/usr/etc/termux/termux.env.tmp"
-	/**
-	 * Termux app $PREFIX/include directory path
-	 */
-	public static final String TERMUX_INCLUDE_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/include"; // Default: "/data/data/com.termux/files/usr/include"
-	/**
-	 * Termux app $PREFIX/include directory
-	 */
+	public static final String TERMUX_ENV_FILE_PATH = TERMUX_CONFIG_PREFIX_DIR_PATH + "/termux.env";
+	public static final String TERMUX_ENV_TEMP_FILE_PATH = TERMUX_CONFIG_PREFIX_DIR_PATH + "/termux.env.tmp";
+	public static final String TERMUX_INCLUDE_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/include";
 	public static final File TERMUX_INCLUDE_PREFIX_DIR = new File(TERMUX_INCLUDE_PREFIX_DIR_PATH);
-	/**
-	 * Termux app $PREFIX/lib directory path
-	 */
-	public static final String TERMUX_LIB_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/lib"; // Default: "/data/data/com.termux/files/usr/lib"
-	/**
-	 * Termux app $PREFIX/lib directory
-	 */
+	public static final String TERMUX_LIB_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/lib";
 	public static final File TERMUX_LIB_PREFIX_DIR = new File(TERMUX_LIB_PREFIX_DIR_PATH);
-	/**
-	 * Termux app $PREFIX/libexec directory path
-	 */
-	public static final String TERMUX_LIBEXEC_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/libexec"; // Default: "/data/data/com.termux/files/usr/libexec"
-	/**
-	 * Termux app $PREFIX/libexec directory
-	 */
+	public static final String TERMUX_LIBEXEC_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/libexec";
 	public static final File TERMUX_LIBEXEC_PREFIX_DIR = new File(TERMUX_LIBEXEC_PREFIX_DIR_PATH);
-	/**
-	 * Termux app $PREFIX/share directory path
-	 */
-	public static final String TERMUX_SHARE_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/share"; // Default: "/data/data/com.termux/files/usr/share"
-	/**
-	 * Termux app $PREFIX/share directory
-	 */
+	public static final String TERMUX_SHARE_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/share";
 	public static final File TERMUX_SHARE_PREFIX_DIR = new File(TERMUX_SHARE_PREFIX_DIR_PATH);
-	/**
-	 * Termux app $PREFIX/tmp and $TMPDIR directory path
-	 */
-	public static final String TERMUX_TMP_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/tmp"; // Default: "/data/data/com.termux/files/usr/tmp"
-	/**
-	 * Termux app $PREFIX/tmp and $TMPDIR directory
-	 */
+	public static final String TERMUX_TMP_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/tmp";
 	public static final File TERMUX_TMP_PREFIX_DIR = new File(TERMUX_TMP_PREFIX_DIR_PATH);
-	/**
-	 * Termux app $PREFIX directory path ignored sub file paths to consider it empty
-	 */
 	public static final List<String> TERMUX_PREFIX_DIR_IGNORED_SUB_FILES_PATHS_TO_CONSIDER_AS_EMPTY = Arrays.asList(
 			TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH, TermuxConstants.TERMUX_ENV_TEMP_FILE_PATH, TermuxConstants.TERMUX_ENV_FILE_PATH);
-	/**
-	 * Termux app $PREFIX/var directory path
-	 */
-	public static final String TERMUX_VAR_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/var"; // Default: "/data/data/com.termux/files/usr/var"
-	/**
-	 * Termux app $PREFIX/var directory
-	 */
+	public static final String TERMUX_VAR_PREFIX_DIR_PATH = TERMUX_PREFIX_DIR_PATH + "/var";
 	public static final File TERMUX_VAR_PREFIX_DIR = new File(TERMUX_VAR_PREFIX_DIR_PATH);
-	/**
-	 * Termux app usr-staging directory path
-	 */
-	public static final String TERMUX_STAGING_PREFIX_DIR_PATH = TERMUX_FILES_DIR_PATH + "/usr-staging"; // Default: "/data/data/com.termux/files/usr-staging"
-	/**
-	 * Termux app usr-staging directory
-	 */
+	public static final String TERMUX_STAGING_PREFIX_DIR_PATH = TERMUX_FILES_DIR_PATH + "/usr-staging";
 	public static final File TERMUX_STAGING_PREFIX_DIR = new File(TERMUX_STAGING_PREFIX_DIR_PATH);
-	/**
-	 * Termux app $HOME directory path
-	 */
-	public static final String TERMUX_HOME_DIR_PATH = TERMUX_FILES_DIR_PATH + "/home"; // Default: "/data/data/com.termux/files/home"
-	/**
-	 * Termux app $HOME directory
-	 */
+	public static final String TERMUX_HOME_DIR_PATH = TERMUX_FILES_DIR_PATH + "/home";
 	public static final File TERMUX_HOME_DIR = new File(TERMUX_HOME_DIR_PATH);
 
 
@@ -689,215 +338,68 @@ public final class TermuxConstants {
 	 * run by the termux launcher widget provided by Termux:Widget
 	 */
 	public static final File TERMUX_SHORTCUT_SCRIPT_ICONS_DIR = new File(TERMUX_SHORTCUT_SCRIPT_ICONS_DIR_PATH);
-
-
-
-
-
-	/*
-	 * Termux app and plugins notification variables.
-	 */
-	/**
-	 * Termux app notification channel id used by {@link TERMUX_APP.TERMUX_SERVICE}
-	 */
+	/* Notification Channels and IDs */
 	public static final String TERMUX_APP_NOTIFICATION_CHANNEL_ID = "termux_notification_channel";
-	/**
-	 * Termux app notification channel name used by {@link TERMUX_APP.TERMUX_SERVICE}
-	 */
 	public static final String TERMUX_APP_NOTIFICATION_CHANNEL_NAME = TermuxConstants.TERMUX_APP_NAME + " App";
-	/**
-	 * Termux app unique notification id used by {@link TERMUX_APP.TERMUX_SERVICE}
-	 */
 	public static final int TERMUX_APP_NOTIFICATION_ID = 1337;
 
-	/**
-	 * Termux app notification channel id used by {@link TERMUX_APP.RUN_COMMAND_SERVICE}
-	 */
 	public static final String TERMUX_RUN_COMMAND_NOTIFICATION_CHANNEL_ID = "termux_run_command_notification_channel";
-	/**
-	 * Termux app notification channel name used by {@link TERMUX_APP.RUN_COMMAND_SERVICE}
-	 */
 	public static final String TERMUX_RUN_COMMAND_NOTIFICATION_CHANNEL_NAME = TermuxConstants.TERMUX_APP_NAME + " RunCommandService";
-	/**
-	 * Termux app unique notification id used by {@link TERMUX_APP.RUN_COMMAND_SERVICE}
-	 */
 	public static final int TERMUX_RUN_COMMAND_NOTIFICATION_ID = 1338;
 
-	/**
-	 * Termux app notification channel id used for plugin command errors
-	 */
 	public static final String TERMUX_PLUGIN_COMMAND_ERRORS_NOTIFICATION_CHANNEL_ID = "termux_plugin_command_errors_notification_channel";
-	/**
-	 * Termux app notification channel name used for plugin command errors
-	 */
 	public static final String TERMUX_PLUGIN_COMMAND_ERRORS_NOTIFICATION_CHANNEL_NAME = TermuxConstants.TERMUX_APP_NAME + " Plugin Commands Errors";
 
-	/**
-	 * Termux app notification channel id used for crash reports
-	 */
 	public static final String TERMUX_CRASH_REPORTS_NOTIFICATION_CHANNEL_ID = "termux_crash_reports_notification_channel";
-	/**
-	 * Termux app notification channel name used for crash reports
-	 */
 	public static final String TERMUX_CRASH_REPORTS_NOTIFICATION_CHANNEL_NAME = TermuxConstants.TERMUX_APP_NAME + " Crash Reports";
 
-
-	/**
-	 * Termux app notification channel id used by {@link TERMUX_FLOAT_APP.TERMUX_FLOAT_SERVICE}
-	 */
 	public static final String TERMUX_FLOAT_APP_NOTIFICATION_CHANNEL_ID = "termux_float_notification_channel";
-	/**
-	 * Termux app notification channel name used by {@link TERMUX_FLOAT_APP.TERMUX_FLOAT_SERVICE}
-	 */
 	public static final String TERMUX_FLOAT_APP_NOTIFICATION_CHANNEL_NAME = TermuxConstants.TERMUX_FLOAT_APP_NAME + " App";
-	/**
-	 * Termux app unique notification id used by {@link TERMUX_APP.TERMUX_SERVICE}
-	 */
 	public static final int TERMUX_FLOAT_APP_NOTIFICATION_ID = 1339;
 
-
-
-
-
-	/*
-	 * Termux app and plugins miscellaneous variables.
-	 */
-
-	/**
-	 * Android OS permission declared by Termux app in AndroidManifest.xml which can be requested by
-	 * 3rd party apps to run various commands in Termux app context
-	 */
-	public static final String PERMISSION_RUN_COMMAND = TERMUX_PACKAGE_NAME + ".permission.RUN_COMMAND"; // Default: "com.termux.permission.RUN_COMMAND"
-
-	/**
-	 * Termux property defined in termux.properties file as a secondary check to PERMISSION_RUN_COMMAND
-	 * to allow 3rd party apps to run various commands in Termux app context
-	 */
-	public static final String PROP_ALLOW_EXTERNAL_APPS = "allow-external-apps"; // Default: "allow-external-apps"
-	/**
-	 * Default value for {@link #PROP_ALLOW_EXTERNAL_APPS}
-	 */
-	public static final String PROP_DEFAULT_VALUE_ALLOW_EXTERNAL_APPS = "false"; // Default: "false"
-
-	/**
-	 * The broadcast action sent when Termux App opens
-	 */
+	/* Miscellaneous Actions and Permissions */
+	public static final String PERMISSION_RUN_COMMAND = TERMUX_PACKAGE_NAME + ".permission.RUN_COMMAND";
+	public static final String PROP_ALLOW_EXTERNAL_APPS = "allow-external-apps";
+	public static final String PROP_DEFAULT_VALUE_ALLOW_EXTERNAL_APPS = "false";
 	public static final String BROADCAST_TERMUX_OPENED = TERMUX_PACKAGE_NAME + ".app.OPENED";
-
-	/**
-	 * The Uri authority for Termux app file shares
-	 */
-	public static final String TERMUX_FILE_SHARE_URI_AUTHORITY = TERMUX_PACKAGE_NAME + ".files"; // Default: "com.termux.files"
-
-	/**
-	 * The normal comma character (U+002C, &comma;, &#44;, comma)
-	 */
-	public static final String COMMA_NORMAL = ","; // Default: ","
-
-	/**
-	 * The alternate comma character (U+201A, &sbquo;, &#8218;, single low-9 quotation mark) that
-	 * may be used instead of {@link #COMMA_NORMAL}
-	 */
-	public static final String COMMA_ALTERNATIVE = "‚"; // Default: "‚"
-
-	/**
-	 * Environment variable prefix root for the Termux app.
-	 */
+	public static final String TERMUX_FILE_SHARE_URI_AUTHORITY = TERMUX_PACKAGE_NAME + ".files";
+	public static final String COMMA_NORMAL = ",";
+	public static final String COMMA_ALTERNATIVE = "‚";
 	public static final String TERMUX_ENV_PREFIX_ROOT = "TERMUX";
 
 
 	/**
-	 * Termux app constants.
+	 * Constants specifically for the main Termux application.
 	 */
 	public static final class TERMUX_APP {
 
-		/**
-		 * Termux apps directory path
-		 */
-		public static final String APPS_DIR_PATH = TERMUX_APPS_DIR_PATH + "/" + TERMUX_PACKAGE_NAME; // Default: "/data/data/com.termux/files/apps/com.termux"
+		public static final String APPS_DIR_PATH = TERMUX_APPS_DIR_PATH + "/" + TERMUX_PACKAGE_NAME;
+		public static final String TERMUX_AM_SOCKET_FILE_PATH = APPS_DIR_PATH + "/termux-am/am.sock";
+
+		public static final String BUILD_CONFIG_CLASS_NAME = TERMUX_PACKAGE_NAME + ".BuildConfig";
+		public static final String FILE_SHARE_RECEIVER_ACTIVITY_CLASS_NAME = TERMUX_PACKAGE_NAME + ".app.api.file.FileShareReceiverActivity";
+		public static final String FILE_VIEW_RECEIVER_ACTIVITY_CLASS_NAME = TERMUX_PACKAGE_NAME + ".app.api.file.FileViewReceiverActivity";
+
+		public static final String TERMUX_ACTIVITY_NAME = TERMUX_PACKAGE_NAME + ".app.TermuxActivity";
+		public static final String TERMUX_SETTINGS_ACTIVITY_NAME = TERMUX_PACKAGE_NAME + ".app.activities.SettingsActivity";
+		public static final String TERMUX_SERVICE_NAME = TERMUX_PACKAGE_NAME + ".app.TermuxService";
+		public static final String RUN_COMMAND_SERVICE_NAME = TERMUX_PACKAGE_NAME + ".app.RunCommandService";
 
 		/**
-		 * termux-am socket file path
-		 */
-		public static final String TERMUX_AM_SOCKET_FILE_PATH = APPS_DIR_PATH + "/termux-am/am.sock"; // Default: "/data/data/com.termux/files/apps/com.termux/termux-am/am.sock"
-
-
-		/**
-		 * Termux app BuildConfig class name
-		 */
-		public static final String BUILD_CONFIG_CLASS_NAME = TERMUX_PACKAGE_NAME + ".BuildConfig"; // Default: "com.termux.BuildConfig"
-
-		/**
-		 * Termux app FileShareReceiverActivity class name
-		 */
-		public static final String FILE_SHARE_RECEIVER_ACTIVITY_CLASS_NAME = TERMUX_PACKAGE_NAME + ".app.api.file.FileShareReceiverActivity"; // Default: "com.termux.app.api.file.FileShareReceiverActivity"
-
-		/**
-		 * Termux app FileViewReceiverActivity class name
-		 */
-		public static final String FILE_VIEW_RECEIVER_ACTIVITY_CLASS_NAME = TERMUX_PACKAGE_NAME + ".app.api.file.FileViewReceiverActivity"; // Default: "com.termux.app.api.file.FileViewReceiverActivity"
-
-
-		/**
-		 * Termux app core activity name.
-		 */
-		public static final String TERMUX_ACTIVITY_NAME = TERMUX_PACKAGE_NAME + ".app.TermuxActivity"; // Default: "com.termux.app.TermuxActivity"
-		/**
-		 * Termux app settings activity name.
-		 */
-		public static final String TERMUX_SETTINGS_ACTIVITY_NAME = TERMUX_PACKAGE_NAME + ".app.activities.SettingsActivity"; // Default: "com.termux.app.activities.SettingsActivity"
-		/**
-		 * Termux app core service name.
-		 */
-		public static final String TERMUX_SERVICE_NAME = TERMUX_PACKAGE_NAME + ".app.TermuxService"; // Default: "com.termux.app.TermuxService"
-		/**
-		 * Termux app run command service name.
-		 */
-		public static final String RUN_COMMAND_SERVICE_NAME = TERMUX_PACKAGE_NAME + ".app.RunCommandService"; // Termux app service to receive commands from 3rd party apps "com.termux.app.RunCommandService"
-
-		/**
-		 * Termux app core activity.
+		 * Constants for TermuxActivity.
 		 */
 		public static final class TERMUX_ACTIVITY {
+			public static final String EXTRA_FAILSAFE_SESSION = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.failsafe_session";
+			public static final String ACTION_NOTIFY_APP_CRASH = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.notify_app_crash";
+			public static final String ACTION_RELOAD_STYLE = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.reload_style";
 
-			/**
-			 * Intent extra for if termux failsafe session needs to be started and is used by {@link TERMUX_ACTIVITY} and {@link TERMUX_SERVICE#ACTION_STOP_SERVICE}
-			 */
-			public static final String EXTRA_FAILSAFE_SESSION = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.failsafe_session"; // Default: "com.termux.app.failsafe_session"
-
-
-			/**
-			 * Intent action to make termux app notify user that a crash happened.
-			 */
-			public static final String ACTION_NOTIFY_APP_CRASH = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.notify_app_crash"; // Default: "com.termux.app.notify_app_crash"
-
-
-			/**
-			 * Intent action to make termux reload its termux session styling
-			 */
-			public static final String ACTION_RELOAD_STYLE = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.reload_style"; // Default: "com.termux.app.reload_style"
-			/**
-			 * Intent {@code String} extra for what to reload for the TERMUX_ACTIVITY.ACTION_RELOAD_STYLE intent. This has been deperecated.
-			 */
 			@Deprecated
-			public static final String EXTRA_RELOAD_STYLE = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.reload_style"; // Default: "com.termux.app.reload_style"
-
-			/**
-			 * Intent {@code boolean} extra for whether to recreate activity for the TERMUX_ACTIVITY.ACTION_RELOAD_STYLE intent.
-			 */
-			public static final String EXTRA_RECREATE_ACTIVITY = TERMUX_APP.TERMUX_ACTIVITY_NAME + ".EXTRA_RECREATE_ACTIVITY"; // Default: "com.termux.app.TermuxActivity.EXTRA_RECREATE_ACTIVITY"
-
-
-			/**
-			 * Intent action to make termux request storage permissions
-			 */
-			public static final String ACTION_REQUEST_PERMISSIONS = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.request_storage_permissions"; // Default: "com.termux.app.request_storage_permissions"
-
-			/**
-			 * Intent action to make termux app open a new window.
-			 */
-			public static final String ACTION_OPEN_NEW_WINDOW = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.open_new_window"; // Default: "com.termux.app.open_new_window"
+			public static final String EXTRA_RELOAD_STYLE = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.reload_style";
+			public static final String EXTRA_RECREATE_ACTIVITY = TERMUX_APP.TERMUX_ACTIVITY_NAME + ".EXTRA_RECREATE_ACTIVITY";
+			public static final String ACTION_REQUEST_PERMISSIONS = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.request_storage_permissions";
+			public static final String ACTION_OPEN_NEW_WINDOW = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.open_new_window";
 		}
+
 
 		/**
 		 * Termux app core service.
