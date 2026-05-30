@@ -126,6 +126,7 @@ public final class TermuxInstaller {
 					// Even if bootstrap is done, ensure bashrc is initialized/updated
 					com.cs.ide.app.utils.BashrcInitializer.initialize(activity);
 					setupBanner(activity, false);
+					updateScripts(activity);
 					setupStorageSymlinks(activity);
 					whenDone.run();
 					return;
@@ -234,66 +235,7 @@ public final class TermuxInstaller {
 					// Patch the bootstrap files to replace com.termux with current package name
 					TermuxPatcher.patchBootstrap(TERMUX_STAGING_PREFIX_DIR);
 
-					// Create am.jar symlink to the APK to allow 'am' command to work
-					// We use a relative symlink to the APK path to be safe, but absolute is usually fine.
-					try {
-						File amJar = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/am.jar");
-						FileUtils.deleteFile("am.jar symlink", amJar.getAbsolutePath(), true);
-						Os.symlink(activity.getPackageCodePath(), amJar.getAbsolutePath());
-						Logger.logInfo(LOG_TAG, "Created am.jar symlink: " + amJar.getAbsolutePath() + " -> " + activity.getPackageCodePath());
-
-						// Also create a small wrapper script for 'am' to ensure it uses the right class and classpath
-						File amScript = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/am");
-						String amContent = "#!/system/bin/sh\n" +
-								"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
-								"export ANDROID_DATA=\"" + TermuxConstants.TERMUX_FILES_DIR_PATH + "/usr/tmp\"\n" +
-								"unset LD_LIBRARY_PATH\n" +
-								"unset LD_PRELOAD\n" +
-								"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
-								"exec /system/bin/app_process /system/bin com.cs.ide.termuxam.Am \"$@\"\n";
-						FileUtils.writeTextToFile("am script", amScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), amContent, false);
-						Os.chmod(amScript.getAbsolutePath(), 0700);
-						Logger.logInfo(LOG_TAG, "Created custom am script at " + amScript.getAbsolutePath());
-
-						// Create package patcher script and apt hook
-						// Create the post-install patcher script
-						File patcherScript = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/termux-patch-packages");
-						String patcherContent = "#!/system/bin/sh\n" +
-								"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
-								"export ANDROID_DATA=\"" + TermuxConstants.TERMUX_FILES_DIR_PATH + "/usr/tmp\"\n" +
-								"unset LD_LIBRARY_PATH\n" +
-								"unset LD_PRELOAD\n" +
-								"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
-								"exec /system/bin/app_process /system/bin com.cs.ide.termux.app.TermuxPackagePatcher \"$@\"\n";
-						FileUtils.writeTextToFile("patcher script", patcherScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), patcherContent, false);
-						Os.chmod(patcherScript.getAbsolutePath(), 0700);
-
-						// Create the pre-install deb patcher script
-						File debPatcherScript = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/bin/termux-patch-debs");
-						String debPatcherContent = "#!/system/bin/sh\n" +
-								"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
-								"export ANDROID_DATA=\"" + TermuxConstants.TERMUX_FILES_DIR_PATH + "/usr/tmp\"\n" +
-								"unset LD_LIBRARY_PATH\n" +
-								"unset LD_PRELOAD\n" +
-								"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
-								"exec /system/bin/app_process /system/bin com.cs.ide.termux.app.TermuxPackagePatcher --stdin\n";
-						FileUtils.writeTextToFile("deb patcher script", debPatcherScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), debPatcherContent, false);
-						Os.chmod(debPatcherScript.getAbsolutePath(), 0700);
-
-						// Create apt hook directory if it doesn't exist
-						File aptConfDir = new File(TERMUX_STAGING_PREFIX_DIR_PATH + "/etc/apt/apt.conf.d");
-						if (!aptConfDir.exists()) aptConfDir.mkdirs();
-
-						// Create the apt hook
-						File aptHook = new File(aptConfDir, "99termux-patcher");
-						String aptHookContent = "DPkg::Pre-Install-Pkgs {\"" + TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/termux-patch-debs\";};\n" +
-								"DPkg::Tools::options::\"" + TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/termux-patch-debs\"::Version \"2\";\n" +
-								"DPkg::Post-Invoke {\"" + TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/termux-patch-packages\";};\n";
-						FileUtils.writeTextToFile("apt hook", aptHook.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), aptHookContent, false);
-						Logger.logInfo(LOG_TAG, "Created package patchers and apt hook at " + aptHook.getAbsolutePath());
-					} catch (Exception e) {
-						Logger.logError(LOG_TAG, "Failed to create am.jar/am script or package patcher: " + e.getMessage());
-					}
+					updateScriptsInDirectory(activity, TERMUX_STAGING_PREFIX_DIR_PATH);
 
 					Logger.logInfo(LOG_TAG, "Moving termux prefix staging to prefix directory.");
 
@@ -358,6 +300,68 @@ public final class TermuxInstaller {
 				// Activity already dismissed - ignore.
 			}
 		});
+	}
+
+	private static void updateScripts(Activity activity) {
+		updateScriptsInDirectory(activity, TERMUX_PREFIX_DIR_PATH);
+	}
+
+	private static void updateScriptsInDirectory(Activity activity, String prefixPath) {
+		try {
+			File amJar = new File(prefixPath + "/bin/am.jar");
+			FileUtils.deleteFile("am.jar symlink", amJar.getAbsolutePath(), true);
+			Os.symlink(activity.getPackageCodePath(), amJar.getAbsolutePath());
+
+			String cachePath = activity.getCacheDir().getAbsolutePath();
+
+			// am script
+			File amScript = new File(prefixPath + "/bin/am");
+			String amContent = "#!/system/bin/sh\n" +
+					"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
+					"export ANDROID_DATA=\"" + cachePath + "\"\n" +
+					"unset LD_LIBRARY_PATH\n" +
+					"unset LD_PRELOAD\n" +
+					"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
+					"exec /system/bin/app_process /system/bin com.cs.ide.termuxam.Am \"$@\"\n";
+			FileUtils.writeTextToFile("am script", amScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), amContent, false);
+			Os.chmod(amScript.getAbsolutePath(), 0700);
+
+			// Post-install patcher script
+			File patcherScript = new File(prefixPath + "/bin/termux-patch-packages");
+			String patcherContent = "#!/system/bin/sh\n" +
+					"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
+					"export ANDROID_DATA=\"" + cachePath + "\"\n" +
+					"unset LD_LIBRARY_PATH\n" +
+					"unset LD_PRELOAD\n" +
+					"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
+					"exec /system/bin/app_process /system/bin com.cs.ide.termux.app.TermuxPackagePatcher \"$@\"\n";
+			FileUtils.writeTextToFile("patcher script", patcherScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), patcherContent, false);
+			Os.chmod(patcherScript.getAbsolutePath(), 0700);
+
+			// Pre-install deb patcher script
+			File debPatcherScript = new File(prefixPath + "/bin/termux-patch-debs");
+			String debPatcherContent = "#!/system/bin/sh\n" +
+					"export CLASSPATH=\"" + activity.getPackageCodePath() + "\"\n" +
+					"export ANDROID_DATA=\"" + cachePath + "\"\n" +
+					"unset LD_LIBRARY_PATH\n" +
+					"unset LD_PRELOAD\n" +
+					"mkdir -p \"$ANDROID_DATA/dalvik-cache\"\n" +
+					"exec /system/bin/app_process /system/bin com.cs.ide.termux.app.TermuxPackagePatcher --stdin\n";
+			FileUtils.writeTextToFile("deb patcher script", debPatcherScript.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), debPatcherContent, false);
+			Os.chmod(debPatcherScript.getAbsolutePath(), 0700);
+
+			// Apt hook
+			File aptConfDir = new File(prefixPath + "/etc/apt/apt.conf.d");
+			if (!aptConfDir.exists()) aptConfDir.mkdirs();
+			File aptHook = new File(aptConfDir, "99termux-patcher");
+			String aptHookContent = "DPkg::Pre-Install-Pkgs {\"" + TERMUX_PREFIX_DIR_PATH + "/bin/termux-patch-debs\";};\n" +
+					"DPkg::Tools::options::\"" + TERMUX_PREFIX_DIR_PATH + "/bin/termux-patch-debs\"::Version \"2\";\n" +
+					"DPkg::Post-Invoke {\"" + TERMUX_PREFIX_DIR_PATH + "/bin/termux-patch-packages\";};\n";
+			FileUtils.writeTextToFile("apt hook", aptHook.getAbsolutePath(), java.nio.charset.Charset.defaultCharset(), aptHookContent, false);
+
+		} catch (Exception e) {
+			Logger.logError(LOG_TAG, "Failed to update scripts: " + e.getMessage());
+		}
 	}
 
 	private static void sendBootstrapCrashReportNotification(Activity activity, String message) {

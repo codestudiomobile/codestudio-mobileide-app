@@ -1,51 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <!--
-        ===== CODE STUDIO – "Code Studio Mobile IDE" One Dark Theme =====
-        Root theme for the entire app. Uses AppCompat (not Material3) so that
-        overflow/popup menus render with the correct dark background and white text.
-        colorPrimary / colorPrimaryDark / colorAccent match the original Code Studio Mobile IDE app.
-    -->
+    <!-- Main application theme (AppCompat) -->
     <style name="Theme.CodeStudio" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Code Studio Mobile IDE primary palette -->
         <item name="colorPrimary">@color/cc_primary_dark</item>
         <item name="colorPrimaryDark">@color/cc_primary_dark</item>
         <item name="colorAccent">@color/cc_accent</item>
 
-        <!-- Window -->
         <item name="android:windowBackground">@color/cc_primary_dark</item>
         <item name="android:colorBackground">@color/cc_primary_dark</item>
 
-        <!-- Status / nav bar -->
         <item name="android:statusBarColor" tools:targetApi="l">@color/cc_primary_dark</item>
         <item name="android:navigationBarColor" tools:targetApi="l">@color/cc_primary_dark</item>
 
-        <!-- Text -->
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColorSecondary">@color/grey_400</item>
         <item name="android:textColorLink">@color/cc_accent</item>
         <item name="android:textAllCaps">false</item>
 
-        <!-- ActionBar / Toolbar -->
         <item name="actionBarStyle">@style/CodeStudio.ActionBar</item>
         <item name="actionBarTheme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
         <item name="actionBarPopupTheme">@style/CodeStudio.PopupMenu</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
 
-        <!-- Popup / overflow menus -->
         <item name="popupMenuStyle">@style/CodeStudio.PopupMenu</item>
         <item name="popupTheme">@style/CodeStudio.PopupMenu</item>
         <item name="android:dropDownListViewStyle">@style/CodeStudio.DropDownList</item>
 
-        <!-- Dialogs -->
         <item name="alertDialogTheme">@style/CodeStudio.AlertDialog</item>
-
-        <!-- Font (JetBrains Mono applied globally) -->
         <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
 
-        <!-- Extra Keys Bar Colors -->
         <item name="extraKeysButtonTextColor">@color/white</item>
         <item name="extraKeysButtonActiveTextColor">@color/white</item>
         <item name="extraKeysButtonBackgroundColor">@android:color/transparent</item>
@@ -64,15 +49,12 @@
         <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
     </style>
 
-    <!-- NoActionBar variant – used where we provide a custom Toolbar -->
     <style name="Theme.CodeStudio.NoActionBar" parent="Theme.CodeStudio">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-    <!-- ──────────────────────────────────────────── -->
-    <!--  ActionBar                                   -->
-    <!-- ──────────────────────────────────────────── -->
+    <!-- ActionBar Styles -->
     <style name="CodeStudio.ActionBar" parent="Widget.AppCompat.ActionBar.Solid">
         <item name="background">@color/cc_primary</item>
         <item name="titleTextStyle">@style/CodeStudio.ActionBar.TitleText</item>
@@ -90,10 +72,7 @@
         <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
     </style>
 
-    <!-- ──────────────────────────────────────────── -->
-    <!--  Popup / overflow menus  (THE CRITICAL FIX)  -->
-    <!--  Dark background + white text = visible menu  -->
-    <!-- ──────────────────────────────────────────── -->
+    <!-- Popup & Dropdown Menus -->
     <style name="CodeStudio.PopupMenu" parent="ThemeOverlay.AppCompat.Dark">
         <item name="android:colorBackground">@color/cc_primary</item>
         <item name="android:textColorPrimary">@color/ide_text_primary</item>
@@ -105,9 +84,7 @@
         <item name="android:background">@color/cc_primary</item>
     </style>
 
-    <!-- ──────────────────────────────────────────── -->
-    <!--  Alert Dialogs                               -->
-    <!-- ──────────────────────────────────────────── -->
+    <!-- Dialogs -->
     <style name="CodeStudio.AlertDialog" parent="ThemeOverlay.AppCompat.Dialog.Alert">
         <item name="colorPrimary">@color/cc_accent</item>
         <item name="android:colorBackground">@color/cc_primary</item>
@@ -121,10 +98,7 @@
         <item name="android:textColor">@color/cc_accent</item>
     </style>
 
-    <!-- ──────────────────────────────────────────── -->
-    <!--  Termux Activity (black background)          -->
-    <!-- ──────────────────────────────────────────── -->
-    <!-- Keep Termux internal theme untouched -->
+    <!-- Termux-inherited Themes -->
     <style name="Theme.BaseActivity.Light.DarkActionBar" parent="Theme.CodeStudio">
         <item name="colorPrimary">@color/ide_toolbar</item>
         <item name="colorPrimaryDark">@color/ide_background</item>
@@ -138,13 +112,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.BaseActivity.DayNight.DarkActionBar" parent="Theme.BaseActivity.Light.DarkActionBar" />
-
     <style name="Theme.BaseActivity.DayNight.NoActionBar" parent="Theme.BaseActivity.Light.NoActionBar" />
-
-    <style name="Theme.MediaViewActivity.Light" parent="Theme.BaseActivity.Light.NoActionBar" />
-
-    <style name="Theme.MarkdownViewActivity.Light" parent="Theme.MediaViewActivity.Light" />
 
     <style name="Theme.MediaViewActivity.DayNight" parent="Theme.BaseActivity.DayNight.NoActionBar" />
 
@@ -157,14 +125,6 @@
     </style>
 
     <style name="ThemeOverlay.BaseDialog.DayNight" parent="ThemeOverlay.BaseDialog.Light" />
-
-    <style name="ThemeOverlay.MessageDialog.DayNight" parent="ThemeOverlay.BaseDialog.DayNight" />
-
-    <style name="Theme.TermuxApp.Light.DarkActionBar" parent="Theme.BaseActivity.Light.DarkActionBar" />
-
-    <style name="Theme.TermuxApp.Light.NoActionBar" parent="Theme.BaseActivity.Light.NoActionBar" />
-
-    <style name="Theme.TermuxApp.DayNight.DarkActionBar" parent="Theme.BaseActivity.DayNight.DarkActionBar" />
 
     <style name="Theme.TermuxApp.DayNight.NoActionBar" parent="Theme.BaseActivity.DayNight.NoActionBar" />
 
@@ -185,6 +145,22 @@
         <item name="extraKeysButtonBackgroundColor">@android:color/transparent</item>
         <item name="extraKeysButtonActiveBackgroundColor">#2D2D2D</item>
         <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textSelectHandleLeft">@drawable/ic_text_select_handle_left_mtrl_alpha
+        </item>
+        <item name="android:textSelectHandleRight">
+            @drawable/ic_text_select_handle_right_mtrl_alpha
+        </item>
+        <item name="android:textSelectHandle">@drawable/ic_selection_handle</item>
+        <item name="actionModeStyle">@style/TermuxActionModeStyle</item>
+        <item name="windowActionModeOverlay">true</item>
     </style>
 
+    <style name="TermuxActionModeStyle" parent="Widget.AppCompat.ActionMode">
+        <item name="background">@color/white</item>
+        <item name="titleTextStyle">@style/TermuxActionModeTitle</item>
+    </style>
+
+    <style name="TermuxActionModeTitle" parent="TextAppearance.AppCompat.Widget.ActionMode.Title">
+        <item name="android:textColor">@color/black</item>
+    </style>
 </resources>

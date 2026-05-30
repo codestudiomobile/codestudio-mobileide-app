@@ -26,12 +26,12 @@ import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
- * Activity for configuring editor settings like text size, line numbers, and syntax highlighting.
- * Includes a live preview of the editor.
+ * Provides an interface for users to customize the code editor's behavior and appearance.
+ * Features include toggling line numbers, word wrap, auto-indentation, and a live
+ * {@link CodeEditor} preview to visualize changes in real-time.
  */
 public class EditorActivity extends AppCompatActivity {
 
-	// UI Components - Switches
 	private SwitchCompat openEditorOnStartup;
 	private SwitchCompat openWelcomeScreenOnStartup;
 	private SwitchCompat pinchToZoomSwitch;
@@ -40,7 +40,6 @@ public class EditorActivity extends AppCompatActivity {
 	private SwitchCompat syntaxHighlightingSwitch;
 	private SwitchCompat wordWrapSwitch;
 
-	// UI Components - Others
 	private SeekBar textSizeSeekBar;
 	private TextView textSizeValue;
 	private CodeEditor editorPreview;
@@ -60,6 +59,9 @@ public class EditorActivity extends AppCompatActivity {
 		setupEditorPreview();
 	}
 
+	/**
+	 * Configures the activity toolbar with a back navigation button.
+	 */
 	private void setupToolbar() {
 		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
@@ -68,6 +70,9 @@ public class EditorActivity extends AppCompatActivity {
 		}
 	}
 
+	/**
+	 * Initializes UI components and sets up dynamic layout adjustments for system insets.
+	 */
 	private void initViews() {
 		rootLayout = findViewById(R.id.editorLayout);
 		if (rootLayout != null) {
@@ -87,6 +92,9 @@ public class EditorActivity extends AppCompatActivity {
 		editorPreview = findViewById(R.id.editorPreview);
 	}
 
+	/**
+	 * Loads saved settings from SharedPreferences and applies them to the UI components.
+	 */
 	private void loadPreferences() {
 		SharedPreferences prefs = getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE);
 
@@ -107,6 +115,9 @@ public class EditorActivity extends AppCompatActivity {
 		editorPreview.setWordwrap(wordWrapSwitch.isChecked());
 	}
 
+	/**
+	 * Sets up event listeners for all interactive UI elements to persist changes.
+	 */
 	private void setupListeners(SharedPreferences prefs) {
 		openEditorOnStartup.setOnCheckedChangeListener((v, checked) ->
 				prefs.edit().putBoolean(AppPreferences.KEY_EDITOR_STARTUP, checked).apply());
@@ -152,6 +163,9 @@ public class EditorActivity extends AppCompatActivity {
 		});
 	}
 
+	/**
+	 * Configures the Sora Editor preview widget with static text and a JetBrains Mono font.
+	 */
 	private void setupEditorPreview() {
 		editorPreview.setText(getString(R.string.editor_preview_text));
 		editorPreview.setEditorLanguage(new EmptyLanguage());
@@ -162,11 +176,15 @@ public class EditorActivity extends AppCompatActivity {
 			editorPreview.setTypefaceText(typeface);
 			editorPreview.setTypefaceLineNumber(typeface);
 		} catch (Exception ignored) {
+			// Fallback to system monospace if asset is missing
 		}
 
 		editorPreview.subscribeAlways(ColorSchemeUpdateEvent.class, (event) -> applyPreviewTheme(event.getColorScheme()));
 	}
 
+	/**
+	 * Applies the custom Code Studio color palette to the editor preview.
+	 */
 	private void applyPreviewTheme(EditorColorScheme scheme) {
 		scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
 		scheme.setColor(EditorColorScheme.TEXT_NORMAL, ContextCompat.getColor(this, R.color.ide_text_primary));

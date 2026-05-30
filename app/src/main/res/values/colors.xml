@@ -1,34 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Generic Palette -->
+    <!--
+        ===== CODE STUDIO – Color Palette =====
+        Core color definitions for the Code Studio Mobile IDE.
+        Matches the One Dark theme where applicable.
+    -->
+
+    <!-- Basic Shades -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="purple_500">#6200EE</color>
-    <color name="purple_700">#3700B3</color>
-    <color name="teal_200">#03DAC5</color>
-
+    <!-- Material Grey Scale -->
     <color name="grey_200">#EEEEEE</color>
     <color name="grey_400">#BDBDBD</color>
     <color name="grey_500">#9E9E9E</color>
     <color name="grey_800">#424242</color>
     <color name="grey_900">#212121</color>
 
-    <color name="red_400">#FF0000</color>
-    <color name="red_500">#F44336</color>
-    <color name="red_800">#C4001D</color>
+    <!-- Semantic Colors (Errors, Links, UI Status) -->
     <color name="red_error">#DC143C</color>
     <color name="red_error_link">#FC143C</color>
-
     <color name="blue_link_light">#0969DA</color>
     <color name="blue_link_dark">#58A6FF</color>
-    <color name="green_700">#4CAF50</color>
-    <color name="yellow_600">#FFEB3B</color>
 
+    <!-- Markdown Support -->
     <color name="background_markdown_code_inline">#1F000000</color>
     <color name="background_markdown_code_block">#0F000000</color>
 
-    <!-- IDE Surface & Background Colors -->
+    <!-- IDE Surface & Background (One Dark Inspired) -->
     <color name="cc_primary">#FF313131</color>
     <color name="cc_primary_dark">#FF292929</color>
     <color name="cc_accent">#FFFFFFFF</color>
@@ -62,11 +61,9 @@
     <color name="progress_warn">#FFFFEB3B</color>
     <color name="progress_error">#FFF44336</color>
 
-    <!-- Legacy Compatibility & System Overrides -->
-    <color name="primary">#FF313131</color>
-    <color name="primaryDark">#FF292929</color>
-    <color name="accent">#FFFFFFFF</color>
-    <color name="design_default_color_surface">#FF282828</color>
-    <color name="design_default_color_on_surface">#FFFFFFFF</color>
+    <!-- System Overrides & Layout Support -->
     <color name="extra_keys_active_bg">#20FFFFFF</color>
+    <color name="terminal_green">#00FF00</color>
+    <color name="terminal_bg">#333333</color>
+    <color name="divider_grey">#CCCCCC</color>
 </resources>

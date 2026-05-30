@@ -27,6 +27,11 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Handles terminal console personalization.
+ * Allows users to visually configure the ASCII banner and prompt title shown in the integrated terminal.
+ * Changes are applied via background shell scripts that modify the Termux environment configuration.
+ */
 public class CustomizationActivity extends AppCompatActivity {
 
 	private static final String LOG_TAG = "CustomizationActivity";

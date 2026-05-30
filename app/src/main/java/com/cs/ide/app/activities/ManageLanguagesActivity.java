@@ -39,9 +39,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
- * ManageLanguagesActivity handles the installation and uninstallation of various
- * language environments and tools (e.g., Python, C++, Node.js).
- * It uses a background service to perform installations without blocking the UI.
+ * Activity for managing language packs in the IDE.
+ * Allows users to search, install, and uninstall language support packages (e.g., compilers, utilities)
+ * through an APT-based background service ({@link AptBackgroundService}).
  */
 public class ManageLanguagesActivity extends AppCompatActivity {
 	private static final String TAG = "ManageLanguagesActivity";

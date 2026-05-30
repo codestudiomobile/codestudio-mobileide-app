@@ -117,6 +117,9 @@
         <activity
             android:name="com.cs.ide.app.activities.CustomizationActivity"
             android:theme="@style/Theme.CodeStudio" />
+        <activity
+            android:name="com.cs.ide.app.activities.MigrationActivity"
+            android:theme="@style/Theme.CodeStudio" />
 
         <!-- Termux & Terminal Activities -->
         <activity

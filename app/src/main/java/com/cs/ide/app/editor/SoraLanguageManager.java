@@ -52,16 +52,41 @@ import kotlin.Unit;
  * Handles detection, dynamic fetching, and loading of language packs (Tree-sitter and TextMate).
  * Integrated with VS Code extensions support for syntax highlighting and snippets.
  */
+
+/**
+ * Manages language support for the Sora Editor, including syntax highlighting
+ * via Tree-sitter and TextMate, as well as snippet provision from VS Code extensions.
+ */
 public class SoraLanguageManager {
 	private static final String TAG = "SoraLanguageManager";
 	private static final String PREFS_NAME = "LanguagePackPrefs";
 	private static boolean textMateInitialized = false;
 	private final Context context;
 	private final CommandFetcher commandFetcher;
+
+	/**
+	 * Cache of loaded language engines.
+	 */
 	private final Map<String, Language> loadedLanguages = new HashMap<>();
+
+	/**
+	 * Maps language IDs to their respective snippet providers.
+	 */
 	private final Map<String, VSCodeSnippetProvider> languageSnippetProviders = new HashMap<>();
+
+	/**
+	 * Maps file extensions to TextMate scope names.
+	 */
 	private final Map<String, String> extensionToScopeMap = new HashMap<>();
+
+	/**
+	 * Maps file extensions to internal language identifiers.
+	 */
 	private final Map<String, String> extensionToLangIdMap = new HashMap<>();
+
+	/**
+	 * Maps language IDs to their configuration JSON file paths.
+	 */
 	private final Map<String, String> langIdToConfigPathMap = new HashMap<>();
 
 	public SoraLanguageManager(Context context) {
@@ -188,7 +213,8 @@ public class SoraLanguageManager {
 				if (g.has("language") && g.getString("language").equals(langId)) {
 					return g.getString("scopeName");
 				}
-			} catch (Exception ignored) {}
+			} catch (Exception ignored) {
+			}
 		}
 		// Fallback to searching by langId if scope name contains it
 		for (int i = 0; i < grammars.length(); i++) {
@@ -196,7 +222,8 @@ public class SoraLanguageManager {
 				JSONObject g = grammars.getJSONObject(i);
 				String scope = g.getString("scopeName");
 				if (scope.endsWith("." + langId)) return scope;
-			} catch (Exception ignored) {}
+			} catch (Exception ignored) {
+			}
 		}
 		return null;
 	}
@@ -268,7 +295,7 @@ public class SoraLanguageManager {
 				}
 			}
 		}
-		
+
 		enableCompletion(editor);
 		promptInstallLanguagePack(editor, langName, cleanExt);
 	}
@@ -398,8 +425,7 @@ public class SoraLanguageManager {
 			if (autoClosing != null) {
 				for (int i = 0; i < autoClosing.length(); i++) {
 					Object item = autoClosing.get(i);
-					if (item instanceof JSONObject) {
-						JSONObject pair = (JSONObject) item;
+					if (item instanceof JSONObject pair) {
 						String open = pair.optString("open");
 						String close = pair.optString("close");
 						if (open != null && close != null && !open.isEmpty() && !close.isEmpty()) {
@@ -490,9 +516,9 @@ public class SoraLanguageManager {
 			if (url != null && !url.isEmpty()) {
 				File langDir = new File(context.getFilesDir(), "languages/" + langName);
 				langDir.mkdirs();
-				String command = url.endsWith(".zip") ? 
-					"curl -L " + url + " -o " + langDir.getAbsolutePath() + "/pack.zip && unzip -o " + langDir.getAbsolutePath() + "/pack.zip -d " + langDir.getAbsolutePath() :
-					"curl -L \"" + url + "\" -o " + langDir.getAbsolutePath() + "/" + url.substring(url.lastIndexOf("/") + 1);
+				String command = url.endsWith(".zip") ?
+						"curl -L " + url + " -o " + langDir.getAbsolutePath() + "/pack.zip && unzip -o " + langDir.getAbsolutePath() + "/pack.zip -d " + langDir.getAbsolutePath() :
+						"curl -L \"" + url + "\" -o " + langDir.getAbsolutePath() + "/" + url.substring(url.lastIndexOf("/") + 1);
 
 				Intent intent = new Intent(context, LanguageManagerService.class);
 				intent.setAction(LanguageManagerService.ACTION_INSTALL_PACKAGE);
@@ -517,10 +543,12 @@ public class SoraLanguageManager {
 				if (catObj == null) continue;
 				for (java.util.Iterator<String> it = catObj.keys(); it.hasNext(); ) {
 					String key = it.next();
-					if (extension.equalsIgnoreCase(catObj.getJSONObject(key).optString("extension"))) return key;
+					if (extension.equalsIgnoreCase(catObj.getJSONObject(key).optString("extension")))
+						return key;
 				}
 			}
-		} catch (Exception ignored) {}
+		} catch (Exception ignored) {
+		}
 		return null;
 	}
 
@@ -531,9 +559,11 @@ public class SoraLanguageManager {
 			JSONObject languages = new JSONObject(configJson).optJSONObject("termux_programming_environment").optJSONObject("languages");
 			for (String category : new String[]{"interpreted", "compiled", "shell_scripting", "web"}) {
 				JSONObject catObj = languages.optJSONObject(category);
-				if (catObj != null && catObj.has(langName)) return catObj.getJSONObject(langName).optString("scope_name", null);
+				if (catObj != null && catObj.has(langName))
+					return catObj.getJSONObject(langName).optString("scope_name", null);
 			}
-		} catch (Exception ignored) {}
+		} catch (Exception ignored) {
+		}
 		return null;
 	}
 }

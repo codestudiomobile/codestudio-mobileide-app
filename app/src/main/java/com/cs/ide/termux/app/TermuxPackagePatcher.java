@@ -26,7 +26,6 @@ public class TermuxPackagePatcher {
 	public static void main(String[] args) {
 		setupLogging();
 		log("Starting Termux Package Patcher...");
-		log("Args: " + String.join(" ", args));
 
 		try {
 			if (args.length > 0) {
@@ -41,16 +40,18 @@ public class TermuxPackagePatcher {
 			} else {
 				log("No args, patching entire prefix: " + TermuxConstants.TERMUX_PREFIX_DIR_PATH);
 				File prefixDir = new File(TermuxConstants.TERMUX_PREFIX_DIR_PATH);
-				TermuxPatcher.patchDirectory(prefixDir);
+				int patchedCount = TermuxPatcher.patchDirectory(prefixDir);
+				log("Patched " + patchedCount + " files.");
 			}
 			log("Patching finished successfully.");
-			System.out.println("Termux Package Patcher: Success");
-		} catch (Exception e) {
+			System.out.println("Termux Package Patcher: Patching Successful");
+		} catch (Throwable e) {
 			log("FATAL ERROR: " + e.getMessage());
 			if (logWriter != null) {
 				e.printStackTrace(logWriter);
 			}
-			System.err.println("Termux Package Patcher: Failure - " + e.getMessage());
+			e.printStackTrace();
+			System.err.println("Termux Package Patcher: Patching Failed - " + e.getMessage());
 			System.exit(1);
 		} finally {
 			if (logWriter != null) {
@@ -61,18 +62,22 @@ public class TermuxPackagePatcher {
 
 	private static void setupLogging() {
 		try {
-			File logFile = new File(TermuxConstants.TERMUX_FILES_DIR_PATH + "/usr/tmp/patcher.log");
-			if (!logFile.getParentFile().exists()) {
-				logFile.getParentFile().mkdirs();
+			// Ensure we use a safe path for logging
+			String filesDir = TermuxConstants.TERMUX_FILES_DIR_PATH;
+			File logFile = new File(filesDir + "/usr/tmp/patcher.log");
+			File parent = logFile.getParentFile();
+			if (parent != null && !parent.exists()) {
+				parent.mkdirs();
 			}
 			logWriter = new PrintWriter(new FileWriter(logFile, true));
-		} catch (IOException e) {
-			// Can't log to file
+		} catch (Exception e) {
+			// Can't log to file, will use stdout
 		}
 	}
 
 	private static void log(String message) {
-		Log.d(TAG, message);
+		// Use android.util.Log to send to logcat (hidden from terminal screen)
+		Log.i(TAG, message);
 		if (logWriter != null) {
 			logWriter.println(message);
 			logWriter.flush();
@@ -226,7 +231,9 @@ public class TermuxPackagePatcher {
 	}
 
 	private static void runCommand(String... command) throws Exception {
-		log("Exec: " + String.join(" ", command));
+		StringBuilder sb = new StringBuilder();
+		for (String s : command) sb.append(s).append(" ");
+		log("Exec: " + sb.toString().trim());
 		ProcessBuilder pb = new ProcessBuilder(command);
 		pb.redirectErrorStream(true);
 		String pathEnv = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + ":" + System.getenv("PATH") + ":/system/bin:/system/xbin";

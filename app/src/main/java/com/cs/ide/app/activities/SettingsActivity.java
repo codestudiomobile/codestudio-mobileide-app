@@ -35,6 +35,7 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
 				getString(R.string.title_manage_languages),
 				getString(R.string.action_open_editor_settings),
 				getString(R.string.title_customization),
+				getString(R.string.title_migration),
 				getString(R.string.menu_about)
 		};
 
@@ -72,6 +73,8 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
 			startActivity(new Intent(this, EditorActivity.class));
 		} else if (selectedItem.equals(getString(R.string.title_customization))) {
 			startActivity(new Intent(this, CustomizationActivity.class));
+		} else if (selectedItem.equals(getString(R.string.title_migration))) {
+			startActivity(new Intent(this, MigrationActivity.class));
 		} else if (selectedItem.equals(getString(R.string.menu_about))) {
 			startActivity(new Intent(this, AboutActivity.class));
 		}

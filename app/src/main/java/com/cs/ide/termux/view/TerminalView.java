@@ -102,7 +102,7 @@ public final class TerminalView extends View {
 	private final ActionMode.Callback mActionModeCallback = new ActionMode.Callback2() {
 		@Override
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-			menu.add(Menu.NONE, 1, Menu.NONE, R.string.action_copy);
+			menu.add(Menu.NONE, 1, Menu.NONE, R.string.copy_text);
 			menu.add(Menu.NONE, 2, Menu.NONE, R.string.paste_text);
 			menu.add(Menu.NONE, 3, Menu.NONE, R.string.text_selection_more);
 			return true;
@@ -245,6 +245,11 @@ public final class TerminalView extends View {
 		if (mHandleRight == null) {
 			mHandleRight = context.getDrawable(R.drawable.ic_text_select_handle_right_mtrl_alpha);
 		}
+
+		// Tint handles to blue to match Termux selection style
+		int handleColor = 0xFF1A73E8;
+		if (mHandleLeft != null) mHandleLeft.setTint(handleColor);
+		if (mHandleRight != null) mHandleRight.setTint(handleColor);
 		mGestureRecognizer = new GestureAndScaleRecognizer(context, new GestureAndScaleRecognizer.Listener() {
 
 			boolean scrolledWithFinger;
@@ -1035,8 +1040,13 @@ public final class TerminalView extends View {
 				int hx2 = getPointX(x2) + Math.round(mRenderer.mFontWidth);
 				int hy2 = getPointY(y2 + 1);
 
-				mHandleLeft.setBounds(hx1 - mHandleLeft.getIntrinsicWidth() * 3 / 4, hy1, hx1 + mHandleLeft.getIntrinsicWidth() / 4, hy1 + mHandleLeft.getIntrinsicHeight());
-				mHandleRight.setBounds(hx2 - mHandleRight.getIntrinsicWidth() / 4, hy2, hx2 + mHandleRight.getIntrinsicWidth() * 3 / 4, hy2 + mHandleRight.getIntrinsicHeight());
+				float density = getContext().getResources().getDisplayMetrics().density;
+				int handleHeight = Math.round(22 * density);
+				int handleWidth = handleHeight * 2; // 2:1 aspect ratio to accommodate built-in transparent padding in the vector drawables
+
+				// Position handles asymmetrically to align standard teardrops perfectly with touch boundaries
+				mHandleLeft.setBounds(hx1 - handleWidth * 3 / 4, hy1, hx1 + handleWidth / 4, hy1 + handleHeight);
+				mHandleRight.setBounds(hx2 - handleWidth / 4, hy2, hx2 + handleWidth * 3 / 4, hy2 + handleHeight);
 
 				mHandleLeft.draw(canvas);
 				mHandleRight.draw(canvas);
