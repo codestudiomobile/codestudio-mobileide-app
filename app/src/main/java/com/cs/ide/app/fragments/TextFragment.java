@@ -24,14 +24,16 @@ import com.cs.ide.app.adapters.ViewPagerAdapter;
 import com.cs.ide.app.editor.SoraLanguageManager;
 import com.cs.ide.app.views.ExtraKeysView;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-
-import org.apache.commons.io.IOUtils;
 
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
+import io.github.rosemoe.sora.text.Content;
+import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.widget.CodeEditor;
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
@@ -160,6 +162,46 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 		});
 
 		applyPreferences();
+
+		// Robust text selection: Long press to select the whole word (delimited by spaces)
+		fileContent.setOnLongClickListener(v -> {
+			Cursor cursor = fileContent.getCursor();
+			if (cursor != null && !cursor.isSelected()) {
+				int line = cursor.getLeftLine();
+				int column = cursor.getLeftColumn();
+				selectWordAt(line, column);
+			}
+			return false; // Return false to allow the editor to show the context menu
+		});
+	}
+
+	/**
+	 * Selects the word at the given line and column, defined by whitespace boundaries.
+	 * This provides a more professional feel for text selection.
+	 */
+	private void selectWordAt(int line, int column) {
+		Content text = fileContent.getText();
+		if (text == null || line < 0 || line >= text.getLineCount()) return;
+
+		String lineText = text.getLineString(line);
+		if (column < 0 || column > lineText.length()) return;
+
+		int start = column;
+		// Expand left until space or line start
+		while (start > 0 && !Character.isWhitespace(lineText.charAt(start - 1))) {
+			start--;
+		}
+
+		int end = column;
+		// Expand right until space or line end
+		while (end < lineText.length() && !Character.isWhitespace(lineText.charAt(end))) {
+			end++;
+		}
+
+		if (start < end) {
+			fileContent.getCursor().setLeft(line, start);
+			fileContent.getCursor().setRight(line, end);
+		}
 	}
 
 	private void applyPreferences() {
@@ -204,6 +246,17 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	public void onResume() {
 		super.onResume();
 		applyPreferences();
+
+		// Robust text selection: Long press to select the whole word (delimited by spaces)
+		fileContent.setOnLongClickListener(v -> {
+			Cursor cursor = fileContent.getCursor();
+			if (cursor != null && !cursor.isSelected()) {
+				int line = cursor.getLeftLine();
+				int column = cursor.getLeftColumn();
+				selectWordAt(line, column);
+			}
+			return false; // Return false to allow the editor to show the context menu
+		});
 	}
 
 	@Override

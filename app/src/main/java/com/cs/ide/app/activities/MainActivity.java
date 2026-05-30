@@ -1155,6 +1155,16 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		closeInViewPager(fileUri);
 	}
 
+	public void switchToTabByName(String name) {
+		if (viewPagerAdapter == null) return;
+		int pos = viewPagerAdapter.findTabPositionByName(name);
+		if (pos != -1) {
+			viewPager.setCurrentItem(pos, false);
+			TabLayout.Tab tab = tabLayout.getTabAt(pos);
+			if (tab != null) tab.select();
+		}
+	}
+
 	public void reopenClosedTab(Uri newUri, String newName) {
 		if (lastClosedTabState == null) return;
 		int pos = Math.min(lastClosedTabState.activeTabIndex(), viewPagerAdapter.getItemCount());

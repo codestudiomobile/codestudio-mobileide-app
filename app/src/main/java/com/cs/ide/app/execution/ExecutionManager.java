@@ -179,9 +179,9 @@ public class ExecutionManager {
 			sb.append(String.format("export HOME='%s'; ", escapedCwd));
 		}
 
-		// 3. Run the command and capture stderr in red
-		// Using a subshell to ensure the exit code of the resolved command is captured correctly
-		sb.append(String.format("( %s ) 2> >(while read line; do echo -e \"\\e[31m$line\\e[0m\" >&2; done); ", resolvedCommand));
+		// 3. Run the command. We avoid complex redirections for stderr to prevent buffering issues
+		// that can bunch up interactive prompts (especially in languages like Python).
+		sb.append(String.format("%s; ", resolvedCommand));
 
 		// 4. Cleanup and exit logic
 		sb.append("EXIT_CODE=$?; ");

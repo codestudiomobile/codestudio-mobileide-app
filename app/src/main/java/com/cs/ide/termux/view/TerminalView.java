@@ -389,8 +389,11 @@ public final class TerminalView extends View {
 					return;
 				if (!mCopyMode) {
 					int[] columnAndRow = getColumnAndRow(event, true);
-					mSelX1 = mSelX2 = columnAndRow[0];
-					mSelY1 = mSelY2 = columnAndRow[1];
+					int[] boundaries = mEmulator.getScreen().getWordBoundariesAt(columnAndRow[0], columnAndRow[1]);
+					mSelX1 = boundaries[0];
+					mSelY1 = boundaries[1];
+					mSelX2 = boundaries[2];
+					mSelY2 = boundaries[3];
 					setCopyMode(true);
 				}
 				performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);

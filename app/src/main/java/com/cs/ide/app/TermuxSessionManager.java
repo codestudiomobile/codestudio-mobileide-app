@@ -54,6 +54,7 @@ public class TermuxSessionManager {
 
 			@Override
 			public void onTextChanged(@NonNull TerminalSession changedSession) {
+				mainHandler.post(terminalView::onScreenUpdated);
 			}
 
 			@Override
@@ -96,6 +97,7 @@ public class TermuxSessionManager {
 
 			@Override
 			public void onScreenUpdated() {
+				mainHandler.post(terminalView::onScreenUpdated);
 			}
 
 			@Override

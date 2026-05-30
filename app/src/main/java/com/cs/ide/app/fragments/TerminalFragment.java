@@ -138,10 +138,15 @@ public class TerminalFragment extends Fragment implements TermuxSessionManager.S
 
 			@Override
 			public void onCopyTextToClipboard(String text) {
+				com.cs.ide.termux.shared.interact.ShareUtils.copyTextToClipboard(requireContext(), text);
 			}
 
 			@Override
 			public void onPasteTextFromClipboard() {
+				String text = com.cs.ide.termux.shared.interact.ShareUtils.getTextStringFromClipboardIfSet(requireContext(), true);
+				if (text != null) {
+					currentSession.write(text);
+				}
 			}
 
 			@Override

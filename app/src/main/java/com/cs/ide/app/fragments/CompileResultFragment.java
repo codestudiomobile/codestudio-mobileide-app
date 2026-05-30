@@ -133,11 +133,15 @@ public class CompileResultFragment extends Fragment implements ServiceConnection
 	}
 
 	private void closeTab() {
-		if (getActivity() instanceof MainActivity) {
+		if (getActivity() instanceof MainActivity activity) {
 			Bundle args = getArguments();
 			if (args != null && args.containsKey(ARG_URI)) {
 				Uri myUri = Uri.parse(args.getString(ARG_URI));
-				((MainActivity) getActivity()).closeFileInViewPager(myUri);
+				String label = myUri.getQueryParameter("label");
+				if (label != null) {
+					activity.switchToTabByName(label);
+				}
+				activity.closeFileInViewPager(myUri);
 			}
 		}
 	}
