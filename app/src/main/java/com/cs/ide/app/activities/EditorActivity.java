@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -44,6 +45,9 @@ public class EditorActivity extends AppCompatActivity {
 	private TextView textSizeValue;
 	private CodeEditor editorPreview;
 	private View rootLayout;
+	private ScaleGestureDetector scaleGestureDetector;
+	private float previewScaleFactor = 1.0f;
+	private int previewBaseTextSize;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +114,8 @@ public class EditorActivity extends AppCompatActivity {
 		textSizeSeekBar.setProgress(textSize - 8);
 		textSizeValue.setText(String.valueOf(textSize));
 
-		editorPreview.setTextSize(textSize);
+		previewBaseTextSize = textSize;
+		updatePreviewTextSize();
 		editorPreview.setLineNumberEnabled(showLineNumbersSwitch.isChecked());
 		editorPreview.setWordwrap(wordWrapSwitch.isChecked());
 	}
@@ -150,7 +155,8 @@ public class EditorActivity extends AppCompatActivity {
 				int size = progress + 8;
 				textSizeValue.setText(String.valueOf(size));
 				prefs.edit().putInt(AppPreferences.KEY_EDITOR_TEXT_SIZE, size).apply();
-				editorPreview.setTextSize(size);
+				previewBaseTextSize = size;
+				updatePreviewTextSize();
 			}
 
 			@Override
@@ -179,30 +185,34 @@ public class EditorActivity extends AppCompatActivity {
 			// Fallback to system monospace if asset is missing
 		}
 
-		editorPreview.subscribeAlways(ColorSchemeUpdateEvent.class, (event) -> applyPreviewTheme(event.getColorScheme()));
+		DisplayManager.applyIdeEditorTheme(this, editorPreview);
+		setupPreviewZoomGesture();
 	}
 
-	/**
-	 * Applies the custom Code Studio color palette to the editor preview.
-	 */
-	private void applyPreviewTheme(EditorColorScheme scheme) {
-		scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
-		scheme.setColor(EditorColorScheme.TEXT_NORMAL, ContextCompat.getColor(this, R.color.ide_text_primary));
-		scheme.setColor(EditorColorScheme.TEXT_SELECTED, ContextCompat.getColor(this, R.color.ide_text_selected));
-		scheme.setColor(EditorColorScheme.LINE_NUMBER, ContextCompat.getColor(this, R.color.ide_line_number));
-		scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
-		scheme.setColor(EditorColorScheme.CURRENT_LINE, ContextCompat.getColor(this, R.color.ide_current_line));
-		scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.WHITE);
-		scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.WHITE);
-		scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#40BDBDBD"));
+	private void setupPreviewZoomGesture() {
+		scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+			@Override
+			public boolean onScale(ScaleGestureDetector detector) {
+				if (!pinchToZoomSwitch.isChecked()) {
+					return false;
+				}
+				previewScaleFactor *= detector.getScaleFactor();
+				previewScaleFactor = Math.max(0.5f, Math.min(previewScaleFactor, 3.0f));
+				updatePreviewTextSize();
+				return true;
+			}
+		});
 
-		scheme.setColor(EditorColorScheme.KEYWORD, ContextCompat.getColor(this, R.color.syntax_keyword));
-		scheme.setColor(EditorColorScheme.LITERAL, ContextCompat.getColor(this, R.color.syntax_string));
-		scheme.setColor(EditorColorScheme.COMMENT, ContextCompat.getColor(this, R.color.syntax_comment));
-		scheme.setColor(EditorColorScheme.OPERATOR, ContextCompat.getColor(this, R.color.syntax_keyword));
-		scheme.setColor(EditorColorScheme.ANNOTATION, ContextCompat.getColor(this, R.color.syntax_type));
-		scheme.setColor(EditorColorScheme.FUNCTION_NAME, ContextCompat.getColor(this, R.color.syntax_function));
-		scheme.setColor(EditorColorScheme.IDENTIFIER_NAME, ContextCompat.getColor(this, R.color.syntax_function));
+		editorPreview.setOnTouchListener((v, event) -> {
+			scaleGestureDetector.onTouchEvent(event);
+			return false;
+		});
+	}
+
+	private void updatePreviewTextSize() {
+		if (editorPreview != null) {
+			editorPreview.setTextSize(previewBaseTextSize * previewScaleFactor);
+		}
 	}
 
 	@Override

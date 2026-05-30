@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="128dp" android:height="92dp" android:viewportWidth="128" android:viewportHeight="92">
-    <path android:fillColor="#FF000000" android:fillType="evenOdd" android:pathData="M 50,13 L 33,30 L 33,34 L 51,52 L 53,52 L 55,50 L 55,48 L 43,36 L 75,35 L 78,36 L 80,37 L 82,39 L 84,41 L 87,44 L 88,47 L 88,56 L 87,59 L 85,62 L 82,65 L 79,67 L 76,68 L 57,68 L 55,70 L 55,73 L 79,73 L 82,72 L 85,70 L 90,65 L 92,62 L 92,60 L 94,57 L 94,46 L 91,40 L 89,37 L 86,34 L 83,32 L 79,30 L 75,29 L 43,28 L 55,16 L 54,13 Z" />
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <group android:translateY="960">
+        <path
+            android:fillColor="#FF000000"
+            android:pathData="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z" />
+    </group>
 </vector>

@@ -1,15 +1,23 @@
 package com.cs.ide.app.utils;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.cs.ide.R;
+
 import org.jetbrains.annotations.Contract;
+
+import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
+import io.github.rosemoe.sora.widget.CodeEditor;
+import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * DisplayManager provides utility methods for UI layout and display adjustments,
@@ -86,5 +94,35 @@ public class DisplayManager {
 		}
 
 		return windowInsets;
+	}
+
+	/**
+	 * Applies the standard Code Studio editor theme to the given CodeEditor.
+	 *
+	 * @param context The context for retrieving resources.
+	 * @param editor  The editor instance to theme.
+	 */
+	public static void applyIdeEditorTheme(@NonNull Context context, @NonNull CodeEditor editor) {
+		editor.subscribeAlways(ColorSchemeUpdateEvent.class, (event) -> {
+			EditorColorScheme scheme = event.getColorScheme();
+			scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, ContextCompat.getColor(context, R.color.ide_background));
+			scheme.setColor(EditorColorScheme.TEXT_NORMAL, ContextCompat.getColor(context, R.color.ide_text_primary));
+			scheme.setColor(EditorColorScheme.TEXT_SELECTED, ContextCompat.getColor(context, R.color.ide_text_selected));
+			scheme.setColor(EditorColorScheme.LINE_NUMBER, ContextCompat.getColor(context, R.color.ide_line_number));
+			scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, ContextCompat.getColor(context, R.color.ide_background));
+			scheme.setColor(EditorColorScheme.CURRENT_LINE, ContextCompat.getColor(context, R.color.ide_current_line));
+			scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.WHITE);
+			scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.WHITE);
+			scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#40BDBDBD"));
+
+			// Syntax highlighting colors
+			scheme.setColor(EditorColorScheme.KEYWORD, ContextCompat.getColor(context, R.color.syntax_keyword));
+			scheme.setColor(EditorColorScheme.LITERAL, ContextCompat.getColor(context, R.color.syntax_string));
+			scheme.setColor(EditorColorScheme.COMMENT, ContextCompat.getColor(context, R.color.syntax_comment));
+			scheme.setColor(EditorColorScheme.OPERATOR, ContextCompat.getColor(context, R.color.syntax_keyword));
+			scheme.setColor(EditorColorScheme.ANNOTATION, ContextCompat.getColor(context, R.color.syntax_type));
+			scheme.setColor(EditorColorScheme.FUNCTION_NAME, ContextCompat.getColor(context, R.color.syntax_function));
+			scheme.setColor(EditorColorScheme.IDENTIFIER_NAME, ContextCompat.getColor(context, R.color.syntax_function));
+		});
 	}
 }

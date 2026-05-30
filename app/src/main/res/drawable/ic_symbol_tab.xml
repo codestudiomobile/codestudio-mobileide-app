@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="128dp" android:height="92dp" android:viewportWidth="128" android:viewportHeight="92">
-    <path android:fillColor="#FF000000" android:fillType="evenOdd" android:pathData="M 64,32 L 59,33 L 56,34 L 51,39 L 50,41 L 50,44 L 56,43 L 60,38 L 62,37 L 69,37 L 71,38 L 75,42 L 76,45 L 75,48 L 72,49 L 59,49 L 56,50 L 54,51 L 50,55 L 49,57 L 49,65 L 50,67 L 53,70 L 56,71 L 67,71 L 71,69 L 73,67 L 75,66 L 76,70 L 81,70 L 81,42 L 80,39 L 79,37 L 77,35 L 73,33 L 68,32 Z M 60,54 L 61,53 L 76,54 L 76,56 L 75,59 L 74,61 L 70,65 L 68,66 L 65,67 L 59,67 L 57,66 L 55,64 L 54,62 L 54,60 L 55,58 L 59,54 Z M 2,19 L 2,24 L 20,25 L 20,70 L 26,70 L 27,24 L 44,24 L 44,19 Z M 90,18 L 90,70 L 95,70 L 96,66 L 100,70 L 102,71 L 113,71 L 116,70 L 122,64 L 123,62 L 124,59 L 125,53 L 125,51 L 124,45 L 123,42 L 122,40 L 120,37 L 118,35 L 114,33 L 110,32 L 106,32 L 103,33 L 101,34 L 97,38 L 96,18 Z M 103,38 L 104,37 L 110,37 L 115,41 L 117,43 L 118,45 L 119,48 L 119,56 L 118,59 L 117,61 L 112,66 L 109,67 L 105,67 L 102,66 L 98,62 L 96,58 L 95,54 L 95,50 L 96,46 L 97,43 L 102,38 Z" />
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="128dp"
+    android:height="92dp"
+    android:viewportWidth="128"
+    android:viewportHeight="92">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M 64,32 L 59,33 L 56,34 L 51,39 L 50,41 L 50,44 L 56,43 L 60,38 L 62,37 L 69,37 L 71,38 L 75,42 L 76,45 L 75,48 L 72,49 L 59,49 L 56,50 L 54,51 L 50,55 L 49,57 L 49,65 L 50,67 L 53,70 L 56,71 L 67,71 L 71,69 L 73,67 L 75,66 L 76,70 L 81,70 L 81,42 L 80,39 L 79,37 L 77,35 L 73,33 L 68,32 Z M 60,54 L 61,53 L 76,54 L 76,56 L 75,59 L 74,61 L 70,65 L 68,66 L 65,67 L 59,67 L 57,66 L 55,64 L 54,62 L 54,60 L 55,58 L 59,54 Z M 2,19 L 2,24 L 20,25 L 20,70 L 26,70 L 27,24 L 44,24 L 44,19 Z M 90,18 L 90,70 L 95,70 L 96,66 L 100,70 L 102,71 L 113,71 L 116,70 L 122,64 L 123,62 L 124,59 L 125,53 L 125,51 L 124,45 L 123,42 L 122,40 L 120,37 L 118,35 L 114,33 L 110,32 L 106,32 L 103,33 L 101,34 L 97,38 L 96,18 Z M 103,38 L 104,37 L 110,37 L 115,41 L 117,43 L 118,45 L 119,48 L 119,56 L 118,59 L 117,61 L 112,66 L 109,67 L 105,67 L 102,66 L 98,62 L 96,58 L 95,54 L 95,50 L 96,46 L 97,43 L 102,38 Z" />
 </vector>

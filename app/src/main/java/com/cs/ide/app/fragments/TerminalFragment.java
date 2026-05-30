@@ -1,6 +1,7 @@
 package com.cs.ide.app.fragments;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,7 +32,7 @@ import org.json.JSONException;
  * TerminalFragment provides an interactive shell interface within the IDE.
  * It uses a TerminalView connected to a TerminalSession managed by TermuxSessionManager.
  */
-public class TerminalFragment extends Fragment implements TermuxSessionManager.SessionCallback {
+public class TerminalFragment extends Fragment implements TermuxSessionManager.SessionCallback, SharedPreferences.OnSharedPreferenceChangeListener {
 	private static final String TAG = "TerminalFragment";
 
 	private TerminalView terminalView;
@@ -81,10 +82,7 @@ public class TerminalFragment extends Fragment implements TermuxSessionManager.S
 		terminalView = view.findViewById(R.id.terminalView);
 		registerForContextMenu(terminalView);
 
-		android.content.SharedPreferences prefs = requireContext().getSharedPreferences(com.cs.ide.app.utils.AppPreferences.PREFERENCE_NAME, android.content.Context.MODE_PRIVATE);
-		int textSizeSp = prefs.getInt(com.cs.ide.app.utils.AppPreferences.KEY_EDITOR_TEXT_SIZE, com.cs.ide.app.utils.AppPreferences.DEFAULT_TEXT_SIZE);
-		float px = android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, textSizeSp, getResources().getDisplayMetrics());
-		terminalView.setTextSize(Math.round(px));
+		applyPreferences();
 
 		// Start the terminal session
 		currentSession = TermuxSessionManager.startSession(requireContext(), terminalView, this);
@@ -315,6 +313,43 @@ public class TerminalFragment extends Fragment implements TermuxSessionManager.S
 		if (listener != null) {
 			listener.onUserInputSubmitted(rawCommand);
 		}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		applyPreferences();
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		requireContext().getSharedPreferences(com.cs.ide.app.utils.AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE)
+				.registerOnSharedPreferenceChangeListener(this);
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		requireContext().getSharedPreferences(com.cs.ide.app.utils.AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE)
+				.unregisterOnSharedPreferenceChangeListener(this);
+	}
+
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		if (com.cs.ide.app.utils.AppPreferences.KEY_EDITOR_TEXT_SIZE.equals(key)) {
+			if (getActivity() != null) {
+				getActivity().runOnUiThread(this::applyPreferences);
+			}
+		}
+	}
+
+	private void applyPreferences() {
+		if (terminalView == null || !isAdded()) return;
+		SharedPreferences prefs = requireContext().getSharedPreferences(com.cs.ide.app.utils.AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE);
+		int textSizeSp = prefs.getInt(com.cs.ide.app.utils.AppPreferences.KEY_EDITOR_TEXT_SIZE, com.cs.ide.app.utils.AppPreferences.DEFAULT_TEXT_SIZE);
+		float px = android.util.TypedValue.applyDimension(android.util.TypedValue.COMPLEX_UNIT_SP, textSizeSp, getResources().getDisplayMetrics());
+		terminalView.setTextSize(Math.round(px));
 	}
 
 	/**

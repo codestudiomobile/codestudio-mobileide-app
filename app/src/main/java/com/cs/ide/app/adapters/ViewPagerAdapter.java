@@ -30,9 +30,9 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 	 */
 	public static final Uri WELCOME_URI = Uri.parse("app://com.cs.ide/welcome");
 	/**
-	 * Special URI representing a new, unsaved "Untitled" file.
+	 * Base URI for new, unsaved "Untitled" files.
 	 */
-	public static final Uri UNTITLED_FILE_URI = Uri.parse("app://com.cs.ide/untitled");
+	public static final String UNTITLED_URI_PREFIX = "app://com.cs.ide/untitled";
 
 	/**
 	 * List of display names for the currently open tabs.
@@ -86,8 +86,8 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 			isPrivateTab.add(false);
 		}
 		if (editorStartup) {
-			fileUris.add(UNTITLED_FILE_URI);
-			fileNames.add(activity.getString(R.string.untitled));
+			fileUris.add(Uri.parse(UNTITLED_URI_PREFIX + "/" + System.currentTimeMillis()));
+			fileNames.add(activity.getString(R.string.untitled) + " 1");
 			isPrivateTab.add(false);
 		}
 	}
@@ -104,6 +104,9 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		if (index != -1) {
 			fileUris.set(index, newUri);
 			fileNames.set(index, newName);
+			if (index < isPrivateTab.size()) {
+				isPrivateTab.set(index, false);
+			}
 			notifyDataSetChanged();
 		}
 	}
@@ -202,8 +205,8 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 			String sessionDir = fileUri.getQueryParameter("session_dir");
 			return CompileResultFragment.newInstance(command, cwd, fileUri, sessionDir);
 		}
-		if (fileUri.equals(UNTITLED_FILE_URI)) {
-			return TextFragment.newInstance(UNTITLED_FILE_URI);
+		if (fileUri.toString().startsWith(UNTITLED_URI_PREFIX)) {
+			return TextFragment.newInstance(fileUri);
 		}
 		try {
 			return TextFragment.newInstance(fileUri);
@@ -376,7 +379,7 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 		String runPrefix = activity.getString(R.string.run_prefix, "");
 		for (int i = 0; i < getItemCount(); i++) {
 			Uri uri = fileUris.get(i);
-			if (!uri.equals(WELCOME_URI) && !uri.equals(UNTITLED_FILE_URI) && !fileNames.get(i).startsWith(runPrefix)) {
+			if (!uri.equals(WELCOME_URI) && !uri.toString().startsWith(UNTITLED_URI_PREFIX) && !fileNames.get(i).startsWith(runPrefix)) {
 				Fragment fragment = getFragment(i);
 				if (fragment instanceof TextFragment textFragment) {
 					if (!textFragment.isSaved() && (content = textFragment.getContents()) != null) {

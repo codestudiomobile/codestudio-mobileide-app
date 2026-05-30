@@ -2,7 +2,6 @@ package com.cs.ide.app.fragments;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,17 +10,18 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.cs.ide.R;
 import com.cs.ide.app.adapters.ViewPagerAdapter;
 import com.cs.ide.app.editor.SoraLanguageManager;
+import com.cs.ide.app.utils.DisplayManager;
 import com.cs.ide.app.views.ExtraKeysView;
 
 import org.apache.commons.io.IOUtils;
@@ -29,13 +29,11 @@ import org.apache.commons.io.IOUtils;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
 import io.github.rosemoe.sora.text.Content;
 import io.github.rosemoe.sora.text.Cursor;
 import io.github.rosemoe.sora.widget.CodeEditor;
-import io.github.rosemoe.sora.widget.schemes.EditorColorScheme;
 
 /**
  * Fragment for editing text files.
@@ -49,6 +47,9 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	private SoraLanguageManager languageManager;
 	private boolean isSaved = true;
 	private Uri fileUri;
+	private ScaleGestureDetector scaleGestureDetector;
+	private float scaleFactor = 1.0f;
+	private int baseTextSize;
 
 	/**
 	 * Creates a new instance of TextFragment for the given file URI.
@@ -139,29 +140,10 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 		});
 
 		// Ensure colors stay consistent even if color scheme is updated by language plugins
-		fileContent.subscribeAlways(ColorSchemeUpdateEvent.class, (event) -> {
-			EditorColorScheme scheme = event.getColorScheme();
-			scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, ContextCompat.getColor(requireContext(), R.color.ide_background));
-			scheme.setColor(EditorColorScheme.TEXT_NORMAL, ContextCompat.getColor(requireContext(), R.color.ide_text_primary));
-			scheme.setColor(EditorColorScheme.TEXT_SELECTED, ContextCompat.getColor(requireContext(), R.color.ide_text_selected));
-			scheme.setColor(EditorColorScheme.LINE_NUMBER, ContextCompat.getColor(requireContext(), R.color.ide_line_number));
-			scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, ContextCompat.getColor(requireContext(), R.color.ide_background));
-			scheme.setColor(EditorColorScheme.CURRENT_LINE, ContextCompat.getColor(requireContext(), R.color.ide_current_line));
-			scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.WHITE);
-			scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.WHITE);
-			scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#40BDBDBD"));
-
-			// Syntax highlighting colors for standard highlighting (e.g. EmptyLanguage or custom basic ones)
-			scheme.setColor(EditorColorScheme.KEYWORD, ContextCompat.getColor(requireContext(), R.color.syntax_keyword));
-			scheme.setColor(EditorColorScheme.LITERAL, ContextCompat.getColor(requireContext(), R.color.syntax_string)); // Used for strings/literals
-			scheme.setColor(EditorColorScheme.COMMENT, ContextCompat.getColor(requireContext(), R.color.syntax_comment));
-			scheme.setColor(EditorColorScheme.OPERATOR, ContextCompat.getColor(requireContext(), R.color.syntax_keyword));
-			scheme.setColor(EditorColorScheme.ANNOTATION, ContextCompat.getColor(requireContext(), R.color.syntax_type));
-			scheme.setColor(EditorColorScheme.FUNCTION_NAME, ContextCompat.getColor(requireContext(), R.color.syntax_function));
-			scheme.setColor(EditorColorScheme.IDENTIFIER_NAME, ContextCompat.getColor(requireContext(), R.color.syntax_function));
-		});
+		DisplayManager.applyIdeEditorTheme(requireContext(), fileContent);
 
 		applyPreferences();
+		setupZoomGesture();
 
 		// Robust text selection: Long press to select the whole word (delimited by spaces)
 		fileContent.setOnLongClickListener(v -> {
@@ -205,11 +187,11 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	}
 
 	private void applyPreferences() {
-		if (!isAdded() || fileContent == null) return;
+		if (fileContent == null || !isAdded()) return;
 		SharedPreferences prefs = requireContext().getSharedPreferences(com.cs.ide.app.utils.AppPreferences.PREFERENCE_NAME, android.content.Context.MODE_PRIVATE);
 
-		int textSize = prefs.getInt(com.cs.ide.app.utils.AppPreferences.KEY_EDITOR_TEXT_SIZE, com.cs.ide.app.utils.AppPreferences.DEFAULT_TEXT_SIZE);
-		fileContent.setTextSize(textSize);
+		baseTextSize = prefs.getInt(com.cs.ide.app.utils.AppPreferences.KEY_EDITOR_TEXT_SIZE, com.cs.ide.app.utils.AppPreferences.DEFAULT_TEXT_SIZE);
+		updateEditorTextSize();
 
 		boolean showLineNumbers = prefs.getBoolean(com.cs.ide.app.utils.AppPreferences.KEY_SHOW_LINE_NUMBERS, true);
 		fileContent.setLineNumberEnabled(showLineNumbers);
@@ -246,6 +228,9 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	public void onResume() {
 		super.onResume();
 		applyPreferences();
+		scaleFactor = 1.0f; // Reset zoom on resume to sync with settings
+		updateEditorTextSize();
+		setupZoomGesture();
 
 		// Robust text selection: Long press to select the whole word (delimited by spaces)
 		fileContent.setOnLongClickListener(v -> {
@@ -382,7 +367,8 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	 * Asynchronously loads the file content from the given URI.
 	 */
 	private void loadFileContent() {
-		if (fileUri == null || fileUri.equals(ViewPagerAdapter.UNTITLED_FILE_URI)) return;
+		if (fileUri == null || fileUri.toString().startsWith(ViewPagerAdapter.UNTITLED_URI_PREFIX))
+			return;
 		new Thread(() -> {
 			if (com.cs.ide.app.utils.FileUtils.isBinaryFile(requireContext(), fileUri)) {
 				return;
@@ -407,5 +393,42 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	 */
 	public void refreshContent() {
 		loadFileContent();
+	}
+
+	private void setupZoomGesture() {
+		scaleGestureDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+			@Override
+			public boolean onScale(ScaleGestureDetector detector) {
+				SharedPreferences prefs = requireContext().getSharedPreferences(com.cs.ide.app.utils.AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE);
+				if (!prefs.getBoolean(com.cs.ide.app.utils.AppPreferences.KEY_PINCH_TO_ZOOM, true)) {
+					return false;
+				}
+
+				scaleFactor *= detector.getScaleFactor();
+				// Limit zoom: baseTextSize is 8-38. Let's allow scaling from 0.5x to 2.0x, but cap at absolute 8 and 80.
+				float newSize = baseTextSize * scaleFactor;
+				if (newSize < 8) {
+					newSize = 8;
+					scaleFactor = newSize / baseTextSize;
+				} else if (newSize > 80) {
+					newSize = 80;
+					scaleFactor = newSize / baseTextSize;
+				}
+
+				updateEditorTextSize();
+				return true;
+			}
+		});
+
+		fileContent.setOnTouchListener((v, event) -> {
+			scaleGestureDetector.onTouchEvent(event);
+			return false; // Let the editor handle its own scrolling/selection
+		});
+	}
+
+	private void updateEditorTextSize() {
+		if (fileContent != null) {
+			fileContent.setTextSize(baseTextSize * scaleFactor);
+		}
 	}
 }

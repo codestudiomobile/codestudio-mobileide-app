@@ -27,9 +27,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -87,27 +87,24 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSelectedListener,
 		FilesAdapter.OnFileClickListener, CreateFileDialog.OnFileCreatedListener, TerminalFragment.ConsoleInputListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
+	public static final Uri INTERNAL_STORAGE_URI = Uri.parse("app://com.cs.ide/internal_storage");
 	private static final String TAG = "MainActivity";
 	private static final int REQUEST_CODE_OPEN_DIRECTORY = 1;
 	private static final int REQUEST_CODE_OPEN_FILE = 2001;
 	private static final int REQUEST_CODE_OPEN_FILE_FOR_IMPORT = 1002;
 	private static final int AUTO_SAVE_INTERVAL_MS = 10000;
-
 	public static Uri currentDirectoryUri = null;
 	public static ViewPagerAdapter viewPagerAdapter;
-
 	private final Handler mainHandler = new Handler(Looper.getMainLooper());
 	private final ExecutorService executor = Executors.newFixedThreadPool(4); // Increased pool for better parallelism
 	private final List<FileItem> fileItems = new ArrayList<>();
 	private final Map<String, String> tabSaveTimes = new HashMap<>();
 	private final ArrayList<Uri> folderUris = new ArrayList<>();
 	private final ArrayList<String> folderNames = new ArrayList<>();
-
-	private long lastBackPressTime = 0;
-
 	public Uri currentFileUri;
 	public String currentMimeType;
 	public ViewPager2 viewPager;
+	private long lastBackPressTime = 0;
 	// --- UI Elements ---
 	private DrawerLayout drawerLayout;
 	private TabLayout tabLayout;
@@ -126,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	private FileItem importTargetFolder;
 	private Uri rootDirectoryUri = null;
 	private Uri folderUri = null;
+	private Uri saveAsSourceUri = null;
 
 	// --- UI State ---
 	private boolean runMenuVisible = false;
@@ -458,10 +456,28 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 			handleSaveAs();
 			return true;
 		} else if (id == R.id.openNewFile) {
-			openSpecialTab(ViewPagerAdapter.UNTITLED_FILE_URI, getString(R.string.untitled));
+			openNewUntitledFile();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void openNewUntitledFile() {
+		int count = 1;
+		String baseName = getString(R.string.untitled);
+		String name = baseName;
+		Uri uri = Uri.parse("app://com.cs.ide/untitled/" + System.currentTimeMillis());
+
+		// Find a unique name like Untitled 1, Untitled 2...
+		while (viewPagerAdapter.findTabPositionByName(name) != -1) {
+			name = baseName + " " + count++;
+		}
+
+		int index = viewPagerAdapter.addTab(uri, name);
+		if (index != -1) {
+			tabLayout.selectTab(tabLayout.getTabAt(index));
+			viewPager.setCurrentItem(index, false);
+		}
 	}
 
 	private void openSpecialTab(Uri uri, String name) {
@@ -878,7 +894,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	}
 
 	public void updateOpenedFolder(Uri uri) {
-		if (uri == null || uri.equals(ViewPagerAdapter.WELCOME_URI) || uri.equals(ViewPagerAdapter.UNTITLED_FILE_URI))
+		if (uri == null || uri.equals(ViewPagerAdapter.WELCOME_URI) || uri.toString().startsWith(ViewPagerAdapter.UNTITLED_URI_PREFIX))
 			return;
 		executor.execute(() -> {
 			Uri folderToSave = FileUtils.isDirectory(this, uri) ? uri : getSafParentUri(uri);
@@ -936,7 +952,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 						else files.add(item);
 					}
 				}
-			} else {
+			} else if ("content".equalsIgnoreCase(uri.getScheme()) && DocumentsContract.isTreeUri(uri)) {
 				documentId = DocumentsContract.getTreeDocumentId(uri);
 				Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, documentId);
 				try (Cursor cursor = getContentResolver().query(childrenUri,
@@ -956,12 +972,20 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 					}
 				}
 			}
+			final String fullPath = FileUtils.getAbsolutePathFromUri(this, uri);
 			final String finalId = documentId;
 			folders.sort((a, b) -> a.displayName.compareToIgnoreCase(b.displayName));
 			files.sort((a, b) -> a.displayName.compareToIgnoreCase(b.displayName));
 
 			runOnUiThread(() -> {
-				currentFolderTitle.setText(getString(R.string.label_storage_prefix) + finalId.substring(Math.min(8, finalId.length())));
+				String displayPath;
+				if (fullPath != null) {
+					displayPath = fullPath;
+				} else {
+					displayPath = finalId.startsWith("primary:") ? finalId.substring(8) : finalId;
+					displayPath = getString(R.string.label_storage_prefix) + displayPath;
+				}
+				currentFolderTitle.setText(displayPath);
 				fileItems.clear();
 				fileItems.addAll(folders);
 				fileItems.addAll(files);
@@ -1027,7 +1051,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		if (viewPagerAdapter == null || position < 0 || position >= viewPagerAdapter.getItemCount())
 			return;
 		Uri uri = viewPagerAdapter.fileUris.get(position);
-		if (uri.equals(ViewPagerAdapter.WELCOME_URI) || uri.equals(ViewPagerAdapter.UNTITLED_FILE_URI))
+		if (uri.equals(ViewPagerAdapter.WELCOME_URI) || uri.toString().startsWith(ViewPagerAdapter.UNTITLED_URI_PREFIX))
 			return;
 
 		Fragment fragment = viewPagerAdapter.getFragment(position);
@@ -1058,32 +1082,32 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	private void saveAllOpenFiles() {
 		if (viewPagerAdapter == null) return;
-		executor.execute(() -> {
-			for (int i = 0; i < viewPagerAdapter.getItemCount(); i++) {
-				final int index = i;
-				runOnUiThread(() -> {
-					Fragment fragment = viewPagerAdapter.getFragment(index);
-					if (fragment instanceof TextFragment textFragment && !textFragment.isSaved()) {
-						byte[] content = textFragment.getContents();
-						Uri uri = viewPagerAdapter.fileUris.get(index);
-						if (content != null && uri != null && !uri.equals(ViewPagerAdapter.WELCOME_URI) && !uri.equals(ViewPagerAdapter.UNTITLED_FILE_URI)) {
-							FilesAdapter.saveFileContentAsync(this, uri, content);
-							textFragment.setSaved(true);
-						}
-					}
-				});
+		boolean savedAny = false;
+		for (int i = 0; i < viewPagerAdapter.getItemCount(); i++) {
+			Fragment fragment = viewPagerAdapter.getFragment(i);
+			if (fragment instanceof TextFragment textFragment && !textFragment.isSaved()) {
+				byte[] content = textFragment.getContents();
+				Uri uri = viewPagerAdapter.fileUris.get(i);
+				if (content != null && uri != null && !uri.equals(ViewPagerAdapter.WELCOME_URI) && !uri.toString().startsWith(ViewPagerAdapter.UNTITLED_URI_PREFIX)) {
+					FilesAdapter.saveFileContentAsync(this, uri, content);
+					textFragment.setSaved(true);
+					savedAny = true;
+				}
 			}
-			runOnUiThread(() -> Toast.makeText(this, R.string.file_saved_successfully, Toast.LENGTH_SHORT).show());
-		});
+		}
+		if (savedAny) {
+			Toast.makeText(this, R.string.file_saved_successfully, Toast.LENGTH_SHORT).show();
+		}
 	}
 
 	private void handleSaveAs() {
 		int currentTabPos = viewPager.getCurrentItem();
 		if (currentTabPos != -1) {
 			Fragment fragment = viewPagerAdapter.getFragment(currentTabPos);
-			if (fragment instanceof TextFragment)
+			if (fragment instanceof TextFragment) {
+				saveAsSourceUri = viewPagerAdapter.fileUris.get(currentTabPos);
 				requestSaveAs(((TextFragment) fragment).getContents());
-			else
+			} else
 				Toast.makeText(this, R.string.msg_content_cannot_be_saved_save_as, Toast.LENGTH_SHORT).show();
 		} else Toast.makeText(this, R.string.msg_no_tab_open_to_save, Toast.LENGTH_SHORT).show();
 	}
@@ -1094,9 +1118,15 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 				if (os != null) {
 					os.write(content);
 					runOnUiThread(() -> {
-						int untitled = viewPagerAdapter.findTabPositionByName(getString(R.string.untitled));
-						if (untitled != -1) viewPagerAdapter.removeTab(untitled);
-						openFileInViewPager(uri, name);
+						if (saveAsSourceUri != null) {
+							viewPagerAdapter.updateTabInfo(saveAsSourceUri, uri, name);
+							saveAsSourceUri = null;
+						} else {
+							int untitled = viewPagerAdapter.findTabPositionByName(getString(R.string.untitled));
+							if (untitled != -1) viewPagerAdapter.removeTab(untitled);
+							openFileInViewPager(uri, name);
+						}
+						refreshFileList();
 						Toast.makeText(this, R.string.file_saved_successfully, Toast.LENGTH_SHORT).show();
 					});
 				}
@@ -1338,8 +1368,12 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	@Override
 	public void onFileCreated(String fileName, Uri fileUri, @Nullable byte[] fileContent) {
-		if (fileContent != null) saveContentToFile(fileUri, fileContent, fileName);
-		else openFileInViewPager(fileUri, fileName);
+		if (fileContent != null) {
+			saveContentToFile(fileUri, fileContent, fileName);
+		} else {
+			saveAsSourceUri = null; // Ensure we don't accidentally update a tab for a new file
+			openFileInViewPager(fileUri, fileName);
+		}
 	}
 
 	@Override
@@ -1380,7 +1414,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	@NonNull
 	private List<FileItem> getChildFolders(Uri parentUri) {
 		List<FileItem> folders = new ArrayList<>();
-		if (parentUri == null || !"content".equals(parentUri.getScheme())) {
+		if (parentUri == null || !"content".equals(parentUri.getScheme()) || !DocumentsContract.isTreeUri(parentUri)) {
 			return folders;
 		}
 		String parentId = DocumentsContract.isDocumentUri(this, parentUri) ? DocumentsContract.getDocumentId(parentUri) : DocumentsContract.getTreeDocumentId(parentUri);
@@ -1419,23 +1453,51 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	public void prepareFolderDataForDialog() {
 		folderUris.clear();
 		folderNames.clear();
-		folderUris.add(null);
+		folderUris.add(INTERNAL_STORAGE_URI);
 		folderNames.add(getString(R.string.app_storage_default));
 
 		if (currentDirectoryUri != null) {
-			String parentId = DocumentsContract.getTreeDocumentId(currentDirectoryUri);
-			Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(currentDirectoryUri, parentId);
-			try (Cursor cursor = getContentResolver().query(childrenUri, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
-				if (cursor != null && cursor.moveToFirst()) {
-					do {
-						if (DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(2))) {
-							folderUris.add(DocumentsContract.buildDocumentUriUsingTree(currentDirectoryUri, cursor.getString(0)));
-							folderNames.add(cursor.getString(1));
+			String currentFolderName = FileUtils.getFileName(this, currentDirectoryUri);
+			if ("content".equals(currentDirectoryUri.getScheme()) && DocumentsContract.isTreeUri(currentDirectoryUri)) {
+				folderUris.add(currentDirectoryUri);
+				folderNames.add(getString(R.string.current_prefix, currentFolderName));
+				try {
+					String parentId = DocumentsContract.getTreeDocumentId(currentDirectoryUri);
+					Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(currentDirectoryUri, parentId);
+					try (Cursor cursor = getContentResolver().query(childrenUri, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
+						if (cursor != null && cursor.moveToFirst()) {
+							do {
+								if (DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(2))) {
+									folderUris.add(DocumentsContract.buildDocumentUriUsingTree(currentDirectoryUri, cursor.getString(0)));
+									folderNames.add(cursor.getString(1));
+								}
+							} while (cursor.moveToNext());
 						}
-					} while (cursor.moveToNext());
+					}
+				} catch (Exception e) {
+					Log.e(TAG, "Error preparing folder data from SAF", e);
 				}
-			} catch (Exception e) {
-				Log.e(TAG, "Error preparing folder data", e);
+			} else if ("file".equals(currentDirectoryUri.getScheme())) {
+				try {
+					File dir = new File(currentDirectoryUri.getPath());
+					if (dir.exists() && dir.isDirectory()) {
+						folderUris.add(currentDirectoryUri);
+						folderNames.add(getString(R.string.current_prefix, dir.getName()));
+
+						// Add subdirectories using File API
+						File[] children = dir.listFiles();
+						if (children != null) {
+							for (File child : children) {
+								if (child.isDirectory()) {
+									folderUris.add(Uri.fromFile(child));
+									folderNames.add(child.getName());
+								}
+							}
+						}
+					}
+				} catch (Exception e) {
+					Log.e(TAG, "Error preparing folder data from File API", e);
+				}
 			}
 		}
 	}

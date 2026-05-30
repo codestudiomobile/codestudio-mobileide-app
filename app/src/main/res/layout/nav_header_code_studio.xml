@@ -10,9 +10,10 @@
 
     <TextView
         android:id="@+id/currentFolderTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minEms="15"
+        android:ellipsize="middle"
+        android:singleLine="true"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textColor="@color/ide_text_primary"
         android:textSize="18sp" />
