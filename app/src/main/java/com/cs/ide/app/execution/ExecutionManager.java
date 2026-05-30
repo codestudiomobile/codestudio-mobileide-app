@@ -39,8 +39,16 @@ public class ExecutionManager {
 
 		final String fileName = (item.displayName != null) ? item.displayName : FileUtils.getFileName(activity, item.uri);
 		String mimeType = activity.getMimeType(item.uri);
-		if (mimeType != null && (mimeType.equals("text/html") || mimeType.equals("application/xhtml+xml"))) {
-			openHtmlInBrowser(activity, item.uri);
+		boolean isHtml = (mimeType != null && (mimeType.equals("text/html") || mimeType.equals("application/xhtml+xml")));
+		if (!isHtml) {
+			String fileNameLower = fileName.toLowerCase();
+			if (fileNameLower.endsWith(".html") || fileNameLower.endsWith(".htm")) {
+				isHtml = true;
+			}
+		}
+
+		if (isHtml) {
+			runHtmlWithCache(activity, item, fileName);
 			return;
 		}
 
@@ -304,13 +312,50 @@ public class ExecutionManager {
 		return null;
 	}
 
+	private static void runHtmlWithCache(MainActivity activity, FileItem item, String fileName) {
+		new Thread(() -> {
+			// Use external cache if available for better browser compatibility
+			File baseExecDir = activity.getExternalCacheDir();
+			if (baseExecDir == null) baseExecDir = activity.getCacheDir();
+
+			File htmlDir = new File(baseExecDir, "html_preview");
+			File sessionDir = new File(htmlDir, "session_" + System.nanoTime());
+
+			if (!sessionDir.exists() && !sessionDir.mkdirs()) {
+				activity.runOnUiThread(() -> Toast.makeText(activity, "Failed to create HTML preview environment.", Toast.LENGTH_SHORT).show());
+				return;
+			}
+
+			File targetFile = new File(sessionDir, fileName);
+			if (copyUriToInternal(activity, item.uri, targetFile)) {
+				activity.runOnUiThread(() -> {
+					openHtmlInBrowser(activity, Uri.fromFile(targetFile));
+				});
+			} else {
+				activity.runOnUiThread(() -> Toast.makeText(activity, "Failed to prepare HTML file for viewing.", Toast.LENGTH_SHORT).show());
+			}
+		}).start();
+	}
+
 	private static void openHtmlInBrowser(Context context, Uri fileUri) {
 		Intent intent = new Intent(Intent.ACTION_VIEW);
 		intent.setDataAndType(fileUri, "text/html");
 		intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+		// Bypass FileUriExposedException for file:// URIs on Android 7+
+		if ("file".equals(fileUri.getScheme())) {
+			try {
+				java.lang.reflect.Method m = android.os.StrictMode.class.getMethod("disableDeathOnFileUriExposure");
+				m.invoke(null);
+			} catch (Exception e) {
+				Log.e(TAG, "Failed to disable file uri exposure death", e);
+			}
+		}
+
 		try {
 			context.startActivity(intent);
 		} catch (Exception e) {
+			Log.e(TAG, "Failed to open HTML in browser", e);
 			Toast.makeText(context, R.string.no_app_found_to_view, Toast.LENGTH_LONG).show();
 		}
 	}

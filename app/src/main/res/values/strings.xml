@@ -359,6 +359,7 @@
     <string name="hint_enter_file_name">Enter file name</string>
 
     <string name="msg_content_cannot_be_saved_save_as">Content in current tab cannot be saved with Save As.</string>
+    <string name="msg_content_cannot_be_saved">Content in current tab cannot be saved.</string>
     <string name="msg_no_tab_open_to_save">No tab open to save.</string>
     <string name="msg_item_exists_in_app_storage">Item already exists in app storage</string>
     <string name="msg_folder_created_app_storage">Folder created in app storage.</string>

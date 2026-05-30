@@ -429,7 +429,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 			openSpecialTab(ViewPagerAdapter.WELCOME_URI, getString(R.string.welcome));
 			return true;
 		} else if (id == R.id.saveFiles) {
-			saveAllOpenFiles();
+			handleSave();
 			return true;
 		} else if (id == R.id.settings) {
 			openSettings();
@@ -672,26 +672,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 				parentUri = rootDirectoryUri;
 			}
 
-			final Uri finalParentUri = parentUri;
-			final List<FileItem> subFolders = parentUri != null ? getChildFolders(parentUri) : new ArrayList<>();
-			final String currentFolderName = (baseItem != null && baseItem.isDirectory) ? baseItem.displayName :
-					(parentUri != null ? FileUtils.getFileName(this, parentUri) : getString(R.string.app_storage_default));
+			prepareFolderDataForDialog(parentUri);
 
 			runOnUiThread(() -> {
-				if (finalParentUri == null)
-					Toast.makeText(this, R.string.open_folder_first, Toast.LENGTH_LONG).show();
-
-				List<String> folderNamesList = new ArrayList<>();
-				List<Uri> folderUrisList = new ArrayList<>();
-				folderNamesList.add(finalParentUri != null ? getString(R.string.current_prefix, currentFolderName) : getString(R.string.app_storage_default));
-				folderUrisList.add(finalParentUri);
-
-				for (FileItem folder : subFolders) {
-					folderNamesList.add(folder.displayName);
-					folderUrisList.add(folder.uri);
-				}
-
-				showCreateFileDialogInternal(folderNamesList, folderUrisList, initialType);
+				showCreateFileDialogInternal(new ArrayList<>(folderNames), new ArrayList<>(folderUris), initialType);
 			});
 		});
 	}
@@ -1080,6 +1064,30 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		getSupportActionBar().setSubtitle(lastSave != null ? getString(R.string.autosaved_at, lastSave) : getString(R.string.nothing_changed));
 	}
 
+	private void handleSave() {
+		int currentTabPos = viewPager.getCurrentItem();
+		if (currentTabPos != -1) {
+			Fragment fragment = viewPagerAdapter.getFragment(currentTabPos);
+			if (fragment instanceof TextFragment textFragment) {
+				Uri uri = viewPagerAdapter.fileUris.get(currentTabPos);
+				if (uri.toString().startsWith(ViewPagerAdapter.UNTITLED_URI_PREFIX)) {
+					handleSaveAs();
+				} else {
+					byte[] content = textFragment.getContents();
+					if (content != null) {
+						FilesAdapter.saveFileContentAsync(this, uri, content);
+						textFragment.setSaved(true);
+						Toast.makeText(this, R.string.file_saved_successfully, Toast.LENGTH_SHORT).show();
+					}
+				}
+			} else {
+				Toast.makeText(this, R.string.msg_content_cannot_be_saved, Toast.LENGTH_SHORT).show();
+			}
+		} else {
+			Toast.makeText(this, R.string.msg_no_tab_open_to_save, Toast.LENGTH_SHORT).show();
+		}
+	}
+
 	private void saveAllOpenFiles() {
 		if (viewPagerAdapter == null) return;
 		boolean savedAny = false;
@@ -1138,6 +1146,12 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	@Override
 	public void requestSaveAs(byte[] content) {
+		int currentTabPos = viewPager.getCurrentItem();
+		if (currentTabPos == -1) return;
+
+		Uri currentTabUri = viewPagerAdapter.fileUris.get(currentTabPos);
+		String currentTabName = viewPagerAdapter.fileNames.get(currentTabPos);
+
 		progressBar.setVisibility(View.VISIBLE);
 		executor.execute(() -> {
 			prepareFolderDataForDialog();
@@ -1148,7 +1162,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 				else if (folderUris.isEmpty())
 					Toast.makeText(this, R.string.select_folder_with_permission, Toast.LENGTH_LONG).show();
 				else
-					CreateFileDialog.newInstance(folderUris, folderNames, content).show(getSupportFragmentManager(), "SaveAsFileDialog");
+					CreateFileDialog.newInstance(folderUris, folderNames, content, currentTabName, currentTabUri).show(getSupportFragmentManager(), "SaveAsFileDialog");
 			});
 		});
 	}
@@ -1451,52 +1465,78 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	}
 
 	public void prepareFolderDataForDialog() {
+		prepareFolderDataForDialog(null);
+	}
+
+	public void prepareFolderDataForDialog(@Nullable Uri baseUri) {
 		folderUris.clear();
 		folderNames.clear();
-		folderUris.add(INTERNAL_STORAGE_URI);
-		folderNames.add(getString(R.string.app_storage_default));
 
-		if (currentDirectoryUri != null) {
-			String currentFolderName = FileUtils.getFileName(this, currentDirectoryUri);
-			if ("content".equals(currentDirectoryUri.getScheme()) && DocumentsContract.isTreeUri(currentDirectoryUri)) {
-				folderUris.add(currentDirectoryUri);
-				folderNames.add(getString(R.string.current_prefix, currentFolderName));
+		Uri topUri = baseUri != null ? baseUri : currentDirectoryUri;
+		if (topUri == null) topUri = INTERNAL_STORAGE_URI;
+
+		// 1. Add the primary/active folder at the top
+		folderUris.add(topUri);
+		if (topUri.equals(INTERNAL_STORAGE_URI)) {
+			folderNames.add(getString(R.string.app_storage_default));
+		} else {
+			folderNames.add(getString(R.string.current_prefix, FileUtils.getFileName(this, topUri)));
+		}
+
+		// 2. Add App Storage as an option if it wasn't the top one
+		if (!topUri.equals(INTERNAL_STORAGE_URI)) {
+			folderUris.add(INTERNAL_STORAGE_URI);
+			folderNames.add(getString(R.string.app_storage_default));
+		}
+
+		// 3. If there's an opened root folder different from topUri, add it
+		if (currentDirectoryUri != null && !currentDirectoryUri.equals(topUri) && !currentDirectoryUri.equals(INTERNAL_STORAGE_URI)) {
+			folderUris.add(currentDirectoryUri);
+			folderNames.add(getString(R.string.current_prefix, FileUtils.getFileName(this, currentDirectoryUri)));
+		}
+
+		// 4. Add subfolders of the opened root folder
+		Uri folderToScan = currentDirectoryUri != null ? currentDirectoryUri : (topUri.equals(INTERNAL_STORAGE_URI) ? null : topUri);
+		if (folderToScan != null) {
+			if ("content".equals(folderToScan.getScheme()) && DocumentsContract.isTreeUri(folderToScan)) {
 				try {
-					String parentId = DocumentsContract.getTreeDocumentId(currentDirectoryUri);
-					Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(currentDirectoryUri, parentId);
+					String parentId = DocumentsContract.isDocumentUri(this, folderToScan) ? DocumentsContract.getDocumentId(folderToScan) : DocumentsContract.getTreeDocumentId(folderToScan);
+					Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(folderToScan, parentId);
 					try (Cursor cursor = getContentResolver().query(childrenUri, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
 						if (cursor != null && cursor.moveToFirst()) {
 							do {
 								if (DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(2))) {
-									folderUris.add(DocumentsContract.buildDocumentUriUsingTree(currentDirectoryUri, cursor.getString(0)));
-									folderNames.add(cursor.getString(1));
+									Uri childUri = DocumentsContract.buildDocumentUriUsingTree(folderToScan, cursor.getString(0));
+									if (!folderUris.contains(childUri)) {
+										folderUris.add(childUri);
+										folderNames.add(cursor.getString(1));
+									}
 								}
 							} while (cursor.moveToNext());
 						}
 					}
 				} catch (Exception e) {
-					Log.e(TAG, "Error preparing folder data from SAF", e);
+					Log.e(TAG, "Error preparing subfolders from SAF", e);
 				}
-			} else if ("file".equals(currentDirectoryUri.getScheme())) {
+			} else if ("file".equals(folderToScan.getScheme())) {
 				try {
-					File dir = new File(currentDirectoryUri.getPath());
+					File dir = new File(folderToScan.getPath());
 					if (dir.exists() && dir.isDirectory()) {
-						folderUris.add(currentDirectoryUri);
-						folderNames.add(getString(R.string.current_prefix, dir.getName()));
-
-						// Add subdirectories using File API
 						File[] children = dir.listFiles();
 						if (children != null) {
 							for (File child : children) {
 								if (child.isDirectory()) {
-									folderUris.add(Uri.fromFile(child));
-									folderNames.add(child.getName());
+									Uri childUri = Uri.fromFile(child);
+									if (!folderUris.contains(childUri)) {
+										folderUris.add(childUri);
+										folderNames.add(child.getName());
+									}
 								}
 							}
 						}
 					}
 				} catch (Exception e) {
-					Log.e(TAG, "Error preparing folder data from File API", e);
+					Log.e(TAG, "Error preparing subfolders from File API", e);
 				}
 			}
 		}

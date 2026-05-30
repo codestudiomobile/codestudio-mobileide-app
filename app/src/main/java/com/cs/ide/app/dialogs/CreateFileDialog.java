@@ -34,23 +34,33 @@ public class CreateFileDialog extends DialogFragment {
 	private static final String ARG_FOLDER_URIS = "folder_uris";
 	private static final String ARG_FOLDER_NAMES = "folder_names";
 	private static final String ARG_FILE_CONTENT = "file_content";
+	private static final String ARG_CURRENT_FILE_NAME = "current_file_name";
+	private static final String ARG_CURRENT_FILE_URI = "current_file_uri";
 
 	private OnFileCreatedListener listener;
 	private ArrayList<Uri> folderUris;
 	private ArrayList<String> folderNames;
 	private byte[] fileContent;
+	private String currentFileName;
+	private Uri currentFileUri;
 
 	public static CreateFileDialog newInstance(ArrayList<Uri> folderUris, ArrayList<String> folderNames) {
-		return newInstance(folderUris, folderNames, null);
+		return newInstance(folderUris, folderNames, null, null, null);
 	}
 
-	public static CreateFileDialog newInstance(ArrayList<Uri> folderUris, ArrayList<String> folderNames, @Nullable byte[] content) {
+	public static CreateFileDialog newInstance(ArrayList<Uri> folderUris, ArrayList<String> folderNames, @Nullable byte[] content, @Nullable String currentName, @Nullable Uri currentUri) {
 		CreateFileDialog fragment = new CreateFileDialog();
 		Bundle args = new Bundle();
 		args.putParcelableArrayList(ARG_FOLDER_URIS, folderUris != null ? folderUris : new ArrayList<>());
 		args.putStringArrayList(ARG_FOLDER_NAMES, folderNames != null ? folderNames : new ArrayList<>());
 		if (content != null) {
 			args.putByteArray(ARG_FILE_CONTENT, content);
+		}
+		if (currentName != null) {
+			args.putString(ARG_CURRENT_FILE_NAME, currentName);
+		}
+		if (currentUri != null) {
+			args.putParcelable(ARG_CURRENT_FILE_URI, currentUri);
 		}
 		fragment.setArguments(args);
 		return fragment;
@@ -73,6 +83,8 @@ public class CreateFileDialog extends DialogFragment {
 			folderUris = getArguments().getParcelableArrayList(ARG_FOLDER_URIS);
 			folderNames = getArguments().getStringArrayList(ARG_FOLDER_NAMES);
 			fileContent = getArguments().getByteArray(ARG_FILE_CONTENT);
+			currentFileName = getArguments().getString(ARG_CURRENT_FILE_NAME);
+			currentFileUri = getArguments().getParcelable(ARG_CURRENT_FILE_URI);
 		}
 		if (folderUris == null) folderUris = new ArrayList<>();
 		if (folderNames == null) folderNames = new ArrayList<>();
@@ -112,6 +124,11 @@ public class CreateFileDialog extends DialogFragment {
 		}
 		createButton.setText(isSaveAsMode ? "Save" : "Create");
 
+		if (isSaveAsMode && currentFileName != null) {
+			fileNameEditText.setText(currentFileName);
+			fileNameEditText.setSelection(currentFileName.lastIndexOf('.') != -1 ? currentFileName.lastIndexOf('.') : currentFileName.length());
+		}
+
 		if (!folderNames.isEmpty()) {
 			ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), R.layout.spinner_item_codestudio, folderNames);
 			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -132,6 +149,28 @@ public class CreateFileDialog extends DialogFragment {
 			return;
 		}
 
+		int selectedPosition = locationSpinner.getSelectedItemPosition();
+		if (selectedPosition < 0 || selectedPosition >= folderUris.size()) return;
+
+		Uri folderUri = folderUris.get(selectedPosition);
+
+		// For Save As, check if name and location are actually modified
+		if (fileContent != null && currentFileUri != null && currentFileName != null) {
+			if (fileName.equals(currentFileName)) {
+				// Name matches, check location
+				Uri parentUriOfCurrent = getSafParentUri(currentFileUri);
+				if (folderUri != null && folderUri.equals(parentUriOfCurrent)) {
+					Toast.makeText(requireContext(), "No changes detected in file name or location.", Toast.LENGTH_SHORT).show();
+					return;
+				}
+				// Also check app storage case
+				if (folderUri == null && currentFileUri.toString().startsWith("file://") && currentFileUri.getPath().contains("code_studio_files")) {
+					Toast.makeText(requireContext(), "No changes detected in file name or location.", Toast.LENGTH_SHORT).show();
+					return;
+				}
+			}
+		}
+
 		String extension = getFileExtension(fileName);
 		if (extension.isEmpty()) {
 			fileName += ".txt";
@@ -141,16 +180,26 @@ public class CreateFileDialog extends DialogFragment {
 		String mimeType = resolveMimeType(extension);
 		if (mimeType == null) return;
 
-		int selectedPosition = locationSpinner.getSelectedItemPosition();
-		if (selectedPosition >= 0 && selectedPosition < folderUris.size()) {
-			Uri folderUri = folderUris.get(selectedPosition);
-			if (folderUri == null || folderUri.toString().equals("app://com.cs.ide/internal_storage")) {
-				createInAppStorage(fileName);
-			} else if ("file".equals(folderUri.getScheme())) {
-				createInFilePath(folderUri, fileName, mimeType);
-			} else {
-				createInSaf(folderUri, fileName, mimeType);
-			}
+		if (folderUri == null || folderUri.toString().equals("app://com.cs.ide/internal_storage")) {
+			createInAppStorage(fileName);
+		} else if ("file".equals(folderUri.getScheme())) {
+			createInFilePath(folderUri, fileName, mimeType);
+		} else {
+			createInSaf(folderUri, fileName, mimeType);
+		}
+	}
+
+	private Uri getSafParentUri(Uri childUri) {
+		if ("file".equalsIgnoreCase(childUri.getScheme())) {
+			java.io.File parent = new java.io.File(childUri.getPath()).getParentFile();
+			return parent != null ? Uri.fromFile(parent) : null;
+		}
+		try {
+			DocumentsContract.Path path = DocumentsContract.findDocumentPath(requireContext().getContentResolver(), childUri);
+			if (path == null || path.getPath().size() < 2) return null;
+			return DocumentsContract.buildDocumentUriUsingTree(childUri, path.getPath().get(path.getPath().size() - 2));
+		} catch (Exception e) {
+			return null;
 		}
 	}
 
