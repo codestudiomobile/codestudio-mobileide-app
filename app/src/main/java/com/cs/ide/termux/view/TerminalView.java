@@ -32,6 +32,7 @@ import android.view.autofill.AutofillValue;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Scroller;
 
 import androidx.annotation.RequiresApi;
@@ -104,7 +105,9 @@ public final class TerminalView extends View {
 		public boolean onCreateActionMode(ActionMode mode, Menu menu) {
 			menu.add(Menu.NONE, 1, Menu.NONE, R.string.copy_text);
 			menu.add(Menu.NONE, 2, Menu.NONE, R.string.paste_text);
-			menu.add(Menu.NONE, 3, Menu.NONE, R.string.text_selection_more);
+			if (mClient != null && mClient.shouldShowMoreInActionMode()) {
+				menu.add(Menu.NONE, 3, Menu.NONE, R.string.text_selection_more);
+			}
 			return true;
 		}
 
@@ -281,7 +284,14 @@ public final class TerminalView extends View {
 				}
 
 				requestFocus();
-				mClient.onSingleTapUp(event);
+				InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+				if (imm != null) {
+					imm.showSoftInput(TerminalView.this, InputMethodManager.SHOW_IMPLICIT);
+				}
+
+				if (mClient != null) {
+					mClient.onSingleTapUp(event);
+				}
 				return true;
 			}
 
@@ -375,7 +385,7 @@ public final class TerminalView extends View {
 			public void onLongPress(MotionEvent event) {
 				if (mGestureRecognizer.isInProgress())
 					return;
-				if (mClient.onLongPress(event))
+				if (mClient != null && mClient.onLongPress(event))
 					return;
 				if (!mCopyMode) {
 					int[] columnAndRow = getColumnAndRow(event, true);
@@ -387,6 +397,8 @@ public final class TerminalView extends View {
 			}
 		});
 		mScroller = new Scroller(context);
+		setFocusable(true);
+		setFocusableInTouchMode(true);
 		AccessibilityManager am = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
 		mAccessibilityEnabled = am.isEnabled();
 
@@ -422,6 +434,10 @@ public final class TerminalView extends View {
 
 	@Override
 	public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+		if (mClient == null) {
+			return null;
+		}
+
 		if (mClient.isTerminalViewSelected()) {
 			if (mClient.shouldEnforceCharBasedInput()) {
 				outAttrs.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
@@ -673,29 +689,31 @@ public final class TerminalView extends View {
 			int y = (int) event.getY();
 
 			if (action == MotionEvent.ACTION_DOWN) {
-				int x1 = getPointX(mSelX1);
-				int y1 = getPointY(mSelY1 + 1);
-				int x2 = getPointX(mSelX2);
-				int y2 = getPointY(mSelY2 + 1);
-
+				// Normalize selection so (X1, Y1) is always start and (X2, Y2) is end
 				if (mSelY1 > mSelY2 || (mSelY1 == mSelY2 && mSelX1 > mSelX2)) {
-					int tmp = x1;
-					x1 = x2;
-					x2 = tmp;
-					tmp = y1;
-					y1 = y2;
-					y2 = tmp;
+					int tmpX = mSelX1;
+					mSelX1 = mSelX2;
+					mSelX2 = tmpX;
+					int tmpY = mSelY1;
+					mSelY1 = mSelY2;
+					mSelY2 = tmpY;
 				}
 
-				// x2 currently points to the left edge of the last selected character.
-				// Move it to the right edge for proper handle placement.
-				x2 += Math.round(mRenderer.mFontWidth);
+				int hx1 = getPointX(mSelX1);
+				int hy1 = getPointY(mSelY1 + 1);
+				int hx2 = getPointX(mSelX2) + Math.round(mRenderer.mFontWidth);
+				int hy2 = getPointY(mSelY2 + 1);
 
-				Rect leftHandleRect = new Rect(x1 - mHandleLeft.getIntrinsicWidth() * 3 / 4, y1, x1 + mHandleLeft.getIntrinsicWidth() / 4, y1 + mHandleLeft.getIntrinsicHeight());
-				Rect rightHandleRect = new Rect(x2 - mHandleRight.getIntrinsicWidth() / 4, y2, x2 + mHandleRight.getIntrinsicWidth() * 3 / 4, y2 + mHandleRight.getIntrinsicHeight());
+				float density = getContext().getResources().getDisplayMetrics().density;
+				int handleHeight = Math.round(22 * density);
+				int handleWidth = handleHeight * 2;
 
-				leftHandleRect.inset(-20, -20);
-				rightHandleRect.inset(-20, -20);
+				Rect leftHandleRect = new Rect(hx1 - handleWidth * 3 / 4, hy1, hx1 + handleWidth / 4, hy1 + handleHeight);
+				Rect rightHandleRect = new Rect(hx2 - handleWidth / 4, hy2, hx2 + handleWidth * 3 / 4, hy2 + handleHeight);
+
+				// Add slop for easier grabbing
+				leftHandleRect.inset(-40, -40);
+				rightHandleRect.inset(-40, -40);
 
 				if (leftHandleRect.contains(x, y)) {
 					mDraggingHandle = SELECTION_HANDLE_LEFT;
@@ -705,23 +723,35 @@ public final class TerminalView extends View {
 					mDraggingHandle = SELECTION_HANDLE_NONE;
 					setCopyMode(false);
 				}
-			} else if (action == MotionEvent.ACTION_MOVE) {
+			} else if (action == MotionEvent.ACTION_MOVE && mDraggingHandle != SELECTION_HANDLE_NONE) {
 				int[] columnAndRow = getColumnAndRow(event, true);
+				int newX = columnAndRow[0];
+				int newY = columnAndRow[1];
+
 				if (mDraggingHandle == SELECTION_HANDLE_LEFT) {
-					if (mSelY1 < mSelY2 || (mSelY1 == mSelY2 && mSelX1 < mSelX2)) {
-						mSelX1 = columnAndRow[0];
-						mSelY1 = columnAndRow[1];
+					// Ensure we don't move start past end
+					if (newY < mSelY2 || (newY == mSelY2 && newX <= mSelX2)) {
+						mSelX1 = newX;
+						mSelY1 = newY;
 					} else {
-						mSelX2 = columnAndRow[0];
-						mSelY2 = columnAndRow[1];
+						// Snap to end or swap? Standard behavior is to swap.
+						mSelX1 = mSelX2;
+						mSelY1 = mSelY2;
+						mSelX2 = newX;
+						mSelY2 = newY;
+						mDraggingHandle = SELECTION_HANDLE_RIGHT;
 					}
 				} else if (mDraggingHandle == SELECTION_HANDLE_RIGHT) {
-					if (mSelY1 < mSelY2 || (mSelY1 == mSelY2 && mSelX1 < mSelX2)) {
-						mSelX2 = columnAndRow[0];
-						mSelY2 = columnAndRow[1];
+					// Ensure we don't move end before start
+					if (newY > mSelY1 || (newY == mSelY1 && newX >= mSelX1)) {
+						mSelX2 = newX;
+						mSelY2 = newY;
 					} else {
-						mSelX1 = columnAndRow[0];
-						mSelY1 = columnAndRow[1];
+						mSelX2 = mSelX1;
+						mSelY2 = mSelY1;
+						mSelX1 = newX;
+						mSelY1 = newY;
+						mDraggingHandle = SELECTION_HANDLE_LEFT;
 					}
 				}
 			}
@@ -773,6 +803,8 @@ public final class TerminalView extends View {
 
 	@Override
 	public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+		if (mClient == null) return super.onKeyPreIme(keyCode, event);
+
 		if (TERMINAL_VIEW_KEY_LOGGING_ENABLED)
 			mClient.logInfo(LOG_TAG, "onKeyPreIme(keyCode=" + keyCode + ", event=" + event + ")");
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
@@ -798,6 +830,8 @@ public final class TerminalView extends View {
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (mClient == null) return true;
+
 		if (TERMINAL_VIEW_KEY_LOGGING_ENABLED)
 			mClient.logInfo(LOG_TAG,
 					"onKeyDown(keyCode=" + keyCode + ", isSystem()=" + event.isSystem() + ", event=" + event + ")");
@@ -878,7 +912,7 @@ public final class TerminalView extends View {
 
 	public void inputCodePoint(int eventSource, int codePoint, boolean controlDownFromEvent,
 	                           boolean leftAltDownFromEvent) {
-		if (TERMINAL_VIEW_KEY_LOGGING_ENABLED) {
+		if (mClient != null && TERMINAL_VIEW_KEY_LOGGING_ENABLED) {
 			mClient.logInfo(LOG_TAG,
 					"inputCodePoint(eventSource=" + eventSource + ", codePoint=" + codePoint + ", controlDownFromEvent="
 							+ controlDownFromEvent + ", leftAltDownFromEvent="
@@ -891,11 +925,15 @@ public final class TerminalView extends View {
 		if (mEmulator != null)
 			mEmulator.setCursorBlinkState(true);
 
-		final boolean controlDown = controlDownFromEvent || mClient.readControlKey();
-		final boolean altDown = leftAltDownFromEvent || mClient.readAltKey();
+		boolean controlDown = controlDownFromEvent;
+		boolean altDown = leftAltDownFromEvent;
+		if (mClient != null) {
+			controlDown = controlDownFromEvent || mClient.readControlKey();
+			altDown = leftAltDownFromEvent || mClient.readAltKey();
 
-		if (mClient.onCodePoint(codePoint, controlDown, mTermSession))
-			return;
+			if (mClient.onCodePoint(codePoint, controlDown, mTermSession))
+				return;
+		}
 
 		if (controlDown) {
 			if (codePoint >= 'a' && codePoint <= 'z') {
@@ -974,13 +1012,13 @@ public final class TerminalView extends View {
 
 	@Override
 	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		if (TERMINAL_VIEW_KEY_LOGGING_ENABLED)
+		if (mClient != null && TERMINAL_VIEW_KEY_LOGGING_ENABLED)
 			mClient.logInfo(LOG_TAG, "onKeyUp(keyCode=" + keyCode + ", event=" + event + ")");
 
 		if (mEmulator == null && keyCode != KeyEvent.KEYCODE_BACK)
 			return true;
 
-		if (mClient.onKeyUp(keyCode, event)) {
+		if (mClient != null && mClient.onKeyUp(keyCode, event)) {
 			invalidate();
 			return true;
 		} else if (event.isSystem()) {
@@ -1008,7 +1046,9 @@ public final class TerminalView extends View {
 			mTermSession.updateSize(newColumns, newRows, (int) mRenderer.getFontWidth(),
 					mRenderer.getFontLineSpacing());
 			mEmulator = mTermSession.getEmulator();
-			mClient.onEmulatorSet();
+			if (mClient != null) {
+				mClient.onEmulatorSet();
+			}
 
 			if (mTerminalCursorBlinkerRunnable != null)
 				mTerminalCursorBlinkerRunnable.setEmulator(mEmulator);
@@ -1079,7 +1119,9 @@ public final class TerminalView extends View {
 					mActionMode = null;
 				}
 			}
-			mClient.copyModeChanged(copyMode);
+			if (mClient != null) {
+				mClient.copyModeChanged(copyMode);
+			}
 			invalidate();
 		}
 	}
@@ -1286,7 +1328,7 @@ public final class TerminalView extends View {
 		}
 	}
 
-	private void stopTerminalCursorBlinker() {
+	public void stopTerminalCursorBlinker() {
 		if (mTerminalCursorBlinkerHandler != null && mTerminalCursorBlinkerRunnable != null) {
 			if (TERMINAL_VIEW_KEY_LOGGING_ENABLED)
 				mClient.logVerbose(LOG_TAG, "Stopping cursor blinker");

@@ -20,12 +20,12 @@
 
         <item name="actionBarStyle">@style/CodeStudio.ActionBar</item>
         <item name="actionBarTheme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
-        <item name="actionBarPopupTheme">@style/CodeStudio.PopupMenu</item>
+        <item name="actionBarPopupTheme">@style/CodeStudio.PopupMenu.Theme</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
 
-        <item name="popupMenuStyle">@style/CodeStudio.PopupMenu</item>
-        <item name="popupTheme">@style/CodeStudio.PopupMenu</item>
+        <item name="popupMenuStyle">@style/CodeStudio.PopupMenu.Widget</item>
+        <item name="popupTheme">@style/CodeStudio.PopupMenu.Theme</item>
         <item name="android:dropDownListViewStyle">@style/CodeStudio.DropDownList</item>
 
         <item name="alertDialogTheme">@style/CodeStudio.AlertDialog</item>
@@ -59,7 +59,7 @@
         <item name="background">@color/cc_primary</item>
         <item name="titleTextStyle">@style/CodeStudio.ActionBar.TitleText</item>
         <item name="subtitleTextStyle">@style/CodeStudio.ActionBar.SubtitleText</item>
-        <item name="popupTheme">@style/CodeStudio.PopupMenu</item>
+        <item name="popupTheme">@style/CodeStudio.PopupMenu.Theme</item>
     </style>
 
     <style name="CodeStudio.ActionBar.TitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
@@ -73,15 +73,27 @@
     </style>
 
     <!-- Popup & Dropdown Menus -->
-    <style name="CodeStudio.PopupMenu" parent="ThemeOverlay.AppCompat.Dark">
+    <style name="CodeStudio.PopupMenu.Widget" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@color/cc_primary</item>
+    </style>
+
+    <style name="CodeStudio.PopupMenu.Theme" parent="ThemeOverlay.AppCompat.Dark">
         <item name="android:colorBackground">@color/cc_primary</item>
         <item name="android:textColorPrimary">@color/ide_text_primary</item>
         <item name="android:textColor">@color/ide_text_primary</item>
         <item name="overlapAnchor">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
     <style name="CodeStudio.DropDownList" parent="Widget.AppCompat.ListView.DropDown">
         <item name="android:background">@color/cc_primary</item>
+        <item name="android:divider">@null</item>
+        <item name="android:dividerHeight">0dp</item>
+        <item name="android:headerDividersEnabled">false</item>
+        <item name="android:footerDividersEnabled">false</item>
+        <item name="android:listSelector">@android:color/transparent</item>
     </style>
 
     <!-- Dialogs -->

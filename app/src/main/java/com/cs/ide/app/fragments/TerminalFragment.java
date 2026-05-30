@@ -145,6 +145,11 @@ public class TerminalFragment extends Fragment implements TermuxSessionManager.S
 			}
 
 			@Override
+			public boolean shouldShowMoreInActionMode() {
+				return true;
+			}
+
+			@Override
 			public boolean onKeyDown(int keyCode, android.view.KeyEvent e, TerminalSession session) {
 				return false;
 			}
@@ -222,12 +227,13 @@ public class TerminalFragment extends Fragment implements TermuxSessionManager.S
 		// If launched with a specific command (via URI), execute it
 		if (launchUri != null && "compile".equals(launchUri.getHost())) {
 			String command = launchUri.getQueryParameter("command");
-			String cwd = launchUri.getQueryParameter("cwd");
 			if (command != null) {
-				if (cwd != null) {
-					runCommand("cd \"" + cwd + "\" && " + command);
-				} else {
-					runCommand(command);
+				// Don't use runCommand() here to avoid double-wrapping and quote mangling
+				// The command from ExecutionManager is already fully wrapped and escaped.
+				try {
+					currentSession.write(command + "\n");
+				} catch (Exception e) {
+					Log.e(TAG, "Error writing command to session", e);
 				}
 			}
 		}

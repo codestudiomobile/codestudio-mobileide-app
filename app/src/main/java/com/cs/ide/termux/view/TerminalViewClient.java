@@ -21,61 +21,63 @@ import com.cs.ide.termux.terminal.TerminalSession;
  */
 public interface TerminalViewClient {
 
-    /**
-     * Callback function on scale events according to
-     * {@link ScaleGestureDetector#getScaleFactor()}.
-     */
-    float onScale(float scale);
+	/**
+	 * Callback function on scale events according to
+	 * {@link ScaleGestureDetector#getScaleFactor()}.
+	 */
+	float onScale(float scale);
 
-    /**
-     * On a single tap on the terminal if terminal mouse reporting not enabled.
-     */
-    void onSingleTapUp(MotionEvent e);
+	/**
+	 * On a single tap on the terminal if terminal mouse reporting not enabled.
+	 */
+	void onSingleTapUp(MotionEvent e);
 
-    boolean shouldBackButtonBeMappedToEscape();
+	boolean shouldBackButtonBeMappedToEscape();
 
-    boolean shouldEnforceCharBasedInput();
+	boolean shouldEnforceCharBasedInput();
 
-    boolean shouldUseCtrlSpaceWorkaround();
+	boolean shouldUseCtrlSpaceWorkaround();
 
-    boolean isTerminalViewSelected();
+	boolean isTerminalViewSelected();
 
-    void copyModeChanged(boolean copyMode);
+	void copyModeChanged(boolean copyMode);
 
-    void onCopyTextToClipboard(String text);
+	void onCopyTextToClipboard(String text);
 
-    void onPasteTextFromClipboard();
+	void onPasteTextFromClipboard();
 
-    boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession session);
+	boolean shouldShowMoreInActionMode();
 
-    boolean onKeyUp(int keyCode, KeyEvent e);
+	boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession session);
 
-    boolean onLongPress(MotionEvent event);
+	boolean onKeyUp(int keyCode, KeyEvent e);
 
-    boolean readControlKey();
+	boolean onLongPress(MotionEvent event);
 
-    boolean readAltKey();
+	boolean readControlKey();
 
-    boolean readShiftKey();
+	boolean readAltKey();
 
-    boolean readFnKey();
+	boolean readShiftKey();
 
-    boolean onCodePoint(int codePoint, boolean ctrlDown, TerminalSession session);
+	boolean readFnKey();
 
-    void onEmulatorSet();
+	boolean onCodePoint(int codePoint, boolean ctrlDown, TerminalSession session);
 
-    void logError(String tag, String message);
+	void onEmulatorSet();
 
-    void logWarn(String tag, String message);
+	void logError(String tag, String message);
 
-    void logInfo(String tag, String message);
+	void logWarn(String tag, String message);
 
-    void logDebug(String tag, String message);
+	void logInfo(String tag, String message);
 
-    void logVerbose(String tag, String message);
+	void logDebug(String tag, String message);
 
-    void logStackTraceWithMessage(String tag, String message, Exception e);
+	void logVerbose(String tag, String message);
 
-    void logStackTrace(String tag, Exception e);
+	void logStackTraceWithMessage(String tag, String message, Exception e);
+
+	void logStackTrace(String tag, Exception e);
 
 }

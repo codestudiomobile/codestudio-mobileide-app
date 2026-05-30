@@ -23,9 +23,11 @@ public class AppPreferences {
 
 	// Workspace & Navigation State
 	public static final String LAST_FOLDER_URI_KEY = "lastFolderUri";
+	public static final String LAST_FOLDER_PATH_KEY = "lastFolderPath";
 
 	// Tab Management State
 	public static final String TAB_URI_KEY = "tab_uris";
 	public static final String TAB_NAME_KEY = "tab_names";
+	public static final String TAB_PATH_KEY = "tab_paths";
 	public static final String CURRENT_TAB = "current_tab";
 }

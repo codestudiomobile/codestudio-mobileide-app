@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -101,6 +102,8 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	private final Map<String, String> tabSaveTimes = new HashMap<>();
 	private final ArrayList<Uri> folderUris = new ArrayList<>();
 	private final ArrayList<String> folderNames = new ArrayList<>();
+
+	private long lastBackPressTime = 0;
 
 	public Uri currentFileUri;
 	public String currentMimeType;
@@ -177,10 +180,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		initializeTabs();
 
 		handleIntent(getIntent());
+		setupBackPressHandling();
 
 		mainHandler.postDelayed(() -> {
 			CommandUpdater.checkForUpdates(this);
-			ExecutionManager.clearAllExecCache(this);
 		}, 1000);
 	}
 
@@ -201,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		mainHandler.removeCallbacks(autoSaveRunnable);
 		performAutoSave(viewPager.getCurrentItem());
 
-		executor.execute(() -> tabManager.saveOpenedTabs(viewPagerAdapter, tabLayout));
+		executor.execute(() -> tabManager.saveOpenedTabs(this, viewPagerAdapter, tabLayout));
 
 		getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE)
 				.unregisterOnSharedPreferenceChangeListener(this);
@@ -270,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	private void initializeTabs() {
 		executor.execute(() -> {
-			TabManager.TabState state = tabManager.loadRecentTabs();
+			TabManager.TabState state = tabManager.loadRecentTabs(this);
 			runOnUiThread(() -> {
 				viewPagerAdapter = new ViewPagerAdapter(this, state.uris(), state.names());
 				viewPager.setAdapter(viewPagerAdapter);
@@ -465,7 +468,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		int index = viewPagerAdapter.addTab(uri, name);
 		if (index != -1) {
 			tabLayout.selectTab(tabLayout.getTabAt(index));
-			viewPager.setCurrentItem(index);
+			viewPager.setCurrentItem(index, false);
 		}
 	}
 
@@ -517,7 +520,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	@Override
 	public void onTabSelected(@NonNull TabLayout.Tab tab) {
 		int position = tab.getPosition();
-		viewPager.setCurrentItem(position);
+		viewPager.setCurrentItem(position, false); // Disable animation to prevent back-and-forth glitch
 		updateSubtitleForTab(position);
 
 		Uri uri = (position < viewPagerAdapter.fileUris.size()) ? viewPagerAdapter.fileUris.get(position) : null;
@@ -551,32 +554,42 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		Uri fileUri = intent.getData();
 		if (fileUri == null) return;
 
-		boolean isPrivate = intent.getBooleanExtra("is_private", true);
-		if (!isPrivate) {
-			try {
-				int takeFlags = intent.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-				if (takeFlags != 0 && "content".equals(fileUri.getScheme())) {
-					getContentResolver().takePersistableUriPermission(fileUri, takeFlags);
+		executor.execute(() -> {
+			boolean isBinary = FileUtils.isBinaryFile(this, fileUri);
+			runOnUiThread(() -> {
+				if (isBinary) {
+					Toast.makeText(this, R.string.msg_cannot_open_binary_file, Toast.LENGTH_SHORT).show();
+					return;
 				}
-			} catch (Exception e) {
-				Log.w(TAG, "Could not persist permissions: " + e.getMessage());
-			}
-		}
 
-		String fileName = FileUtils.getFileName(this, fileUri);
-		if (isPrivate) fileName += " " + getString(R.string.private_tab_suffix);
-
-		int tabIndex = viewPagerAdapter.addTab(fileUri, fileName, isPrivate);
-		if (tabIndex != -1) {
-			viewPager.post(() -> {
-				if (tabIndex < viewPagerAdapter.getItemCount()) {
-					viewPager.setCurrentItem(tabIndex, true);
-					TabLayout.Tab tab = tabLayout.getTabAt(tabIndex);
-					if (tab != null) tab.select();
+				boolean isPrivate = intent.getBooleanExtra("is_private", true);
+				if (!isPrivate) {
+					try {
+						int takeFlags = intent.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+						if (takeFlags != 0 && "content".equals(fileUri.getScheme())) {
+							getContentResolver().takePersistableUriPermission(fileUri, takeFlags);
+						}
+					} catch (Exception e) {
+						Log.w(TAG, "Could not persist permissions: " + e.getMessage());
+					}
 				}
+
+				String fileName = FileUtils.getFileName(this, fileUri);
+				if (isPrivate) fileName += " " + getString(R.string.private_tab_suffix);
+
+				int tabIndex = viewPagerAdapter.addTab(fileUri, fileName, isPrivate);
+				if (tabIndex != -1) {
+					viewPager.post(() -> {
+						if (tabIndex < viewPagerAdapter.getItemCount()) {
+							viewPager.setCurrentItem(tabIndex, false);
+							TabLayout.Tab tab = tabLayout.getTabAt(tabIndex);
+							if (tab != null) tab.select();
+						}
+					});
+				}
+				if (isPrivate) closeLeftNavigation();
 			});
-		}
-		if (isPrivate) closeLeftNavigation();
+		});
 	}
 
 	@Override
@@ -713,20 +726,48 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 			Uri docUri = parentUri;
 
 			try {
-				if (DocumentsContract.isTreeUri(parentUri) && !DocumentsContract.isDocumentUri(this, parentUri)) {
-					docUri = DocumentsContract.buildDocumentUriUsingTree(parentUri, DocumentsContract.getTreeDocumentId(parentUri));
+				// Check if we are dealing with a standard file URI (file://)
+				if ("file".equalsIgnoreCase(parentUri.getScheme())) {
+					File parentFile = new File(parentUri.getPath());
+					File newFile = new File(parentFile, finalNewName);
+					if (newFile.exists()) {
+						throw new IOException("Item already exists at this location.");
+					}
+
+					boolean success = isFolder ? newFile.mkdirs() : newFile.createNewFile();
+					if (success) {
+						newDocumentUri = Uri.fromFile(newFile);
+					} else {
+						throw new IOException("Failed to create " + (isFolder ? "folder" : "file") + " using standard File API.");
+					}
+				} else {
+					// Handling for SAF content URIs (content://)
+					if (DocumentsContract.isTreeUri(parentUri) && !DocumentsContract.isDocumentUri(this, parentUri)) {
+						docUri = DocumentsContract.buildDocumentUriUsingTree(parentUri, DocumentsContract.getTreeDocumentId(parentUri));
+					}
+
+					String extension = "";
+					int dotIndex = finalNewName.lastIndexOf('.');
+					if (dotIndex >= 0) extension = finalNewName.substring(dotIndex + 1);
+
+					String mimeType = isFolder ? DocumentsContract.Document.MIME_TYPE_DIR : MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+					if (mimeType == null) mimeType = "application/octet-stream";
+
+					newDocumentUri = DocumentsContract.createDocument(getContentResolver(), docUri, mimeType, finalNewName);
 				}
-
-				String extension = "";
-				int dotIndex = finalNewName.lastIndexOf('.');
-				if (dotIndex >= 0) extension = finalNewName.substring(dotIndex + 1);
-
-				String mimeType = isFolder ? DocumentsContract.Document.MIME_TYPE_DIR : MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
-				if (mimeType == null) mimeType = "application/octet-stream";
-
-				newDocumentUri = DocumentsContract.createDocument(getContentResolver(), docUri, mimeType, finalNewName);
 			} catch (Exception e) {
-				Log.e(TAG, "Creation failed", e);
+				Log.e(TAG, "Creation failed for " + finalNewName + " at " + docUri, e);
+				final String errorMessage = e.getMessage();
+				final Uri failedDocUri = docUri;
+				runOnUiThread(() -> {
+					String path = FileUtils.getAbsolutePathFromUri(this, failedDocUri);
+					if (path == null) path = FileUtils.getFileName(this, failedDocUri);
+					new AlertDialog.Builder(this)
+							.setTitle(R.string.title_creation_failed)
+							.setMessage(getString(R.string.failed_to_create_item, finalNewName, path) + "\n\nError: " + errorMessage)
+							.setPositiveButton(android.R.string.ok, null)
+							.show();
+				});
 			}
 
 			final Uri resultUri = newDocumentUri;
@@ -736,11 +777,9 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 				if (resultUri != null) {
 					if (!isFolder)
 						FilesAdapter.saveFileContentAsync(this, resultUri, "".getBytes());
-					Toast.makeText(this, isFolder ? R.string.folder_created_msg : R.string.file_created_msg, Toast.LENGTH_SHORT).show();
+					Toast.makeText(this, getString(isFolder ? R.string.folder_created_msg : R.string.file_created_msg, resultName), Toast.LENGTH_SHORT).show();
 					if (!isFolder) openFileInViewPager(resultUri, resultName);
 					mainHandler.postDelayed(this::refreshFileList, 500);
-				} else {
-					Toast.makeText(this, R.string.failed_to_create_item, Toast.LENGTH_LONG).show();
 				}
 			});
 		});
@@ -808,21 +847,34 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	// --- File Explorer Management ---
 
 	private void restoreLastFolder() {
-		String uriString = getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE)
-				.getString(AppPreferences.LAST_FOLDER_URI_KEY, null);
-		if (uriString != null) {
-			executor.execute(() -> {
+		android.content.SharedPreferences prefs = getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE);
+		String uriString = prefs.getString(AppPreferences.LAST_FOLDER_URI_KEY, null);
+		String pathString = prefs.getString(AppPreferences.LAST_FOLDER_PATH_KEY, null);
+
+		executor.execute(() -> {
+			boolean restored = false;
+			if (uriString != null) {
 				try {
 					Uri lastFolder = Uri.parse(uriString);
 					getContentResolver().takePersistableUriPermission(lastFolder,
 							Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 					folderUri = currentDirectoryUri = lastFolder;
 					runOnUiThread(() -> setupFilesAdapter(lastFolder));
+					restored = true;
 				} catch (Exception e) {
-					Log.e(TAG, "Error restoring last folder", e);
+					Log.w(TAG, "Could not restore folder via URI permission, likely lost on reinstall. Trying path...");
 				}
-			});
-		}
+			}
+
+			if (!restored && pathString != null) {
+				File folder = new File(pathString);
+				if (folder.exists() && folder.isDirectory()) {
+					Uri folderUriFromPath = Uri.fromFile(folder);
+					folderUri = currentDirectoryUri = folderUriFromPath;
+					runOnUiThread(() -> setupFilesAdapter(folderUriFromPath));
+				}
+			}
+		});
 	}
 
 	public void updateOpenedFolder(Uri uri) {
@@ -830,7 +882,14 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 			return;
 		executor.execute(() -> {
 			Uri folderToSave = FileUtils.isDirectory(this, uri) ? uri : getSafParentUri(uri);
-			if (folderToSave != null) saveLastFolder(folderToSave);
+			if (folderToSave != null) {
+				saveLastFolder(folderToSave);
+				String path = FileUtils.getAbsolutePathFromUri(this, folderToSave);
+				if (path != null) {
+					getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE).edit()
+							.putString(AppPreferences.LAST_FOLDER_PATH_KEY, path).apply();
+				}
+			}
 		});
 	}
 
@@ -840,6 +899,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	}
 
 	private void setupFilesAdapter(Uri uri) {
+		rootDirectoryUri = uri;
 		if (filesAdapter == null) {
 			filesList = findViewById(R.id.filesList);
 			filesAdapter = new FilesAdapter(this, fileItems, this, rootDirectoryUri);
@@ -859,32 +919,49 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	public void populateFileList(final Uri uri, final int depth) {
 		try {
-			String documentId = DocumentsContract.getTreeDocumentId(uri);
-			Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, documentId);
 			final List<FileItem> folders = new ArrayList<>();
 			final List<FileItem> files = new ArrayList<>();
+			String documentId = "root";
 
-			try (Cursor cursor = getContentResolver().query(childrenUri,
-					new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-							DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-							DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
-				if (cursor != null && cursor.moveToFirst()) {
-					do {
-						String id = cursor.getString(0);
-						String name = cursor.getString(1);
-						String mime = cursor.getString(2);
-						Uri childUri = DocumentsContract.buildDocumentUriUsingTree(uri, id);
-						if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime))
-							folders.add(new FileItem(childUri, name, true, depth, mime));
-						else files.add(new FileItem(childUri, name, false, depth, mime));
-					} while (cursor.moveToNext());
+			if ("file".equalsIgnoreCase(uri.getScheme())) {
+				File dir = new File(uri.getPath());
+				documentId = dir.getName();
+				File[] children = dir.listFiles();
+				if (children != null) {
+					for (File child : children) {
+						boolean isDir = child.isDirectory();
+						String mime = isDir ? DocumentsContract.Document.MIME_TYPE_DIR : FileItem.resolveMimeType(this, Uri.fromFile(child));
+						FileItem item = new FileItem(Uri.fromFile(child), child.getName(), isDir, depth, mime);
+						if (isDir) folders.add(item);
+						else files.add(item);
+					}
+				}
+			} else {
+				documentId = DocumentsContract.getTreeDocumentId(uri);
+				Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, documentId);
+				try (Cursor cursor = getContentResolver().query(childrenUri,
+						new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+								DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+								DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
+					if (cursor != null && cursor.moveToFirst()) {
+						do {
+							String id = cursor.getString(0);
+							String name = cursor.getString(1);
+							String mime = cursor.getString(2);
+							Uri childUri = DocumentsContract.buildDocumentUriUsingTree(uri, id);
+							if (DocumentsContract.Document.MIME_TYPE_DIR.equals(mime))
+								folders.add(new FileItem(childUri, name, true, depth, mime));
+							else files.add(new FileItem(childUri, name, false, depth, mime));
+						} while (cursor.moveToNext());
+					}
 				}
 			}
+			final String finalId = documentId;
 			folders.sort((a, b) -> a.displayName.compareToIgnoreCase(b.displayName));
 			files.sort((a, b) -> a.displayName.compareToIgnoreCase(b.displayName));
 
 			runOnUiThread(() -> {
-				currentFolderTitle.setText(getString(R.string.label_storage_prefix) + documentId.substring(Math.min(8, documentId.length())));
+				currentFolderTitle.setText(getString(R.string.label_storage_prefix) + finalId.substring(Math.min(8, finalId.length())));
 				fileItems.clear();
 				fileItems.addAll(folders);
 				fileItems.addAll(files);
@@ -909,6 +986,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	// --- File Execution ---
 
 	public void runFile(FileItem item) {
+		int currentTabPos = viewPager.getCurrentItem();
+		if (currentTabPos != -1) {
+			performAutoSave(currentTabPos);
+		}
 		ExecutionManager.runFile(this, item);
 	}
 
@@ -951,14 +1032,21 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 		Fragment fragment = viewPagerAdapter.getFragment(position);
 		if (fragment instanceof TextFragment textFragment && !textFragment.isSaved()) {
+			// Fetch contents on UI thread but process saving in background
 			byte[] content = textFragment.getContents();
 			if (content != null && !viewPagerAdapter.fileNames.get(position).startsWith(getString(R.string.run_prefix, ""))) {
-				FilesAdapter.saveFileContentAsync(this, uri, content);
-				textFragment.setSaved(true);
-				tabSaveTimes.put(uri.toString(), new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
+				executor.execute(() -> {
+					FilesAdapter.saveFileContentAsync(this, uri, content);
+					runOnUiThread(() -> {
+						textFragment.setSaved(true);
+						tabSaveTimes.put(uri.toString(), new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date()));
+						updateSubtitleForTab(position);
+					});
+				});
 			}
+		} else {
+			updateSubtitleForTab(position);
 		}
-		updateSubtitleForTab(position);
 	}
 
 	private void updateSubtitleForTab(int position) {
@@ -1038,9 +1126,20 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	// --- Tab Helpers ---
 
 	public void openFileInViewPager(Uri uri, String name) {
-		int pos = viewPagerAdapter.addTab(uri, name);
-		viewPager.setCurrentItem(pos, true);
-		invalidateOptionsMenu();
+		executor.execute(() -> {
+			boolean isBinary = FileUtils.isBinaryFile(this, uri);
+			runOnUiThread(() -> {
+				if (isBinary) {
+					Toast.makeText(this, R.string.msg_cannot_open_binary_file, Toast.LENGTH_SHORT).show();
+					return;
+				}
+				int pos = viewPagerAdapter.addTab(uri, name);
+				if (pos != -1) {
+					viewPager.setCurrentItem(pos, false);
+					invalidateOptionsMenu();
+				}
+			});
+		});
 	}
 
 	public void closeInViewPager(Uri fileUri) {
@@ -1196,24 +1295,29 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	@Override
 	public void onFileClicked(Uri fileUri, String fileName) {
-		String mimeType = getMimeType(fileUri);
-		if (FileUtils.isExternalViewType(mimeType)) {
-			Intent intent = new Intent(Intent.ACTION_VIEW);
-			intent.setDataAndType(fileUri, mimeType != null ? mimeType : "*/*");
-			intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-			try {
-				startActivity(intent);
-			} catch (Exception e) {
-				Toast.makeText(this, R.string.no_app_found_to_view, Toast.LENGTH_LONG).show();
-			}
-		} else {
-			int index = viewPagerAdapter.addTab(fileUri, fileName);
-			if (index != -1) {
-				tabLayout.selectTab(tabLayout.getTabAt(index));
-				viewPager.setCurrentItem(index);
-				closeLeftNavigation();
-			}
-		}
+		executor.execute(() -> {
+			boolean isBinary = FileUtils.isBinaryFile(this, fileUri);
+			runOnUiThread(() -> {
+				if (isBinary) {
+					Toast.makeText(this, R.string.msg_cannot_open_binary_file, Toast.LENGTH_SHORT).show();
+					return;
+				}
+				String mimeType = getMimeType(fileUri);
+				if (FileUtils.isExternalViewType(mimeType)) {
+					Intent intent = new Intent(Intent.ACTION_VIEW);
+					intent.setDataAndType(fileUri, mimeType != null ? mimeType : "*/*");
+					intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+					try {
+						startActivity(intent);
+					} catch (Exception e) {
+						Toast.makeText(this, R.string.no_app_found_to_view, Toast.LENGTH_LONG).show();
+					}
+				} else {
+					openFileInViewPager(fileUri, fileName);
+					closeLeftNavigation();
+				}
+			});
+		});
 	}
 
 	@Override
@@ -1245,6 +1349,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	}
 
 	private Uri getSafParentUri(Uri childUri) {
+		if ("file".equalsIgnoreCase(childUri.getScheme())) {
+			File parent = new File(childUri.getPath()).getParentFile();
+			return parent != null ? Uri.fromFile(parent) : null;
+		}
 		try {
 			DocumentsContract.Path path = DocumentsContract.findDocumentPath(getContentResolver(), childUri);
 			if (path == null || path.getPath().size() < 2) return null;
@@ -1262,6 +1370,9 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	@NonNull
 	private List<FileItem> getChildFolders(Uri parentUri) {
 		List<FileItem> folders = new ArrayList<>();
+		if (parentUri == null || !"content".equals(parentUri.getScheme())) {
+			return folders;
+		}
 		String parentId = DocumentsContract.isDocumentUri(this, parentUri) ? DocumentsContract.getDocumentId(parentUri) : DocumentsContract.getTreeDocumentId(parentUri);
 		Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(parentUri, parentId);
 		try (Cursor cursor = getContentResolver().query(childrenUri, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
@@ -1275,6 +1386,24 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 			Log.e(TAG, "Error listing child folders", e);
 		}
 		return folders;
+	}
+
+	private void setupBackPressHandling() {
+		getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+			@Override
+			public void handleOnBackPressed() {
+				if (drawerLayout != null && drawerLayout.isDrawerOpen(GravityCompat.START)) {
+					drawerLayout.closeDrawer(GravityCompat.START);
+				} else {
+					if (System.currentTimeMillis() - lastBackPressTime < 2000) {
+						finish();
+					} else {
+						lastBackPressTime = System.currentTimeMillis();
+						Toast.makeText(MainActivity.this, R.string.msg_press_back_again_to_exit, Toast.LENGTH_SHORT).show();
+					}
+				}
+			}
+		});
 	}
 
 	public void prepareFolderDataForDialog() {

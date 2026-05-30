@@ -123,6 +123,7 @@
     <string name="log_level_value">Logcat log level set to \"%1$s\"</string>
 
 
+    <string name="msg_cannot_open_binary_file">Cannot open binary file.</string>
     <string name="application_name">Termux</string>
     <string name="shared_user_label">Termux user</string>
     <!--  Termux RUN_COMMAND permission  -->
@@ -300,13 +301,15 @@
     <string name="file_created_msg">File created: %1$s</string>
     <string name="folder_created_msg">Folder created: %1$s</string>
     <string name="auto_resolved_suffix"> (Auto-resolved)</string>
-    <string name="failed_to_create_item">Failed to create %1$s. Name conflict could not be resolved or permission denied.</string>
+    <string name="title_creation_failed">Creation Failed</string>
+    <string name="failed_to_create_item">Failed to create \'%1$s\' at \'%2$s\'.\n\nPlease check folder permissions or storage space.</string>
     <string name="running_prefix">Running: %1$s</string>
     <string name="no_app_found_to_view">No application found to view this file type.</string>
     <string name="error_saving_file">Error saving file: %1$s</string>
     <string name="file_saved_successfully">File saved successfully!</string>
     <string name="select_folder_with_permission">Please select a folder with write permission first.</string>
     <string name="project_root">Project Root</string>
+    <string name="msg_press_back_again_to_exit">Press back again to exit</string>
     <string name="root_directory">ROOT DIRECTORY</string>
     <string name="target_folder">Target Folder:</string>
     <string name="enter_name">Enter Name:</string>
@@ -336,6 +339,10 @@
     <string name="menu_about">About</string>
 
     <string name="title_manage_languages">Manage Languages</string>
+    <string name="action_fix_16kb_alignment">Fix 16KB Alignment (Android 15)</string>
+    <string name="msg_fixing_alignment">Fixing ELF alignment for 16KB page size...</string>
+    <string name="msg_alignment_fixed">ELF alignment fixed successfully!</string>
+    <string name="msg_alignment_fix_failed">Failed to fix ELF alignment.</string>
     <string name="msg_installing_package">Installing package…</string>
     <string name="pref_open_editor_on_startup">Open editor on startup</string>
     <string name="pref_open_welcome_screen_on_startup">Open welcome screen on startup</string>
@@ -420,7 +427,7 @@
 
     <string name="title_migration">Termux Migration</string>
     <string name="label_export_backup">Export (Backup from Termux)</string>
-    <string name="desc_export_backup">Run the following command in Termux to create a backup. You might need to install \'pv\' first (pkg install pv).</string>
+    <string name="desc_export_backup">Run the following command in Termux to create a backup.</string>
     <string name="action_copy_script">Copy Script</string>
     <string name="action_export_instructions">Export Instructions to File</string>
     <string name="label_import_backup">Import (Restore to CodeStudio)</string>
@@ -437,5 +444,5 @@
     <string name="msg_error_tar_not_found">Tar utility not found on device. Please install bootstrap first.</string>
     <string name="msg_instructions_saved">Instructions saved successfully!</string>
     <string name="msg_failed_save_instructions">Failed to save instructions: %1$s</string>
-    <string name="migration_instructions_content">Termux to CodeStudio Migration Instructions\n===========================================\n\nIf you want a highly accurate, beautiful progress bar with an ETA, you need the pv utility.\n\nNote: If you don\'t have pv installed, run \'pkg install pv\' in Termux.\n\nThe Export (Backup from Termux):\n-------------------------------\nRun these commands in the official Termux app:\n\nSIZE=$(du -sb /data/data/com.termux/files/home /data/data/com.termux/files/usr | awk \'{total += $1} END {print total}\')\n\ntar -zcf - -C /data/data/com.termux/files ./home ./usr | pv -s $SIZE > /sdcard/Download/termux-backup.tar.gz\n\nThe Import (Restore to CodeStudio):\n----------------------------------\n1. Open CodeStudio.\n2. Go to Settings -> Termux Migration.\n3. Click \'Select and Import Backup\'.\n4. Select the \'termux-backup.tar.gz\' file from your Downloads folder.\n5. Wait for the import to complete and restart the app.</string>
+    <string name="migration_instructions_content">Termux to CodeStudio Migration Guide\n====================================\n\nStep 1: Grant Storage Access in Termux\n--------------------------------------\nOpen Termux and run:\ntermux-setup-storage\n(Grant the storage permission popup on your screen).\n\nStep 2: Back Up Your Data in Termux\n-----------------------------------\nRun this exact command:\ntar -zcvf /sdcard/Download/termux-backup.tar.gz -C /data/data/com.termux/files ./home ./usr\n\nStep 3: Import in CodeStudio\n----------------------------\n1. Open CodeStudio.\n2. Go to Settings -> Termux Migration.\n3. Click \'Select and Import Backup\'.\n4. Select the \'termux-backup.tar.gz\' file from your Downloads folder.\n5. Wait for the import to complete and restart the app.\n\nNote: If you run into permission glitches after restore, simply restart your phone to sync system permissions.</string>
 </resources>

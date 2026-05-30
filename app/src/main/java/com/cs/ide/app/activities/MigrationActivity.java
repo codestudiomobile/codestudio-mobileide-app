@@ -25,9 +25,11 @@ import com.cs.ide.R;
 import com.cs.ide.termux.shared.logger.Logger;
 import com.cs.ide.termux.shared.termux.TermuxConstants;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 public class MigrationActivity extends AppCompatActivity {
@@ -84,11 +86,8 @@ public class MigrationActivity extends AppCompatActivity {
 		pbImport = findViewById(R.id.pbImport);
 
 		String exportScript = """
-				pkg install pv -y
-				
-				SIZE=$(du -sb /data/data/com.termux/files/home /data/data/com.termux/files/usr | awk '{total += $1} END {print total}')
-				
-				tar -zcf - -C /data/data/com.termux/files ./home ./usr | pv -s $SIZE > /sdcard/Download/termux-backup.tar.gz""";
+				termux-setup-storage
+				tar -zcvf /sdcard/Download/termux-backup.tar.gz -C /data/data/com.termux/files ./home ./usr""";
 
 		tvExportScript.setText(exportScript);
 
@@ -154,25 +153,45 @@ public class MigrationActivity extends AppCompatActivity {
 					}
 				}
 
-				// 2. Backup and Clear existing home and usr
+				// 3. Find tar before moving directories
+				String tarPath = null;
+				File termuxTar = new File(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/tar");
+				if (termuxTar.exists()) {
+					tarPath = termuxTar.getAbsolutePath();
+				}
+
+				// 2. Backup existing home and usr (Don't delete backups until success)
 				File homeDir = TermuxConstants.TERMUX_HOME_DIR;
 				File usrDir = TermuxConstants.TERMUX_PREFIX_DIR;
 
 				File homeOld = new File(homeDir.getParent(), HOME_OLD);
 				File usrOld = new File(usrDir.getParent(), USR_OLD);
 
-				// Clean up previous backups if any
-				deleteRecursive(homeOld);
-				deleteRecursive(usrOld);
+				// If previous backups exist and current dirs exist, we must decide.
+				// To be safe, let's keep one level of backup and rename existing old to .bak if they exist
+				File homeBak = new File(homeDir.getParent(), HOME_OLD + ".bak");
+				File usrBak = new File(usrDir.getParent(), USR_OLD + ".bak");
+				if (homeOld.exists()) {
+					deleteRecursive(homeBak);
+					homeOld.renameTo(homeBak);
+				}
+				if (usrOld.exists()) {
+					deleteRecursive(usrBak);
+					usrOld.renameTo(usrBak);
+				}
 
 				// Move current to old
+				boolean homeMoved = false;
+				boolean usrMoved = false;
 				if (homeDir.exists()) {
-					if (!homeDir.renameTo(homeOld)) {
+					homeMoved = homeDir.renameTo(homeOld);
+					if (!homeMoved) {
 						Logger.logWarn(LOG_TAG, "Failed to rename home directory to backup.");
 					}
 				}
 				if (usrDir.exists()) {
-					if (!usrDir.renameTo(usrOld)) {
+					usrMoved = usrDir.renameTo(usrOld);
+					if (!usrMoved) {
 						Logger.logWarn(LOG_TAG, "Failed to rename usr directory to backup.");
 					}
 				}
@@ -180,33 +199,78 @@ public class MigrationActivity extends AppCompatActivity {
 				if (!homeDir.exists()) homeDir.mkdirs();
 				if (!usrDir.exists()) usrDir.mkdirs();
 
-				// 3. Extract using tar if available
-				String tarPath;
-				if (new File(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/tar").exists()) {
-					tarPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/tar";
-				} else if (new File("/system/bin/tar").exists()) {
-					tarPath = "/system/bin/tar";
-				} else if (new File("/system/xbin/tar").exists()) {
-					tarPath = "/system/xbin/tar";
-				} else {
-					throw new Exception(getString(R.string.msg_error_tar_not_found));
+				// Update tarPath if it was in usrDir and now moved to usrOld
+				if (tarPath != null && tarPath.startsWith(usrDir.getAbsolutePath())) {
+					tarPath = usrOld.getAbsolutePath() + tarPath.substring(usrDir.getAbsolutePath().length());
+				}
+
+				if (tarPath == null || !new File(tarPath).exists()) {
+					if (new File("/system/bin/tar").exists()) {
+						tarPath = "/system/bin/tar";
+					} else if (new File("/system/xbin/tar").exists()) {
+						tarPath = "/system/xbin/tar";
+					} else {
+						// ROLLBACK
+						if (homeMoved) {
+							deleteRecursive(homeDir);
+							homeOld.renameTo(homeDir);
+						}
+						if (usrMoved) {
+							deleteRecursive(usrDir);
+							usrOld.renameTo(usrDir);
+						}
+						throw new Exception(getString(R.string.msg_error_tar_not_found));
+					}
 				}
 
 				ProcessBuilder pb = new ProcessBuilder(
-						tarPath, "-zxf", tempFile.getAbsolutePath(), "-C", TermuxConstants.TERMUX_FILES_DIR_PATH
+						tarPath, "-zxpf", tempFile.getAbsolutePath(), "-C", TermuxConstants.TERMUX_FILES_DIR_PATH
 				);
+
+				// Set environment variables for Termux tar to find its libraries and helper tools (like gzip) after move
+				if (tarPath.startsWith(usrOld.getAbsolutePath())) {
+					String binPath = usrOld.getAbsolutePath() + "/bin";
+					String libPath = usrOld.getAbsolutePath() + "/lib";
+					pb.environment().put("LD_LIBRARY_PATH", libPath);
+					pb.environment().put("PATH", binPath + ":" + System.getenv("PATH"));
+				}
+
 				pb.redirectErrorStream(true);
 				Process process = pb.start();
+
+				StringBuilder tarOutput = new StringBuilder();
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+					String line;
+					while ((line = reader.readLine()) != null) {
+						tarOutput.append(line).append("\n");
+					}
+				}
+
 				int exitCode = process.waitFor();
 
 				if (exitCode == 0) {
+					// SUCCESS: Now it's safe to delete old backups if we want, or keep them.
+					// Let's keep them for now, but delete .bak
+					deleteRecursive(homeBak);
+					deleteRecursive(usrBak);
+
 					runOnUiThread(() -> {
 						tvImportStatus.setText(R.string.msg_import_success);
 						pbImport.setVisibility(View.GONE);
 						Toast.makeText(this, R.string.msg_import_success, Toast.LENGTH_LONG).show();
 					});
 				} else {
-					throw new Exception("Tar exited with code " + exitCode);
+					// ROLLBACK on failure
+					if (homeMoved) {
+						deleteRecursive(homeDir);
+						homeOld.renameTo(homeDir);
+					}
+					if (usrMoved) {
+						deleteRecursive(usrDir);
+						usrOld.renameTo(usrDir);
+					}
+
+					throw new Exception("Tar exited with code " + exitCode + (tarOutput.length() > 0 ? ": " + tarOutput.toString().trim() : ""));
 				}
 
 			} catch (Exception e) {

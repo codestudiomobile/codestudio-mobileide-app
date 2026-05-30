@@ -188,12 +188,13 @@ public class EditorActivity extends AppCompatActivity {
 	private void applyPreviewTheme(EditorColorScheme scheme) {
 		scheme.setColor(EditorColorScheme.WHOLE_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
 		scheme.setColor(EditorColorScheme.TEXT_NORMAL, ContextCompat.getColor(this, R.color.ide_text_primary));
+		scheme.setColor(EditorColorScheme.TEXT_SELECTED, ContextCompat.getColor(this, R.color.ide_text_selected));
 		scheme.setColor(EditorColorScheme.LINE_NUMBER, ContextCompat.getColor(this, R.color.ide_line_number));
 		scheme.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, ContextCompat.getColor(this, R.color.ide_background));
 		scheme.setColor(EditorColorScheme.CURRENT_LINE, ContextCompat.getColor(this, R.color.ide_current_line));
 		scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.WHITE);
 		scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.WHITE);
-		scheme.setColor(EditorColorScheme.TEXT_SELECTED, ContextCompat.getColor(this, R.color.ide_text_selected));
+		scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#40BDBDBD"));
 
 		scheme.setColor(EditorColorScheme.KEYWORD, ContextCompat.getColor(this, R.color.syntax_keyword));
 		scheme.setColor(EditorColorScheme.LITERAL, ContextCompat.getColor(this, R.color.syntax_string));

@@ -9,11 +9,13 @@ import android.os.IBinder;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.cs.ide.R;
 import com.cs.ide.termux.app.TermuxService;
+import com.cs.ide.termux.shared.termux.terminal.TermuxTerminalSessionClientBase;
 import com.cs.ide.termux.terminal.TerminalSession;
 import com.cs.ide.termux.view.TerminalView;
 import com.cs.ide.termux.view.TerminalViewClient;
@@ -116,6 +118,17 @@ public class CompileResultActivity extends AppCompatActivity implements ServiceC
 
 			if (termuxSession != null) {
 				terminalSession = termuxSession.getTerminalSession();
+				terminalSession.updateTerminalSessionClient(new TermuxTerminalSessionClientBase() {
+					@Override
+					public void onTextChanged(@NonNull TerminalSession changedSession) {
+						terminalView.onScreenUpdated();
+					}
+
+					@Override
+					public void onScreenUpdated() {
+						terminalView.onScreenUpdated();
+					}
+				});
 
 				// Configure terminal view client with default implementations
 				terminalView.setTerminalViewClient(new TerminalViewClient() {
@@ -176,6 +189,11 @@ public class CompileResultActivity extends AppCompatActivity implements ServiceC
 					@Override
 					public void onPasteTextFromClipboard() {
 
+					}
+
+					@Override
+					public boolean shouldShowMoreInActionMode() {
+						return false;
 					}
 
 					@Override

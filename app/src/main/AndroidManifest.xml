@@ -46,7 +46,7 @@
 
     <application
         android:name="com.cs.ide.termux.app.TermuxApplication"
-        android:allowBackup="false"
+        android:allowBackup="true"
         android:banner="@drawable/ic_banner"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:extractNativeLibs="true"

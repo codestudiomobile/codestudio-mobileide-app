@@ -27,6 +27,8 @@ import com.cs.ide.app.views.ExtraKeysView;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.commons.io.IOUtils;
+
 import io.github.rosemoe.sora.event.ColorSchemeUpdateEvent;
 import io.github.rosemoe.sora.event.ContentChangeEvent;
 import io.github.rosemoe.sora.lang.EmptyLanguage;
@@ -108,9 +110,12 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	private void setupEditor() {
 		fileContent.setNestedScrollingEnabled(true);
 		fileContent.setHighlightCurrentLine(true);
-		
+
 		// Enable auto-closing of brackets and quotes
 		fileContent.getProps().symbolPairAutoCompletion = true;
+
+		// Disable deleting multiple spaces at once to fix backspace behavior on indented lines
+		fileContent.getProps().deleteMultiSpaces = 0;
 
 		// Apply JetBrains Mono font
 		try {
@@ -142,6 +147,7 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 			scheme.setColor(EditorColorScheme.CURRENT_LINE, ContextCompat.getColor(requireContext(), R.color.ide_current_line));
 			scheme.setColor(EditorColorScheme.SELECTION_INSERT, Color.WHITE);
 			scheme.setColor(EditorColorScheme.SELECTION_HANDLE, Color.WHITE);
+			scheme.setColor(EditorColorScheme.SELECTED_TEXT_BACKGROUND, Color.parseColor("#40BDBDBD"));
 
 			// Syntax highlighting colors for standard highlighting (e.g. EmptyLanguage or custom basic ones)
 			scheme.setColor(EditorColorScheme.KEYWORD, ContextCompat.getColor(requireContext(), R.color.syntax_keyword));
@@ -310,7 +316,13 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	 */
 	public byte[] getContents() {
 		if (fileContent == null) return null;
-		return fileContent.getText().toString().getBytes(StandardCharsets.UTF_8);
+		try {
+			// Use toString() as writeTo(Writer) is not available in this version of Sora Editor
+			return fileContent.getText().toString().getBytes(StandardCharsets.UTF_8);
+		} catch (Exception e) {
+			Log.e(TAG, "Error getting contents from editor", e);
+			return null;
+		}
 	}
 
 	/**
@@ -319,11 +331,12 @@ public class TextFragment extends Fragment implements TextWatcher, SharedPrefere
 	private void loadFileContent() {
 		if (fileUri == null || fileUri.equals(ViewPagerAdapter.UNTITLED_FILE_URI)) return;
 		new Thread(() -> {
+			if (com.cs.ide.app.utils.FileUtils.isBinaryFile(requireContext(), fileUri)) {
+				return;
+			}
 			try (InputStream is = requireContext().getContentResolver().openInputStream(fileUri)) {
 				if (is == null) return;
-				byte[] buffer = new byte[is.available()];
-				is.read(buffer);
-				String content = new String(buffer, StandardCharsets.UTF_8);
+				String content = IOUtils.toString(is, StandardCharsets.UTF_8);
 				if (getActivity() != null) {
 					getActivity().runOnUiThread(() -> {
 						fileContent.setText(content);

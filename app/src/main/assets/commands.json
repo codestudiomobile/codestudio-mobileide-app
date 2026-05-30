@@ -13,7 +13,7 @@
 					"check_installed": "dpkg -s python",
 					"check_available": "apt-cache show python",
 					"extension": ".py",
-					"run": "python {{file}}",
+					"run": "python -u {{file}}",
 					"interactive_shell": "python",
 					"suggestion_pack": "https://raw.githubusercontent.com/textmate/python.tmbundle/master/Syntaxes/Python.tmLanguage",
 					"scope_name": "source.python"

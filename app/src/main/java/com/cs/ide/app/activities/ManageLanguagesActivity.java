@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -31,6 +32,8 @@ import com.cs.ide.app.models.LanguagePack;
 import com.cs.ide.app.services.AptBackgroundService;
 import com.cs.ide.app.services.LanguageManagerService;
 import com.cs.ide.app.utils.DisplayManager;
+import com.cs.ide.termux.app.TermuxPatcher;
+import com.cs.ide.termux.shared.termux.TermuxConstants;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -220,12 +223,36 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.add(0, 1001, 0, R.string.action_fix_16kb_alignment)
+				.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+		return true;
+	}
+
+	@Override
 	public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 		if (item.getItemId() == android.R.id.home) {
 			finish();
 			return true;
+		} else if (item.getItemId() == 1001) {
+			fix16KBAlignment();
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	private void fix16KBAlignment() {
+		Toast.makeText(this, R.string.msg_fixing_alignment, Toast.LENGTH_SHORT).show();
+		new Thread(() -> {
+			try {
+				File prefixDir = new File(TermuxConstants.TERMUX_PREFIX_DIR_PATH);
+				TermuxPatcher.patchDirectory(prefixDir);
+				mainHandler.post(() -> Toast.makeText(this, R.string.msg_alignment_fixed, Toast.LENGTH_LONG).show());
+			} catch (Exception e) {
+				Log.e(TAG, "Failed to fix alignment", e);
+				mainHandler.post(() -> Toast.makeText(this, R.string.msg_alignment_fix_failed, Toast.LENGTH_LONG).show());
+			}
+		}).start();
 	}
 
 	// --- UI Setup ---

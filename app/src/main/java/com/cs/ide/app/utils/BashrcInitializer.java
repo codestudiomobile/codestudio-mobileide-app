@@ -21,7 +21,7 @@ public class BashrcInitializer {
 	private static final String TAG = "BashrcInitializer";
 
 	/**
-	 * Overwrites $PREFIX/etc/bash.bashrc with content from bash-content.bashrc asset.
+	 * Overwrites $PREFIX/etc/bash.bashrc with content from bash.bashrc asset.
 	 * Explicitly converts all line endings to LF to prevent "command not found" errors.
 	 *
 	 * @param context The application context.
@@ -39,9 +39,9 @@ public class BashrcInitializer {
 
 		Log.d(TAG, "Initializing bash.bashrc (ensuring Unix line endings)...");
 
-		try (InputStream in = context.getAssets().open("bash-content.bashrc");
-			 BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-			 PrintWriter writer = new PrintWriter(new FileOutputStream(bashrc, false))) {
+		try (InputStream in = context.getAssets().open("bash.bashrc");
+		     BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		     PrintWriter writer = new PrintWriter(new FileOutputStream(bashrc, false))) {
 
 			String line;
 			while ((line = reader.readLine()) != null) {

@@ -16,7 +16,7 @@
         android:background="@color/cc_primary_dark"
         android:elevation="0dp"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:popupTheme="@style/CodeStudio.PopupMenu"
+        app:popupTheme="@style/CodeStudio.PopupMenu.Theme"
         app:title="Settings"
         app:titleTextColor="@color/white" />
 

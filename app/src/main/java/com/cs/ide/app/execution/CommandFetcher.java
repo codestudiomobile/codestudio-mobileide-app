@@ -155,7 +155,7 @@ public class CommandFetcher {
 	 * @param absoluteFilePath The absolute path of the file.
 	 * @return The resolved command string, or null if not found or error.
 	 */
-	public String resolveCommandForFile(String absoluteFilePath) {
+	public String resolveCommandForFile(String absoluteFilePath, String internalOutputPath) {
 		if (absoluteFilePath == null) return null;
 		File file = new File(absoluteFilePath);
 		String fileName = file.getName();
@@ -184,7 +184,9 @@ public class CommandFetcher {
 					String langKey = langKeys.next();
 					JSONObject lang = catObj.getJSONObject(langKey);
 					if (extension.equalsIgnoreCase(lang.optString("extension"))) {
-						return buildCommand(lang, absoluteFilePath);
+						// Only use internal output path for compiled languages that aren't JVM-based (Java/Kotlin use their own ways)
+						boolean useInternal = category.equals("compiled") && !langKey.equals("java") && !langKey.equals("kotlin");
+						return buildCommand(lang, absoluteFilePath, useInternal ? internalOutputPath : null);
 					}
 				}
 			}
@@ -194,35 +196,53 @@ public class CommandFetcher {
 		return null;
 	}
 
-	private String buildCommand(JSONObject lang, String absoluteFilePath) {
+	private String buildCommand(JSONObject lang, String absoluteFilePath, String internalOutputPath) {
 		try {
 			String run = lang.optString("run", "");
 			String compile = lang.optString("compile", "");
 
 			if (run.isEmpty() && compile.isEmpty()) return null;
 
-			String fileName = new File(absoluteFilePath).getName();
-			String parentDir = new File(absoluteFilePath).getParent();
+			File file = new File(absoluteFilePath);
+			String fileName = file.getName();
 			String fileNameWithoutExt = fileName;
 			int dotIndex = fileName.lastIndexOf('.');
 			if (dotIndex > 0) {
 				fileNameWithoutExt = fileName.substring(0, dotIndex);
 			}
 
-			String output = parentDir + "/" + fileNameWithoutExt;
+			// Use relative paths (filename only) with single quotes for maximum shell safety.
+			// We execute in the file's parent directory as cwd (handled by ExecutionManager).
+			String qFile = "'" + fileName.replace("'", "'\\''") + "'";
+
+			// Use absolute path for output if provided (to avoid noexec issues), otherwise relative.
+			String qOutput;
+			if (internalOutputPath != null && !internalOutputPath.isEmpty()) {
+				qOutput = "'" + internalOutputPath.replace("'", "'\\''") + "'";
+			} else {
+				qOutput = "'" + fileNameWithoutExt.replace("'", "'\\''") + "'";
+			}
+
+			String qClassName = "'" + fileNameWithoutExt.replace("'", "'\\''") + "'";
 
 			String command = "";
 			if (!compile.isEmpty()) {
-				command = compile.replace("{{file}}", "\"" + absoluteFilePath + "\"")
-						.replace("{{output}}", "\"" + output + "\"");
+				command = compile.replace("{{file}}", qFile)
+						.replace("{{output}}", qOutput);
 				if (!run.isEmpty()) {
-					command += " && " + run.replace("{{file}}", "\"" + absoluteFilePath + "\"")
-							.replace("{{output}}", "\"" + output + "\"")
-							.replace("{{class_name}}", fileNameWithoutExt);
+					String runCmd = run.replace("{{file}}", qFile)
+							.replace("{{output}}", qOutput)
+							.replace("{{class_name}}", qClassName);
+
+					// Prepend ./ for compiled executables if it's a relative path
+					if (run.startsWith("./") && !runCmd.startsWith("./") && (internalOutputPath == null || internalOutputPath.isEmpty())) {
+						runCmd = "./" + runCmd;
+					}
+					command += " && " + runCmd;
 				}
 			} else {
-				command = run.replace("{{file}}", "\"" + absoluteFilePath + "\"")
-						.replace("{{class_name}}", fileNameWithoutExt);
+				command = run.replace("{{file}}", qFile)
+						.replace("{{class_name}}", qClassName);
 			}
 
 			return command;

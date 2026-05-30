@@ -9,7 +9,6 @@ import com.cs.ide.termux.shared.termux.TermuxConstants;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
@@ -26,6 +25,8 @@ public class TermuxPackagePatcher {
 	public static void main(String[] args) {
 		setupLogging();
 		log("Starting Termux Package Patcher...");
+		log("Working dir: " + new File(".").getAbsolutePath());
+		log("Arguments: " + java.util.Arrays.toString(args));
 
 		try {
 			if (args.length > 0) {
@@ -34,23 +35,26 @@ public class TermuxPackagePatcher {
 						log("Reading paths from stdin (APT hook mode)");
 						readFromStdin();
 					} else {
+						System.out.println("Patching: " + new File(path).getName());
 						processPath(path);
 					}
 				}
 			} else {
 				log("No args, patching entire prefix: " + TermuxConstants.TERMUX_PREFIX_DIR_PATH);
+				System.out.println("Scanning and patching entire environment... Please wait.");
 				File prefixDir = new File(TermuxConstants.TERMUX_PREFIX_DIR_PATH);
 				int patchedCount = TermuxPatcher.patchDirectory(prefixDir);
-				log("Patched " + patchedCount + " files.");
+				log("Patched " + patchedCount + " files/links.");
+				System.out.println("\nFinished. Patched " + patchedCount + " entries.");
 			}
 			log("Patching finished successfully.");
-			System.out.println("Termux Package Patcher: Patching Successful");
+			System.out.println("Termux Package Patcher: Success");
 		} catch (Throwable e) {
 			log("FATAL ERROR: " + e.getMessage());
+			e.printStackTrace();
 			if (logWriter != null) {
 				e.printStackTrace(logWriter);
 			}
-			e.printStackTrace();
 			System.err.println("Termux Package Patcher: Patching Failed - " + e.getMessage());
 			System.exit(1);
 		} finally {
@@ -86,15 +90,19 @@ public class TermuxPackagePatcher {
 
 	private static void readFromStdin() throws Exception {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-		String line;
 
 		boolean inHeader = true;
 		int protocolVersion = 1;
 
+		log("Reading from STDIN...");
+
+		String line;
 		while ((line = reader.readLine()) != null) {
-			log("STDIN: " + line);
 			String trimmed = line.trim();
+			log("STDIN LINE: [" + trimmed + "]");
+
 			if (trimmed.isEmpty()) {
+				log("Detected header separator (empty line)");
 				inHeader = false;
 				continue;
 			}
@@ -108,8 +116,10 @@ public class TermuxPackagePatcher {
 						log("Failed to parse protocol version, assuming 1");
 					}
 				}
-				// If it looks like a path and we are in header, we probably missed the blank line or it's version 1
+				// Config lines in protocol 2/3 don't start with /
+				// Package lines in protocol 1 start with /
 				if (trimmed.startsWith("/")) {
+					log("Detected path in header, switching to data mode (Protocol 1?)");
 					inHeader = false;
 				} else {
 					continue;
@@ -117,18 +127,27 @@ public class TermuxPackagePatcher {
 			}
 
 			if (protocolVersion == 1) {
-				processPath(trimmed);
+				if (trimmed.startsWith("/")) {
+					processPath(trimmed);
+				}
 			} else {
-				// Version 2/3: action is the last field
+				// Version 2/3: fields are: pkg version architecture status path
+				// We expect at least 5 fields.
 				String[] parts = trimmed.split("\\s+");
 				if (parts.length >= 5) {
-					String action = parts[parts.length - 1];
-					if (action.startsWith("/") && action.endsWith(".deb")) {
-						processPath(action);
+					String debPath = parts[parts.length - 1];
+					if (debPath.startsWith("/") && debPath.endsWith(".deb")) {
+						log("Found deb package from APT protocol " + protocolVersion + ": " + debPath);
+						processPath(debPath);
+					} else {
+						log("Ignoring line (not a deb path): " + debPath);
 					}
+				} else {
+					log("Ignoring malformed line: " + trimmed);
 				}
 			}
 		}
+		log("Finished reading from STDIN.");
 	}
 
 	private static void processPath(String path) throws Exception {
