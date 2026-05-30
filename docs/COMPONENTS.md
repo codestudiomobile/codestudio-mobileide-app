@@ -13,9 +13,12 @@ navigation, and the multi-tab editing experience.
 
 ### 🔍 Technical Highlights:
 
-- **Multi-Tab Engine**: Uses `ViewPager2` to swap between open files seamlessly.
-- **Drawer Navigation**: Integrated with Android's Storage Access Framework (SAF) to browse your
-  local device and cloud storage.
+- **Performance-First Architecture**: Features a multi-threaded core where file system operations,
+  auto-saving, and tab persistence are offloaded to dedicated background thread pools.
+- **High-Speed SAF**: Uses optimized `DocumentsContract` cursor queries instead of standard
+  `DocumentFile` wrappers, allowing for near-instant file enumeration in large directories.
+- **Multi-Tab Engine**: Uses `ViewPager2` with an optimized offscreen page limit to ensure tab
+  swapping is instantaneous and frames are never dropped.
 
 ---
 

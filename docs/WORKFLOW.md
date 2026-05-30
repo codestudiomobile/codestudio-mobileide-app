@@ -32,6 +32,12 @@ an overview of the project and its features, please see the [README.md](../READM
       instant prompts preview and alphanumeric ASCII art block text generators.
     - Deployed custom shell scripts `apply-title.sh` and `apply-banner.sh` executing dynamically
       inside `/bin/bash` processes to inject environment customizers.
+- **High-Performance Core Orchestration**:
+    - Refactored `MainActivity` into a multi-threaded architecture using `ExecutorService` thread
+      pools to offload heavy I/O operations from the UI thread.
+    - Optimized Storage Access Framework (SAF) interactions with direct `DocumentsContract` cursor
+      queries, ensuring 60 FPS responsiveness during rapid file navigation and large-scale saving
+      operations.
 - **PTY/NDK Native Emulation Layer**:
     - Deployed JNI Pseudo-Terminal bindings (`termux.c` NDK code) managing multiplexer forks (
       `/dev/ptmx`), POSIX slave redirects, and dynamic column/row resizing using Linux system
@@ -60,8 +66,6 @@ Ensuring the stability and reliability of the IDE:
 
 - **Cross-Version Testing**: Verifying compatibility across different Android versions (especially
   Android 10+ restrictions).
-- **Performance Optimization**: Reducing the resource footprint of the terminal and editor
-  components.
 - **Community Feedback & Bug Squashing**: Addressing reported issues and polishing the UI for a
   production-ready release.
 - **Security Audits**: Ensuring the shell environment is secure and respects user data privacy.

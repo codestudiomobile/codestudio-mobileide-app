@@ -153,5 +153,5 @@ or apply custom color schemes.
 
 ## 4. Development Note
 
-Customization features are being expanded. In future updates, we plan to add a dedicated UI for
-banner and prompt management.
+We are continuously improving the customization engine. Future updates will include more ASCII fonts
+and deeper integration with shell themes.
