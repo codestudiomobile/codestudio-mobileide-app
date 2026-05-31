@@ -39,7 +39,7 @@ import java.util.Properties;
  */
 public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionClientBase {
 
-	private static final int MAX_SESSIONS = 8;
+	private static final int MAX_SESSIONS = 32;
 	private static final String LOG_TAG = "TermuxTerminalSessionActivityClient";
 	private final TermuxActivity mActivity;
 	private SoundPool mBellSoundPool;
@@ -359,7 +359,7 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
 		}
 	}
 
-	public void addNewSession(boolean isFailSafe, String sessionName) {
+	public void addNewSession(boolean isFailSafe, String runCommand, String sessionName) {
 		TermuxService service = mActivity.getTermuxService();
 		if (service == null) return;
 
@@ -376,7 +376,12 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
 				workingDirectory = currentSession.getCwd();
 			}
 
-			TermuxSession newTermuxSession = service.createTermuxSession(null, null, null, workingDirectory, isFailSafe, sessionName);
+			String stdin = null;
+			if (runCommand != null && !runCommand.isEmpty()) {
+				stdin = runCommand + "\n";
+			}
+
+			TermuxSession newTermuxSession = service.createTermuxSession(null, null, stdin, workingDirectory, isFailSafe, sessionName);
 			if (newTermuxSession == null) return;
 
 			TerminalSession newTerminalSession = newTermuxSession.getTerminalSession();

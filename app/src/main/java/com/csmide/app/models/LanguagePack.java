@@ -18,6 +18,14 @@ public class LanguagePack {
 	 * Status indicating an installation or uninstallation is currently in progress.
 	 */
 	public static final int STATUS_INSTALLING = 2;
+	/**
+	 * Status indicating the size is being probed.
+	 */
+	public static final int STATUS_PROBING = 3;
+	/**
+	 * Status indicating sizes are fetched and ready to install.
+	 */
+	public static final int STATUS_READY_TO_INSTALL = 4;
 
 	public static final int TYPE_RUNTIME = 0;
 	public static final int TYPE_SUGGESTION = 1;
@@ -48,6 +56,9 @@ public class LanguagePack {
 	 */
 	public int status;
 	public String companionKey;
+
+	public String downloadSize;
+	public String installSize;
 
 	/**
 	 * Constructs a new LanguagePack.

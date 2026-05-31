@@ -102,6 +102,10 @@
 
     <string name="msg_storage_permission_granted_on_request">The storage permission granted by user on request</string>
     <string name="msg_storage_permission_not_granted_on_request">The storage permission not granted by user on request</string>
+    <string name="title_storage_permission_required">Storage Permission Required</string>
+    <string name="msg_storage_permission_rational">CodeStudio needs storage access to work with your files. Since internal app storage is limited, we highly recommend allowing access to your device\'s shared storage.</string>
+    <string name="action_grant">Grant Permission</string>
+    <string name="action_not_now">Not Now</string>
 
 
     <!-- Launcher Icons -->
@@ -144,6 +148,8 @@
     <string name="title_max_terminals_reached">Max terminals reached</string>
     <string name="msg_max_terminals_reached">Close down existing ones before creating new.</string>
     <string name="title_rename_session">Set session name</string>
+    <string name="status_checking">Checking…</string>
+    <string name="action_check_size">Check Size</string>
     <string name="action_rename_session_confirm">Set</string>
     <string name="title_create_named_session">New named session</string>
     <string name="action_create_named_session_confirm">Create</string>
@@ -293,9 +299,9 @@
     <string name="no_files_to_save">No files to save</string>
     <string name="parent_directory">Parent Directory</string>
     <string name="renaming">Renaming…</string>
-    <string name="renamed_to">Renamed to: %1$s</string>
+    <string name="renamed_to">Renamed from %1$s to %2$s</string>
     <string name="failed_to_rename">Failed to rename \'%1$s\'. File may not exist or name conflict could not be resolved.</string>
-    <string name="deleted_msg">Deleted: %1$s</string>
+    <string name="deleted_msg">Deleted %1$s</string>
     <string name="failed_to_delete">Failed to delete.</string>
     <string name="file_imported_successfully">File imported successfully: %1$s</string>
     <string name="file_overwritten_successfully">File \'%1$s\' overwritten successfully.</string>
@@ -337,7 +343,7 @@
     <string name="menu_open_folder">Open Folder</string>
     <string name="menu_open_welcome_screen">Open welcome screen</string>
     <string name="menu_settings">Settings</string>
-    <string name="menu_about">About</string>
+    <string name="menu_about">About Us</string>
 
     <string name="title_manage_languages">Manage Languages</string>
     <string name="action_fix_16kb_alignment">Fix 16KB Alignment (Android 15)</string>
@@ -447,4 +453,5 @@
     <string name="msg_instructions_saved">Instructions saved successfully!</string>
     <string name="msg_failed_save_instructions">Failed to save instructions: %1$s</string>
     <string name="migration_instructions_content">Termux to CodeStudio Migration Guide\n====================================\n\nStep 1: Grant Storage Access in Termux\n--------------------------------------\nOpen Termux and run:\ntermux-setup-storage\n(Grant the storage permission popup on your screen).\n\nStep 2: Back Up Your Data in Termux\n-----------------------------------\nRun this exact command:\ntar -zcvf /sdcard/Download/termux-backup.tar.gz -C /data/data/com.termux/files ./home ./usr\n\nStep 3: Import in CodeStudio\n----------------------------\n1. Open CodeStudio.\n2. Go to Settings -> Termux Migration.\n3. Click \'Select and Import Backup\'.\n4. Select the \'termux-backup.tar.gz\' file from your Downloads folder.\n5. Wait for the import to complete and restart the app.\n\nNote: If you run into permission glitches after restore, simply restart your phone to sync system permissions.</string>
+    <string name="msg_no_changes_detected">No changes detected in file name or location.</string>
 </resources>

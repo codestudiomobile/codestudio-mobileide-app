@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.csmide.R;
 import com.csmide.app.activities.MainActivity;
 import com.csmide.app.models.FileItem;
+import com.csmide.app.utils.FontManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -170,6 +171,7 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FileViewHold
 
 		public void bind(@NonNull FileItem item) {
 			fileName.setText(item.displayName);
+			fileName.setTypeface(FontManager.getTypeface(context));
 			if (item.isDirectory) {
 				fileIcon.setImageResource(item.isExpanded ? R.drawable.ic_folder_open : R.drawable.ic_folder_closed);
 			} else {
@@ -195,9 +197,6 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FileViewHold
 				if (item.isExpanded) collapseFolder(pos);
 				else {
 					expandFolder(pos);
-					if (context instanceof MainActivity) {
-						((MainActivity) context).updateOpenedFolder(item.uri);
-					}
 				}
 			} else if (onFileClickListener != null) {
 				if (context instanceof MainActivity) ((MainActivity) context).closeLeftNavigation();

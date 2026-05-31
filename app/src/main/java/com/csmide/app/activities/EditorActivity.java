@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -13,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
@@ -126,7 +128,23 @@ public class EditorActivity extends AppCompatActivity {
 
 		// Load available fonts
 		List<String> fonts = FontManager.getAvailableFonts(this);
-		ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_codestudio, fonts);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.spinner_item_codestudio, fonts) {
+			@NonNull
+			@Override
+			public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+				TextView tv = (TextView) super.getView(position, convertView, parent);
+				tv.setText(FontManager.getFontDisplayName(getItem(position)));
+				return tv;
+			}
+
+			@NonNull
+			@Override
+			public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+				TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+				tv.setText(FontManager.getFontDisplayName(getItem(position)));
+				return tv;
+			}
+		};
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		fontFamilySpinner.setAdapter(adapter);
 

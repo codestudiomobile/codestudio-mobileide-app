@@ -1,9 +1,11 @@
 package com.csmide.app.utils;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.text.InputType;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.csmide.R;
 
@@ -20,36 +22,68 @@ public class DialogHelper {
 	 * @param onConfirm Runnable to execute if the user confirms deletion.
 	 */
 	public static void showDeleteConfirmationDialog(Context context, String itemName, Runnable onConfirm) {
-		new AlertDialog.Builder(context)
-				.setTitle(context.getString(R.string.delete) + " " + itemName)
-				.setMessage(context.getString(R.string.delete_confirm_msg, itemName))
-				.setPositiveButton(R.string.delete, (dialog, which) -> onConfirm.run())
-				.setNegativeButton(R.string.action_cancel, null)
-				.show();
+		View view = android.view.LayoutInflater.from(context).inflate(R.layout.dialog_delete_code_studio, null);
+		TextView messageView = view.findViewById(R.id.deleteMessage);
+		android.widget.Button deleteBtn = view.findViewById(R.id.delete);
+		android.widget.Button cancelBtn = view.findViewById(R.id.cancel);
+
+		messageView.setText(context.getString(R.string.delete_confirm_msg, itemName));
+
+		final AlertDialog dialog = new AlertDialog.Builder(context, R.style.CodeStudio_AlertDialog)
+				.setView(view)
+				.create();
+
+		deleteBtn.setOnClickListener(v -> {
+			onConfirm.run();
+			dialog.dismiss();
+		});
+
+		cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
+		dialog.show();
 	}
 
 	/**
-	 * Shows a simple rename dialog with an EditText.
+	 * Shows a custom rename dialog.
 	 *
 	 * @param context     The context to show the dialog in.
 	 * @param currentName The current name of the item.
 	 * @param onRename    Callback to handle the new name.
 	 */
 	public static void showRenameDialog(Context context, String currentName, OnInputListener onRename) {
-		final EditText input = new EditText(context);
-		input.setInputType(InputType.TYPE_CLASS_TEXT);
+		View view = android.view.LayoutInflater.from(context).inflate(R.layout.dialog_rename_code_studio, null);
+		final EditText input = view.findViewById(R.id.newName);
+		final android.widget.Button renameBtn = view.findViewById(R.id.rename);
+		final android.widget.Button cancelBtn = view.findViewById(R.id.cancel);
+
 		input.setText(currentName);
-		new AlertDialog.Builder(context)
-				.setTitle(R.string.rename)
-				.setView(input)
-				.setPositiveButton(R.string.rename, (dialog, which) -> {
-					String newName = input.getText().toString().trim();
-					if (!newName.isEmpty() && !newName.equals(currentName)) {
-						onRename.onInput(newName);
-					}
-				})
-				.setNegativeButton(R.string.action_cancel, null)
-				.show();
+		// Select filename without extension
+		int dotIndex = currentName.lastIndexOf('.');
+		if (dotIndex > 0) {
+			input.setSelection(0, dotIndex);
+		} else {
+			input.setSelection(0, currentName.length());
+		}
+
+		final AlertDialog dialog = new AlertDialog.Builder(context, R.style.CodeStudio_AlertDialog)
+				.setView(view)
+				.create();
+
+		renameBtn.setOnClickListener(v -> {
+			String newName = input.getText().toString().trim();
+			if (newName.isEmpty()) {
+				android.widget.Toast.makeText(context, R.string.name_cannot_be_empty, android.widget.Toast.LENGTH_SHORT).show();
+				return;
+			}
+			if (!newName.equals(currentName)) {
+				onRename.onInput(newName);
+			}
+			dialog.dismiss();
+		});
+
+		cancelBtn.setOnClickListener(v -> dialog.dismiss());
+
+		dialog.show();
 	}
 
 	/**

@@ -131,7 +131,7 @@ public class CreateFileDialog extends DialogFragment {
 
 		if (!folderNames.isEmpty()) {
 			ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), R.layout.spinner_item_codestudio, folderNames);
-			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			adapter.setDropDownViewResource(R.layout.spinner_item_codestudio);
 			locationSpinner.setAdapter(adapter);
 		} else {
 			Toast.makeText(requireContext(), "No accessible folders available.", Toast.LENGTH_LONG).show();
@@ -145,7 +145,7 @@ public class CreateFileDialog extends DialogFragment {
 	private void handleCreate(EditText fileNameEditText, Spinner locationSpinner) {
 		String fileName = fileNameEditText.getText().toString().trim();
 		if (fileName.isEmpty()) {
-			Toast.makeText(requireContext(), "Please enter a file name", Toast.LENGTH_SHORT).show();
+			Toast.makeText(requireContext(), R.string.name_cannot_be_empty, Toast.LENGTH_SHORT).show();
 			return;
 		}
 
@@ -160,12 +160,12 @@ public class CreateFileDialog extends DialogFragment {
 				// Name matches, check location
 				Uri parentUriOfCurrent = getSafParentUri(currentFileUri);
 				if (folderUri != null && folderUri.equals(parentUriOfCurrent)) {
-					Toast.makeText(requireContext(), "No changes detected in file name or location.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(requireContext(), R.string.msg_no_changes_detected, Toast.LENGTH_SHORT).show();
 					return;
 				}
 				// Also check app storage case
 				if (folderUri == null && currentFileUri.toString().startsWith("file://") && currentFileUri.getPath().contains("code_studio_files")) {
-					Toast.makeText(requireContext(), "No changes detected in file name or location.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(requireContext(), R.string.msg_no_changes_detected, Toast.LENGTH_SHORT).show();
 					return;
 				}
 			}

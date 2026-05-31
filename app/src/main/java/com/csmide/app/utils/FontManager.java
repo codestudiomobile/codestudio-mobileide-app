@@ -34,6 +34,21 @@ public class FontManager {
 		return fonts;
 	}
 
+	public static String getFontDisplayName(String fontPath) {
+		if (fontPath == null) return "Default";
+		String name = fontPath;
+		if (name.startsWith("fonts/")) {
+			name = name.substring(6);
+		}
+		int dotIndex = name.lastIndexOf('.');
+		if (dotIndex != -1) {
+			name = name.substring(0, dotIndex);
+		}
+		// Replace hyphens and underscores with spaces and capitalize
+		name = name.replace('-', ' ').replace('_', ' ');
+		return name;
+	}
+
 	public static Typeface getTypeface(Context context) {
 		SharedPreferences prefs = context.getSharedPreferences(AppPreferences.PREFERENCE_NAME, Context.MODE_PRIVATE);
 		String fontPath = prefs.getString(AppPreferences.KEY_EDITOR_FONT, AppPreferences.DEFAULT_FONT);

@@ -282,6 +282,23 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 	}
 
 	@Override
+	protected void onNewIntent(Intent intent) {
+		super.onNewIntent(intent);
+		setIntent(intent);
+		if (mTermuxService != null) {
+			if (intent != null && intent.hasExtra("run_command")) {
+				boolean isFailSafe = intent.getBooleanExtra(TERMUX_ACTIVITY.EXTRA_FAILSAFE_SESSION, false);
+				String runCommand = intent.getStringExtra("run_command");
+				String sessionName = intent.getStringExtra("session_name");
+				mTermuxTerminalSessionActivityClient.addNewSession(isFailSafe, runCommand, sessionName);
+			} else if (intent != null && (Intent.ACTION_RUN.equals(intent.getAction()) || intent.getBooleanExtra("new_session", false))) {
+				boolean isFailSafe = intent.getBooleanExtra(TERMUX_ACTIVITY.EXTRA_FAILSAFE_SESSION, false);
+				mTermuxTerminalSessionActivityClient.addNewSession(isFailSafe, null, null);
+			}
+		}
+	}
+
+	@Override
 	public void onStart() {
 		super.onStart();
 
@@ -398,10 +415,14 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 					if (mTermuxService == null) return; // Activity might have been destroyed.
 					try {
 						boolean launchFailsafe = false;
+						String runCommand = null;
+						String sessionLabel = null;
 						if (intent != null && intent.getExtras() != null) {
 							launchFailsafe = intent.getExtras().getBoolean(TERMUX_ACTIVITY.EXTRA_FAILSAFE_SESSION, false);
+							runCommand = intent.getExtras().getString("run_command");
+							sessionLabel = intent.getExtras().getString("session_name");
 						}
-						mTermuxTerminalSessionActivityClient.addNewSession(launchFailsafe, null);
+						mTermuxTerminalSessionActivityClient.addNewSession(launchFailsafe, runCommand, sessionLabel);
 					} catch (WindowManager.BadTokenException e) {
 						// Activity finished - ignore.
 					}
@@ -414,10 +435,11 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 			// If termux was started from launcher "New session" shortcut and activity is recreated,
 			// then the original intent will be re-delivered, resulting in a new session being re-added
 			// each time.
-			if (!mIsActivityRecreated && intent != null && Intent.ACTION_RUN.equals(intent.getAction())) {
-				// Android 7.1 app shortcut from res/xml/shortcuts.xml.
+			if (!mIsActivityRecreated && intent != null && (Intent.ACTION_RUN.equals(intent.getAction()) || intent.hasExtra("run_command") || intent.getBooleanExtra("new_session", false))) {
 				boolean isFailSafe = intent.getBooleanExtra(TERMUX_ACTIVITY.EXTRA_FAILSAFE_SESSION, false);
-				mTermuxTerminalSessionActivityClient.addNewSession(isFailSafe, null);
+				String runCommand = intent.getStringExtra("run_command");
+				String sessionLabel = intent.getStringExtra("session_name");
+				mTermuxTerminalSessionActivityClient.addNewSession(isFailSafe, runCommand, sessionLabel);
 			} else {
 				mTermuxTerminalSessionActivityClient.setCurrentSession(mTermuxTerminalSessionActivityClient.getCurrentStoredSessionOrLast());
 			}
@@ -557,11 +579,11 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
 	private void setNewSessionButtonView() {
 		View newSessionButton = findViewById(R.id.new_session_button);
-		newSessionButton.setOnClickListener(v -> mTermuxTerminalSessionActivityClient.addNewSession(false, null));
+		newSessionButton.setOnClickListener(v -> mTermuxTerminalSessionActivityClient.addNewSession(false, null, null));
 		newSessionButton.setOnLongClickListener(v -> {
 			TextInputDialogUtils.textInput(TermuxActivity.this, R.string.title_create_named_session, null,
-					R.string.action_create_named_session_confirm, text -> mTermuxTerminalSessionActivityClient.addNewSession(false, text),
-					R.string.action_new_session_failsafe, text -> mTermuxTerminalSessionActivityClient.addNewSession(true, text),
+					R.string.action_create_named_session_confirm, text -> mTermuxTerminalSessionActivityClient.addNewSession(false, null, text),
+					R.string.action_new_session_failsafe, text -> mTermuxTerminalSessionActivityClient.addNewSession(true, null, text),
 					-1, null, null);
 			return true;
 		});

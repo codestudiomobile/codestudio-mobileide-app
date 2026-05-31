@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
+import com.csmide.R;
 import com.csmide.app.execution.CommandFetcher;
 import com.csmide.app.services.LanguageManagerService;
 import com.itsaky.androidide.treesitter.TSLanguage;
@@ -480,7 +481,7 @@ public class SoraLanguageManager {
 					if (i < relatedLangs.size() - 1) message.append(", ");
 				}
 			}
-			new AlertDialog.Builder(context)
+			new AlertDialog.Builder(context, com.csmide.R.style.CodeStudio_AlertDialog)
 					.setTitle("Install Language Pack?")
 					.setMessage(message.toString())
 					.setPositiveButton("Install All", (dialog, which) -> {

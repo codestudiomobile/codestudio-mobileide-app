@@ -82,5 +82,26 @@
             android:max="100"
             android:progress="0"
             android:progressTint="@color/cc_accent" />
+
+        <TextView
+            android:id="@+id/extractStatusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="Installation Progress"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/extractProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="#4CAF50"
+            android:visibility="gone" />
     </LinearLayout>
 </LinearLayout>

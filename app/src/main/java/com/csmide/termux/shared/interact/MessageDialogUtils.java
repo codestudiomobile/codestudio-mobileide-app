@@ -59,7 +59,7 @@ public class MessageDialogUtils {
 	                               final DialogInterface.OnClickListener onNegativeButton,
 	                               final DialogInterface.OnDismissListener onDismiss) {
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.Theme_AppCompat_Light_Dialog);
+		AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.CodeStudio_AlertDialog);
 
 		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		View view = inflater.inflate(R.layout.dialog_show_message, null);
@@ -67,12 +67,16 @@ public class MessageDialogUtils {
 			builder.setView(view);
 
 			TextView titleView = view.findViewById(R.id.dialog_title);
-			if (titleView != null)
+			if (titleView != null) {
 				titleView.setText(titleText);
+				titleView.setTextColor(Color.WHITE);
+			}
 
 			TextView messageView = view.findViewById(R.id.dialog_message);
-			if (messageView != null)
+			if (messageView != null) {
 				messageView.setText(messageText);
+				messageView.setTextColor(Color.WHITE);
+			}
 		}
 
 		if (positiveText == null)
@@ -88,13 +92,12 @@ public class MessageDialogUtils {
 		AlertDialog dialog = builder.create();
 
 		dialog.setOnShowListener(dialogInterface -> {
-			Logger.logError("dialog");
 			Button button = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
 			if (button != null)
-				button.setTextColor(Color.BLACK);
+				button.setTextColor(context.getColor(R.color.cc_accent));
 			button = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
 			if (button != null)
-				button.setTextColor(Color.BLACK);
+				button.setTextColor(context.getColor(R.color.cc_accent));
 		});
 
 		dialog.show();

@@ -123,7 +123,7 @@ public class MigrationActivity extends AppCompatActivity {
 	}
 
 	private void importBackup(Uri uri) {
-		new AlertDialog.Builder(this)
+		new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
 				.setTitle(R.string.title_import_backup)
 				.setMessage(R.string.msg_confirm_import)
 				.setPositiveButton(R.string.action_proceed, (dialog, which) -> startImportTask(uri))

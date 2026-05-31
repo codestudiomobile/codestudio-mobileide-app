@@ -36,6 +36,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Scroller;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.csmide.R;
 import com.csmide.termux.terminal.KeyHandler;
@@ -70,6 +72,7 @@ public final class TerminalView extends View {
 	final GestureAndScaleRecognizer mGestureRecognizer;
 	final Scroller mScroller;
 	private final boolean mAccessibilityEnabled;
+	private final Handler mAutoScrollHandler = new Handler();
 	/**
 	 * The currently displayed terminal session, whose emulator is
 	 * {@link #mEmulator}.
@@ -170,29 +173,6 @@ public final class TerminalView extends View {
 	private TerminalCursorBlinkerRunnable mTerminalCursorBlinkerRunnable;
 	private int mTerminalCursorBlinkerRate;
 	private boolean mCursorInvisibleIgnoreOnce;
-
-	private final Handler mAutoScrollHandler = new Handler();
-	private final Runnable mAutoScrollRunnable = new Runnable() {
-		@Override
-		public void run() {
-			if (mDraggingHandle != SELECTION_HANDLE_NONE) {
-				int scrollAmount = 0;
-				float density = getContext().getResources().getDisplayMetrics().density;
-				int scrollEdge = Math.round(40 * density);
-				if (mLastMoveY < scrollEdge) {
-					scrollAmount = -1;
-				} else if (mLastMoveY > getHeight() - scrollEdge) {
-					scrollAmount = 1;
-				}
-
-				if (scrollAmount != 0) {
-					scrollDuringSelection(scrollAmount);
-					updateSelectionOnScroll(scrollAmount);
-					mAutoScrollHandler.postDelayed(this, 50);
-				}
-			}
-		}
-	};
 	private float mLastMoveY;
 	/**
 	 * Keep track of where mouse touch event started which we report as mouse
@@ -250,6 +230,30 @@ public final class TerminalView extends View {
 	 * {@link #autofill(AutofillValue)} by calling {@link #resetAutoFill()}.
 	 */
 	private String[] mAutoFillHints = new String[0];
+	private boolean mIsOutputScreen = false;
+	private final Runnable mAutoScrollRunnable = new Runnable() {
+		@Override
+		public void run() {
+			if (mDraggingHandle != SELECTION_HANDLE_NONE) {
+				int scrollAmount = 0;
+				float density = getContext().getResources().getDisplayMetrics().density;
+				int scrollEdge = Math.round(40 * density);
+				if (mLastMoveY < scrollEdge) {
+					scrollAmount = -1;
+				} else if (mLastMoveY > getHeight() - scrollEdge) {
+					scrollAmount = 1;
+				}
+
+				if (scrollAmount != 0) {
+					scrollDuringSelection(scrollAmount);
+					updateSelectionOnScroll(scrollAmount);
+					mAutoScrollHandler.postDelayed(this, 50);
+				}
+			}
+		}
+	};
+	private boolean mUserHasScrolled = false;
+	private int mLastActiveRows = 0;
 
 	public TerminalView(Context context) {
 		this(context, null);
@@ -334,6 +338,7 @@ public final class TerminalView extends View {
 					sendMouseEventCode(e, TerminalEmulator.MOUSE_LEFT_BUTTON_MOVED, true);
 				} else {
 					scrolledWithFinger = true;
+					mUserHasScrolled = true;
 					float newDistanceY = distanceY + mScrollRemainder;
 					int deltaRows = (int) (newDistanceY / mRenderer.mFontLineSpacing);
 					mScrollRemainder = newDistanceY - deltaRows * mRenderer.mFontLineSpacing;
@@ -593,6 +598,13 @@ public final class TerminalView extends View {
 			return;
 
 		int rowsInHistory = mEmulator.getScreen().getActiveTranscriptRows();
+		int activeRows = mEmulator.getScreen().getActiveRows();
+
+		if (activeRows > mLastActiveRows) {
+			mUserHasScrolled = false;
+			mLastActiveRows = activeRows;
+		}
+
 		if (mTopRow < -rowsInHistory)
 			mTopRow = -rowsInHistory;
 
@@ -609,11 +621,11 @@ public final class TerminalView extends View {
 			}
 		}
 
-		if (!skipScrolling && mTopRow != 0) {
-			if (mTopRow < -3) {
-				awakenScrollBars();
+		if (!skipScrolling && !mUserHasScrolled) {
+			// Regular session and output screen: stick to bottom
+			if (mTopRow != 0) {
+				mTopRow = 0;
 			}
-			mTopRow = 0;
 		}
 
 		mEmulator.clearScrollCounter();
@@ -648,8 +660,8 @@ public final class TerminalView extends View {
 	}
 
 	public int[] getColumnAndRow(MotionEvent event, boolean relativeToScroll) {
-		int column = (int) (event.getX() / mRenderer.mFontWidth);
-		int row = (int) ((event.getY() - mRenderer.mFontLineSpacingAndAscent) / mRenderer.mFontLineSpacing);
+		int column = (int) ((event.getX() - getPaddingLeft()) / mRenderer.mFontWidth);
+		int row = (int) ((event.getY() - getPaddingTop() - mRenderer.mFontLineSpacingAndAscent) / mRenderer.mFontLineSpacing);
 		if (relativeToScroll) {
 			row += mTopRow;
 		}
@@ -750,59 +762,59 @@ public final class TerminalView extends View {
 					mDraggingHandle = SELECTION_HANDLE_NONE;
 					setCopyMode(false);
 				}
-				} else if (action == MotionEvent.ACTION_MOVE && mDraggingHandle != SELECTION_HANDLE_NONE) {
-					mLastMoveY = event.getY();
-					int[] columnAndRow = getColumnAndRow(event, true);
-					int newX = columnAndRow[0];
-					int newY = columnAndRow[1];
+			} else if (action == MotionEvent.ACTION_MOVE && mDraggingHandle != SELECTION_HANDLE_NONE) {
+				mLastMoveY = event.getY();
+				int[] columnAndRow = getColumnAndRow(event, true);
+				int newX = columnAndRow[0];
+				int newY = columnAndRow[1];
 
-					if (mDraggingHandle == SELECTION_HANDLE_LEFT) {
-						// Ensure we don't move start past end
-						if (newY < mSelY2 || (newY == mSelY2 && newX <= mSelX2)) {
-							mSelX1 = newX;
-							mSelY1 = newY;
-						} else {
-							// Snap to end or swap? Standard behavior is to swap.
-							mSelX1 = mSelX2;
-							mSelY1 = mSelY2;
-							mSelX2 = newX;
-							mSelY2 = newY;
-							mDraggingHandle = SELECTION_HANDLE_RIGHT;
-						}
-					} else if (mDraggingHandle == SELECTION_HANDLE_RIGHT) {
-						// Ensure we don't move end before start
-						if (newY > mSelY1 || (newY == mSelY1 && newX >= mSelX1)) {
-							mSelX2 = newX;
-							mSelY2 = newY;
-						} else {
-							mSelX2 = mSelX1;
-							mSelY2 = mSelY1;
-							mSelX1 = newX;
-							mSelY1 = newY;
-							mDraggingHandle = SELECTION_HANDLE_LEFT;
-						}
-					}
-
-					// Trigger auto-scroll if near edges
-					float density = getContext().getResources().getDisplayMetrics().density;
-					int scrollEdge = Math.round(40 * density);
-					if (mLastMoveY < scrollEdge || mLastMoveY > getHeight() - scrollEdge) {
-						mAutoScrollHandler.removeCallbacks(mAutoScrollRunnable);
-						mAutoScrollHandler.post(mAutoScrollRunnable);
+				if (mDraggingHandle == SELECTION_HANDLE_LEFT) {
+					// Ensure we don't move start past end
+					if (newY < mSelY2 || (newY == mSelY2 && newX <= mSelX2)) {
+						mSelX1 = newX;
+						mSelY1 = newY;
 					} else {
-						mAutoScrollHandler.removeCallbacks(mAutoScrollRunnable);
+						// Snap to end or swap? Standard behavior is to swap.
+						mSelX1 = mSelX2;
+						mSelY1 = mSelY2;
+						mSelX2 = newX;
+						mSelY2 = newY;
+						mDraggingHandle = SELECTION_HANDLE_RIGHT;
+					}
+				} else if (mDraggingHandle == SELECTION_HANDLE_RIGHT) {
+					// Ensure we don't move end before start
+					if (newY > mSelY1 || (newY == mSelY1 && newX >= mSelX1)) {
+						mSelX2 = newX;
+						mSelY2 = newY;
+					} else {
+						mSelX2 = mSelX1;
+						mSelY2 = mSelY1;
+						mSelX1 = newX;
+						mSelY1 = newY;
+						mDraggingHandle = SELECTION_HANDLE_LEFT;
 					}
 				}
 
-				if (mCopyMode) {
-					invalidate();
-					if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-						mDraggingHandle = SELECTION_HANDLE_NONE;
-						mAutoScrollHandler.removeCallbacks(mAutoScrollRunnable);
-						updateFloatingToolbarVisibility(event);
-					}
-					return true;
+				// Trigger auto-scroll if near edges
+				float density = getContext().getResources().getDisplayMetrics().density;
+				int scrollEdge = Math.round(40 * density);
+				if (mLastMoveY < scrollEdge || mLastMoveY > getHeight() - scrollEdge) {
+					mAutoScrollHandler.removeCallbacks(mAutoScrollRunnable);
+					mAutoScrollHandler.post(mAutoScrollRunnable);
+				} else {
+					mAutoScrollHandler.removeCallbacks(mAutoScrollRunnable);
 				}
+			}
+
+			if (mCopyMode) {
+				invalidate();
+				if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+					mDraggingHandle = SELECTION_HANDLE_NONE;
+					mAutoScrollHandler.removeCallbacks(mAutoScrollRunnable);
+					updateFloatingToolbarVisibility(event);
+				}
+				return true;
+			}
 		}
 
 		if (event.isFromSource(InputDevice.SOURCE_MOUSE)) {
@@ -1078,8 +1090,9 @@ public final class TerminalView extends View {
 		if (viewWidth == 0 || viewHeight == 0 || mTermSession == null)
 			return;
 
+		int usableHeight = viewHeight - getPaddingTop() - getPaddingBottom();
 		int newColumns = Math.max(4, (int) (viewWidth / mRenderer.mFontWidth));
-		int newRows = Math.max(4, (viewHeight - mRenderer.mFontLineSpacingAndAscent) / mRenderer.mFontLineSpacing);
+		int newRows = Math.max(4, (usableHeight - mRenderer.mFontLineSpacingAndAscent) / mRenderer.mFontLineSpacing);
 
 		if (mEmulator == null || (newColumns != mEmulator.mColumns || newRows != mEmulator.mRows)) {
 			mTermSession.updateSize(newColumns, newRows, (int) mRenderer.getFontWidth(),
@@ -1103,6 +1116,8 @@ public final class TerminalView extends View {
 		if (mEmulator == null) {
 			canvas.drawColor(0XFF000000);
 		} else {
+			canvas.save();
+			canvas.translate(getPaddingLeft(), getPaddingTop());
 			int x1 = mSelX1, y1 = mSelY1, x2 = mSelX2, y2 = mSelY2;
 			if (mCopyMode && x1 != -1 && y1 != -1 && x2 != -1 && y2 != -1) {
 				if (y1 > y2 || (y1 == y2 && x1 > x2)) {
@@ -1132,6 +1147,7 @@ public final class TerminalView extends View {
 			} else {
 				mRenderer.render(mEmulator, canvas, mTopRow, -1, -1, -1, -1);
 			}
+			canvas.restore();
 		}
 	}
 
@@ -1198,6 +1214,28 @@ public final class TerminalView extends View {
 
 	public void setTopRow(int mTopRow) {
 		this.mTopRow = mTopRow;
+	}
+
+	public void setIsOutputScreen(boolean isOutputScreen) {
+		this.mIsOutputScreen = isOutputScreen;
+		if (mIsOutputScreen) {
+			ViewCompat.setOnApplyWindowInsetsListener(this, (v, insets) -> {
+				int imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+				int systemBarsHeight = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+				int bottomPadding = Math.max(0, imeHeight - systemBarsHeight);
+				if (getPaddingBottom() != bottomPadding) {
+					setPadding(getPaddingLeft(), getPaddingTop(), getPaddingRight(), bottomPadding);
+					updateSize();
+				}
+				return insets;
+			});
+		} else {
+			ViewCompat.setOnApplyWindowInsetsListener(this, null);
+			if (getPaddingBottom() != 0) {
+				setPadding(getPaddingLeft(), getPaddingTop(), getPaddingRight(), 0);
+				updateSize();
+			}
+		}
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)

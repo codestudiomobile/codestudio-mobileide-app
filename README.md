@@ -76,9 +76,10 @@ Experimental features:
 
 Ready to start coding? Grab the latest version of CodeStudio from the releases page:
 
-[![Download APK](https://img.shields.io/badge/Download-APK-success?style=for-the-badge&logo=android)](../../releases)
+[![Download APK](https://img.shields.io/badge/Download-APK-success?style=for-the-badge&logo=android)](https://github.com/codestudiomobile/codestudio-mobileide-app/releases)
 
-*(Or check the [Releases](../../releases) section for older versions and changelogs.)*
+*(Or check the [Releases](https://github.com/codestudiomobile/codestudio-mobileide-app/releases)
+section for older versions and changelogs.)*
 
 ## 🤝 Contributing
 

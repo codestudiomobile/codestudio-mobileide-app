@@ -32,7 +32,7 @@
         android:id="@+id/folder"
         android:icon="@drawable/ic_folder"
         android:title="@string/menu_folder"
-        app:showAsAction="always">
+        app:showAsAction="ifRoom">
         <menu>
             <item
                 android:id="@+id/newItem"
@@ -75,13 +75,13 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/settings"
-        android:title="@string/menu_settings"
+        android:id="@+id/about_us"
+        android:title="@string/menu_about"
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/about"
-        android:title="@string/menu_about"
+        android:id="@+id/settings"
+        android:title="@string/menu_settings"
         app:showAsAction="never" />
 
 </menu>

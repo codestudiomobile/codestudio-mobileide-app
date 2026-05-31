@@ -5,6 +5,7 @@
     android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context="com.csmide.app.activities.MainActivity">
 
     <LinearLayout
@@ -19,7 +20,6 @@
             android:background="@color/cc_primary_dark"
             android:elevation="0dp"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/CodeStudio.PopupMenu.Theme"
             app:subtitle="@string/nothing_changed"
             app:subtitleTextAppearance="@style/SubTitleStyle"
             app:title="Code Studio Mobile IDE"
@@ -36,7 +36,7 @@
             app:tabMode="scrollable"
             app:tabSelectedTextColor="@color/white"
             app:tabTextAppearance="@style/CodeStudio.TabTextStyle"
-            app:tabTextColor="@color/grey_400" />
+            app:tabTextColor="@color/white" />
 
         <ProgressBar
             android:id="@+id/progressBar"

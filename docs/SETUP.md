@@ -1,74 +1,48 @@
 # Getting Started with CodeStudio
 
-This guide covers the initial setup, system requirements, and essential configuration steps for
-CodeStudio Mobile IDE.
+This guide covers the initial setup and system requirements for CodeStudio Mobile IDE.
 
 ## 📱 System Requirements
 
-To ensure a smooth development experience, your device should meet the following minimum
-requirements:
+To ensure a smooth development experience, your device should meet the following requirements:
 
 - **Android Version**: Android 8.0 (API 26) or higher.
-- **Architecture**: ARM64 (AArch64) is highly recommended for best performance and package
-  compatibility. x86_64, ARMv7, and x86 are also supported.
-- **Storage**:
-    - At least **500MB** of free space for the initial installation and bootstrap.
-    - Additional space (1GB+ recommended) for compilers, runtimes, and project files.
-- **Memory**: 4GB RAM or higher recommended for running modern compilers and LSP services.
+- **Architecture**: ARM64 (AArch64) is highly recommended. x86_64, ARMv7, and x86 are also
+  supported.
+- **Storage**: At least **1.5GB** of free space for installation, compilers, and project files.
+- **Memory**: 4GB RAM or higher recommended.
 
-## 💾 Storage Configuration
+## 💾 Storage Setup
 
-CodeStudio uses a hybrid storage model to balance security and convenience.
+CodeStudio requires access to your device's shared storage to manage your project files effectively.
 
-### 1. Internal App Storage (`$HOME`)
+### 1. Granting Permissions
 
-- **Location**: `/data/data/com.csmide/files/home`
-- **Use Case**: This is where your Linux home directory resides. It's the primary location for
-  configuration files, local project clones, and where the `apt` package manager installs software.
-- **Performance**: Fastest performance for file operations and compilation.
+Upon first launch, CodeStudio will request storage permissions. Please **Allow** this to ensure you
+can open and edit files from your device's internal storage (e.g., Downloads, Documents).
 
-### 2. Android Shared Storage (SD Card/Internal)
+### 2. Accessing Shared Storage
 
-- **Setup**: To access your device's shared storage (e.g., your Downloads or Documents folder), run
-  the following command in the integrated terminal:
-  ```bash
-  termux-setup-storage
-  ```
-- **Access**: Once granted, your shared storage will be accessible via the `~/storage/shared`
-  symlink.
-- **Note**: Due to Android's Scoped Storage restrictions, certain execution permissions are
-  restricted on shared storage. We recommend keeping your source code in the Internal App Storage
-  for full feature support (like running scripts).
+Once permission is granted, your shared storage is automatically linked. You can access it in the
+terminal at:
 
-## 📦 Package Management
+```bash
+~/storage/shared
+```
 
-CodeStudio comes with a pre-configured package repository.
+### 3. Internal App Storage
 
-- **Updating Repositories**: Before installing new software, always update the package lists:
-  ```bash
-  pkg update
-  ```
-- **Installing Packages**: You can install compilers and tools directly:
-  ```bash
-  pkg install python nodejs clang git
-  ```
-- **One-Tap Execution**: For many languages, clicking the "Run" icon in the editor will
-  automatically handle the execution via the background service.
+For tasks requiring maximum performance (like compilation), you can also use the internal app
+storage (`$HOME`).
 
-## 🔧 Environment Synchronization
+## 📦 Basic Usage
 
-CodeStudio automatically patches its environment to match your unique installation:
-
-- **Package Identity**: All internal paths are automatically updated from `com.termux` to
-  `com.csmide`.
-- **Bash Integration**: Your `~/.bashrc` is pre-configured to synchronize the editor's current
-  folder with the terminal's working directory.
+- **Update Packages**: Run `pkg update` in the terminal after installation.
+- **Install Tools**: Use `pkg install <tool_name>` (e.g., `pkg install python`).
+- **Run Code**: Use the "Run" icon in the editor for supported languages.
 
 ## ⚠️ Troubleshooting
 
-- **"Command not found"**: Ensure you have run `pkg update` and that the required package is
-  installed.
-- **Permission Denied**: If you encounter permission issues on `/sdcard`, ensure you have run
-  `termux-setup-storage`.
-- **Performance Lag**: Large projects or complex LSP services may require significant RAM. Close
-  unused tabs or background apps if performance degrades.
+- **Permission Denied**: If you can't access `/sdcard`, make sure storage permission is enabled in
+  Android Settings for CodeStudio.
+- **Command Not Found**: Ensure you have installed the required package via `pkg install`.

@@ -1,8 +1,11 @@
 package com.csmide.app.activities;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,6 +39,35 @@ public class AboutActivity extends AppCompatActivity {
 		if (getSupportActionBar() != null) {
 			getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 			getSupportActionBar().setTitle(R.string.menu_about);
+		}
+
+		setupClickListeners();
+	}
+
+	private void setupClickListeners() {
+		View layoutMail = findViewById(R.id.layout_mail);
+		View layoutShare = findViewById(R.id.layout_share);
+
+		if (layoutMail != null) {
+			layoutMail.setOnClickListener(v -> {
+				Intent intent = new Intent(Intent.ACTION_SENDTO);
+				intent.setData(Uri.parse("mailto:codestudiomobile@gmail.com"));
+				intent.putExtra(Intent.EXTRA_SUBJECT, "Code Studio Mobile IDE - Feedback");
+				try {
+					startActivity(Intent.createChooser(intent, "Send Email"));
+				} catch (android.content.ActivityNotFoundException ex) {
+					Toast.makeText(this, "No email client installed.", Toast.LENGTH_SHORT).show();
+				}
+			});
+		}
+
+		if (layoutShare != null) {
+			layoutShare.setOnClickListener(v -> {
+				Intent intent = new Intent(Intent.ACTION_SEND);
+				intent.setType("text/plain");
+				intent.putExtra(Intent.EXTRA_TEXT, "Check out Code Studio Mobile IDE: https://github.com/codestudiomobile/codestudio-mobileide");
+				startActivity(Intent.createChooser(intent, "Share via"));
+			});
 		}
 	}
 

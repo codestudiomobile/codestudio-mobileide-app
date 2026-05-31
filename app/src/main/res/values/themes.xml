@@ -80,11 +80,6 @@
     <style name="CodeStudio.PopupMenu.Theme" parent="ThemeOverlay.AppCompat.Dark">
         <item name="android:colorBackground">@color/cc_primary</item>
         <item name="android:textColorPrimary">@color/ide_text_primary</item>
-        <item name="android:textColor">@color/ide_text_primary</item>
-        <item name="overlapAnchor">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowFrame">@null</item>
-        <item name="android:windowContentOverlay">@null</item>
     </style>
 
     <style name="CodeStudio.DropDownList" parent="Widget.AppCompat.ListView.DropDown">
@@ -93,7 +88,6 @@
         <item name="android:dividerHeight">0dp</item>
         <item name="android:headerDividersEnabled">false</item>
         <item name="android:footerDividersEnabled">false</item>
-        <item name="android:listSelector">@android:color/transparent</item>
     </style>
 
     <!-- Dialogs -->

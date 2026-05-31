@@ -66,6 +66,8 @@ public class AptBackgroundService extends Service {
 	 * Extra key for install size.
 	 */
 	public static final String EXTRA_INSTALL_SIZE = "install_size";
+	public static final String EXTRA_EXTRACT_PROGRESS = "extract_progress";
+	public static final String EXTRA_SPEED = "download_speed";
 
 	/**
 	 * Notification channel ID for the service.
@@ -176,6 +178,13 @@ public class AptBackgroundService extends Service {
 				boolean isCustom = pkg.startsWith("custom_command:");
 				if (isCustom) {
 					String command = pkg.substring("custom_command:".length());
+					if (command.contains("install") || command.contains("upgrade")) {
+						if (!command.contains("--status-fd")) {
+							command = command.replace("apt-get install", "apt-get install --status-fd=3")
+									.replace("apt install", "apt-get install --status-fd=3");
+							command += " 3>&1";
+						}
+					}
 					pb = new ProcessBuilder(
 							TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh",
 							"-c",
@@ -183,11 +192,11 @@ public class AptBackgroundService extends Service {
 					);
 					broadcastProgress(0, "Running custom command...");
 				} else {
-					// Using pkg install without -y to get the size prompt
+					// Using apt-get with status-fd for better tracking
 					pb = new ProcessBuilder(
-							TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/pkg",
-							"install",
-							pkg
+							TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh",
+							"-c",
+							"apt-get install --status-fd=3 " + pkg + " 3>&1"
 					);
 				}
 
@@ -195,6 +204,8 @@ public class AptBackgroundService extends Service {
 				pb.environment().put("PREFIX", prefix);
 				pb.environment().put("LD_LIBRARY_PATH", prefix + "/lib");
 				pb.environment().put("PATH", prefix + "/bin:" + System.getenv("PATH"));
+				pb.environment().put("HOME", prefix.replace("/usr", "/home"));
+				pb.environment().put("TERM", "xterm");
 				pb.redirectErrorStream(true);
 
 				currentProcess = pb.start();
@@ -207,6 +218,10 @@ public class AptBackgroundService extends Service {
 					StringBuilder outputAccumulator = new StringBuilder();
 					java.util.LinkedList<String> lastLines = new java.util.LinkedList<>();
 					java.util.regex.Pattern percentPattern = java.util.regex.Pattern.compile("(\\d+)%");
+
+					long lastBytes = 0;
+					long lastTime = System.currentTimeMillis();
+					String currentSpeed = "";
 
 					while ((n = in.read(buffer)) != -1) {
 						String chunk = new String(buffer, 0, n);
@@ -222,43 +237,60 @@ public class AptBackgroundService extends Service {
 
 							// Strip ANSI escape codes
 							String cleanLine = line.replaceAll("\\u001B\\[[;\\d]*[A-Za-z]", "");
+							android.util.Log.d("AptService", "PKG: " + cleanLine);
 							lastLines.add(cleanLine);
 							if (lastLines.size() > 15) lastLines.removeFirst();
 
-							// 2. Extract Progress %
+							// --- Status-Fd Parsing ---
+							if (cleanLine.startsWith("dlstatus:")) {
+								String[] parts = cleanLine.split(":");
+								if (parts.length >= 4) {
+									try {
+										long completed = Long.parseLong(parts[2]);
+										long total = Long.parseLong(parts[3]);
+										int percent = (int) (completed * 100 / (total > 0 ? total : 1));
+
+										long now = System.currentTimeMillis();
+										long dt = now - lastTime;
+										if (dt >= 1000) {
+											double speedVal = (completed - lastBytes) / (dt / 1000.0);
+											currentSpeed = formatSpeed(speedVal);
+											lastBytes = completed;
+											lastTime = now;
+										}
+
+										String statusText = "Downloading " + pkg + " (" + percent + "%) " + currentSpeed;
+										broadcastProgress(percent, -1, currentSpeed, statusText);
+										updateNotification(statusText, percent);
+									} catch (Exception ignored) {
+									}
+								}
+								continue;
+							}
+
+							if (cleanLine.startsWith("pmstatus:")) {
+								String[] parts = cleanLine.split(":");
+								if (parts.length >= 3) {
+									try {
+										float percent = Float.parseFloat(parts[2]);
+										String status = parts.length > 3 ? parts[3] : "Installing...";
+										int p = (int) percent;
+										String statusText = "Installing " + pkg + ": " + status + " (" + p + "%)";
+										broadcastProgress(100, p, "", statusText);
+										updateNotification(statusText, p);
+									} catch (Exception ignored) {
+									}
+								}
+								continue;
+							}
+
+							// 2. Fallback Progress % (regex)
 							java.util.regex.Matcher pm = percentPattern.matcher(cleanLine);
 							if (pm.find()) {
 								int percent = Integer.parseInt(pm.group(1));
-								// Update Status, Speed and Stage
-								String status = "Processing";
-								String speed = "";
-
-								StringBuilder contextBuilder = new StringBuilder();
-								for (String l : lastLines) contextBuilder.append(l).append("\n");
-								String context = contextBuilder.toString();
-
-								boolean isDownloading = context.contains("Get:") || context.contains("Fetching") || context.contains("kB/s") || context.contains("MB/s");
-								boolean isExtracting = context.contains("Unpacking") || context.contains("Preparing to unpack");
-								boolean isInstalling = context.contains("Setting up") || context.contains("Selecting") || context.contains("Configuring");
-
-								if (isDownloading) {
-									status = "Downloading";
-									java.util.regex.Matcher sm = java.util.regex.Pattern.compile("([\\d.,]+\\s*[kMG]?B/s)").matcher(context);
-									if (sm.find()) speed = sm.group(1);
-								} else if (isExtracting) {
-									status = "Extracting";
-								} else if (isInstalling) {
-									status = "Installing";
-								} else if (context.contains("Preparing")) {
-									status = "Preparing";
-								}
-
-								String displayStatus = status + (speed != null && !speed.isEmpty() ? " (" + speed + ")" : "");
-								broadcastProgress(percent, displayStatus);
-								updateNotification(displayStatus, percent);
+								broadcastProgress(percent, "Processing...");
+								updateNotification("Processing...", percent);
 							}
-
-							android.util.Log.d("AptService", "PKG: " + cleanLine);
 						}
 
 						// Prompt Detection
@@ -319,8 +351,14 @@ public class AptBackgroundService extends Service {
 	 * @param text    Description of the current step.
 	 */
 	private void broadcastProgress(int percent, String text) {
+		broadcastProgress(percent, -1, "", text);
+	}
+
+	private void broadcastProgress(int percent, int extractPercent, String speed, String text) {
 		Intent intent = new Intent(ACTION_PROGRESS);
 		intent.putExtra(EXTRA_PROGRESS_PERCENT, percent);
+		if (extractPercent != -1) intent.putExtra(EXTRA_EXTRACT_PROGRESS, extractPercent);
+		if (speed != null && !speed.isEmpty()) intent.putExtra(EXTRA_SPEED, speed);
 		intent.putExtra(EXTRA_PROGRESS_TEXT, text);
 		sendBroadcast(intent);
 	}
@@ -386,5 +424,14 @@ public class AptBackgroundService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
+	}
+
+	private String formatSpeed(double bytesPerSecond) {
+		if (bytesPerSecond < 1024)
+			return String.format(java.util.Locale.US, "%.1f B/s", bytesPerSecond);
+		double kb = bytesPerSecond / 1024.0;
+		if (kb < 1024) return String.format(java.util.Locale.US, "%.1f KB/s", kb);
+		double mb = kb / 1024.0;
+		return String.format(java.util.Locale.US, "%.1f MB/s", mb);
 	}
 }

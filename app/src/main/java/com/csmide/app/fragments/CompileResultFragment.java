@@ -96,6 +96,7 @@ public class CompileResultFragment extends Fragment implements ServiceConnection
 
 		terminalView = new TerminalView(requireContext(), null);
 		terminalView.setId(R.id.terminal_view);
+		terminalView.setIsOutputScreen(true);
 		terminalView.setFocusable(true);
 		terminalView.setFocusableInTouchMode(true);
 

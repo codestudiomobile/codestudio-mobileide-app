@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
@@ -19,6 +20,7 @@ import com.csmide.app.activities.ManageLanguagesActivity;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +42,8 @@ public class LanguageManagerService extends Service {
 	public static final String ACTION_CANCEL = "com.csmide.action.PACKAGE_CANCEL";
 	public static final String EXTRA_DOWNLOAD_SIZE = "download_size";
 	public static final String EXTRA_INSTALL_SIZE = "install_size";
+	public static final String EXTRA_EXTRACT_PROGRESS = "extract_progress";
+	public static final String EXTRA_SPEED = "download_speed";
 	private static final String TAG = "LanguageManagerService";
 	private static final String CHANNEL_ID = "LanguageManagerChannel";
 	private static final int NOTIFICATION_ID = 2001;
@@ -167,10 +171,23 @@ public class LanguageManagerService extends Service {
 			try {
 				String prefix = "/data/data/" + getPackageName() + "/files/usr";
 
-				// Remove -y if it's a pkg install command to allow interactive size check
+				// Inject --status-fd=3 and redirect to stdout for better progress tracking
 				String cmd = task.command;
-				if (cmd.startsWith("pkg install") && cmd.contains("-y")) {
-					cmd = cmd.replace("-y", "");
+				if (cmd.contains("install") || cmd.contains("upgrade")) {
+					if (!cmd.contains("--status-fd")) {
+						// Prefer apt-get for consistent flag handling
+						cmd = cmd.replace("pkg install", "apt-get install --status-fd=3")
+								.replace("apt install", "apt-get install --status-fd=3")
+								.replace("pkg upgrade", "apt-get upgrade --status-fd=3")
+								.replace("apt upgrade", "apt-get upgrade --status-fd=3");
+
+						if (!cmd.contains("--status-fd")) {
+							cmd = cmd.replace("install", "install --status-fd=3");
+						}
+						// Remove -y if present to allow interactive confirmation with size parsing
+						cmd = cmd.replace("-y", "");
+						cmd += " 3>&1";
+					}
 				}
 
 				ProcessBuilder pb = new ProcessBuilder(
@@ -204,6 +221,9 @@ public class LanguageManagerService extends Service {
 
 				long lastProgressTime = System.currentTimeMillis();
 				int lastPercent = -1;
+				long lastBytes = 0;
+				long lastTime = System.currentTimeMillis();
+				String currentSpeed = "";
 
 				while ((n = in.read(buffer)) != -1) {
 					String chunk = new String(buffer, 0, n);
@@ -223,6 +243,53 @@ public class LanguageManagerService extends Service {
 						lastLines.add(cleanLine);
 						if (lastLines.size() > 15) lastLines.removeFirst();
 
+						// --- Status-Fd Parsing (dlstatus & pmstatus) ---
+						if (cleanLine.startsWith("dlstatus:")) {
+							String[] parts = cleanLine.split(":");
+							if (parts.length >= 4) {
+								try {
+									long completed = Long.parseLong(parts[2]);
+									long total = Long.parseLong(parts[3]);
+									int percent = (int) (completed * 100 / (total > 0 ? total : 1));
+
+									long now = System.currentTimeMillis();
+									long dt = now - lastTime;
+									if (dt >= 1000) {
+										double speedVal = (completed - lastBytes) / (dt / 1000.0);
+										currentSpeed = formatSpeed(speedVal);
+										lastBytes = completed;
+										lastTime = now;
+									}
+
+									currentProgress = percent;
+									currentStatusText = "Downloading " + task.name + " (" + percent + "%) " + currentSpeed;
+									broadcastProgress(currentProgress, -1, currentSpeed, currentStatusText);
+									updateNotification(currentStatusText, currentProgress);
+									lastProgressTime = System.currentTimeMillis();
+								} catch (Exception ignored) {
+								}
+							}
+							continue;
+						}
+
+						if (cleanLine.startsWith("pmstatus:")) {
+							String[] parts = cleanLine.split(":");
+							if (parts.length >= 3) {
+								try {
+									float percent = Float.parseFloat(parts[2]);
+									String status = parts.length > 3 ? parts[3] : "Installing...";
+									int p = (int) percent;
+									currentStatusText = "Installing " + task.name + ": " + status + " (" + p + "%)";
+									// Send 100 for download progress, and p for extract progress
+									broadcastProgress(100, p, "", currentStatusText);
+									updateNotification(currentStatusText, p);
+									lastProgressTime = System.currentTimeMillis();
+								} catch (Exception ignored) {
+								}
+							}
+							continue;
+						}
+
 						// Package Not Found Detection
 						if (cleanLine.contains("Unable to locate package") || cleanLine.contains("E: package not found") || cleanLine.contains("package not available")) {
 							finalErrorMsg = "Package not found in repositories";
@@ -241,7 +308,7 @@ public class LanguageManagerService extends Service {
 							finalErrorMsg = cleanLine;
 						}
 
-						// Progress detection
+						// Fallback Progress detection (regex)
 						Matcher pm = percentPattern.matcher(cleanLine);
 						if (pm.find()) {
 							int percent = Integer.parseInt(pm.group(1));
@@ -277,6 +344,7 @@ public class LanguageManagerService extends Service {
 						fullContext.append(currentOutput);
 						String context = fullContext.toString();
 
+						// Enhanced Regex for size detection
 						Matcher m = Pattern.compile("Need to get ([\\d.,]+\\s*[kMG]B)").matcher(context);
 						if (m.find()) downloadSize = m.group(1);
 
@@ -318,6 +386,18 @@ public class LanguageManagerService extends Service {
 						getString(R.string.msg_package_uninstalled_success, task.name) :
 						getString(R.string.msg_package_installed_success, task.name);
 				broadcastProgress(100, successMsg);
+
+				// Play completion sound
+				try {
+					MediaPlayer mp = MediaPlayer.create(this, R.raw.bell);
+					if (mp != null) {
+						mp.setOnCompletionListener(MediaPlayer::release);
+						mp.start();
+					}
+				} catch (Exception e) {
+					Log.e(TAG, "Failed to play completion sound", e);
+				}
+
 				processNextInQueue();
 			} else if (retryNeeded && task.retryCount < 2) {
 				task.retryCount++;
@@ -356,8 +436,14 @@ public class LanguageManagerService extends Service {
 	}
 
 	private void broadcastProgress(int progress, String statusText) {
+		broadcastProgress(progress, -1, "", statusText);
+	}
+
+	private void broadcastProgress(int progress, int extractProgress, String speed, String statusText) {
 		Intent intent = new Intent(ACTION_PROGRESS_UPDATE);
 		intent.putExtra(EXTRA_PROGRESS, progress);
+		if (extractProgress != -1) intent.putExtra(EXTRA_EXTRACT_PROGRESS, extractProgress);
+		if (speed != null && !speed.isEmpty()) intent.putExtra(EXTRA_SPEED, speed);
 		intent.putExtra(EXTRA_STATUS_TEXT, statusText);
 		intent.putExtra(EXTRA_PACKAGE_KEY, currentTask != null ? currentTask.key : "");
 		sendBroadcast(intent);
@@ -376,7 +462,13 @@ public class LanguageManagerService extends Service {
 		Intent cancelIntent = new Intent(ACTION_CANCEL);
 		PendingIntent cancelPendingIntent = PendingIntent.getBroadcast(this, 1, cancelIntent, PendingIntent.FLAG_IMMUTABLE);
 
-		String title = getString(R.string.title_package_manager);
+		String title;
+		if (currentTask != null) {
+			title = "download " + currentTask.name.toLowerCase();
+		} else {
+			title = getString(R.string.title_package_manager);
+		}
+
 		if (!completedPackages.isEmpty()) {
 			title += " (" + completedPackages.size() + " done)";
 		}
@@ -388,7 +480,7 @@ public class LanguageManagerService extends Service {
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
 				.setContentTitle(title)
 				.setContentText(text)
-				.setSmallIcon(R.drawable.ic_code_studio)
+				.setSmallIcon(R.drawable.ic_foreground)
 				.setProgress(100, progress, progress <= 0)
 				.setContentIntent(pendingIntent)
 				.setOngoing(true)
@@ -416,6 +508,14 @@ public class LanguageManagerService extends Service {
 	@Override
 	public IBinder onBind(Intent intent) {
 		return null;
+	}
+
+	private String formatSpeed(double bytesPerSecond) {
+		if (bytesPerSecond < 1024) return String.format(Locale.US, "%.1f B/s", bytesPerSecond);
+		double kb = bytesPerSecond / 1024.0;
+		if (kb < 1024) return String.format(Locale.US, "%.1f KB/s", kb);
+		double mb = kb / 1024.0;
+		return String.format(Locale.US, "%.1f MB/s", mb);
 	}
 
 	private static class InstallTask {

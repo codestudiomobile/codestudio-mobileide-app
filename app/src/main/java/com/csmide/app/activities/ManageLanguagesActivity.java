@@ -32,7 +32,7 @@ import com.csmide.app.models.LanguagePack;
 import com.csmide.app.services.AptBackgroundService;
 import com.csmide.app.services.LanguageManagerService;
 import com.csmide.app.utils.DisplayManager;
-import com.csmide.termux.app.TermuxPatcher;
+import com.csmide.termux.app.TermuxActivity;
 import com.csmide.termux.shared.termux.TermuxConstants;
 
 import java.io.File;
@@ -46,7 +46,7 @@ import java.util.concurrent.Future;
  * Allows users to search, install, and uninstall language support packages (e.g., compilers, utilities)
  * through an APT-based background service ({@link AptBackgroundService}).
  */
-public class ManageLanguagesActivity extends AppCompatActivity {
+public class ManageLanguagesActivity extends AppCompatActivity implements LanguagePackAdapter.OnPackActionListener {
 	private static final String TAG = "ManageLanguagesActivity";
 
 	// --- State and Helpers ---
@@ -63,6 +63,8 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 	private View progressContainer;
 	private TextView progressStatusText;
 	private ProgressBar installProgressBar;
+	private TextView extractStatusText;
+	private ProgressBar extractProgressBar;
 	private AlertDialog progressDialog;
 	private final Runnable hideProgressRunnable = () -> {
 		progressContainer.setVisibility(View.GONE);
@@ -82,11 +84,12 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 			if (AptBackgroundService.ACTION_PROGRESS.equals(action)) {
 				int percent = intent.getIntExtra(AptBackgroundService.EXTRA_PROGRESS_PERCENT, 0);
 				String text = intent.getStringExtra(AptBackgroundService.EXTRA_PROGRESS_TEXT);
-				updateProgressFromService(percent, text);
+				updateProgressFromService(percent, -1, text);
 			} else if (LanguageManagerService.ACTION_PROGRESS_UPDATE.equals(action)) {
 				int percent = intent.getIntExtra(LanguageManagerService.EXTRA_PROGRESS, 0);
+				int extractPercent = intent.getIntExtra(LanguageManagerService.EXTRA_EXTRACT_PROGRESS, -1);
 				String text = intent.getStringExtra(LanguageManagerService.EXTRA_STATUS_TEXT);
-				updateProgressFromService(percent, text);
+				updateProgressFromService(percent, extractPercent, text);
 			} else if (LanguageManagerService.ACTION_REQUEST_CONFIRM.equals(action)) {
 				String downloadSize = intent.getStringExtra(LanguageManagerService.EXTRA_DOWNLOAD_SIZE);
 				String installSize = intent.getStringExtra(LanguageManagerService.EXTRA_INSTALL_SIZE);
@@ -100,12 +103,12 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 		}
 	};
 
-	private void updateProgressFromService(int percent, String text) {
+	private void updateProgressFromService(int percent, int extractPercent, String text) {
 		mainHandler.removeCallbacks(hideProgressRunnable);
-		updateProgress(percent, text);
+		updateProgress(percent, extractPercent, text);
 
-		if (percent == 100) {
-			if (text != null && text.contains("successfully")) {
+		if (percent == 100 && (extractPercent == -1 || extractPercent == 100)) {
+			if (text != null && (text.contains("successfully") || text.contains("complete"))) {
 				Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
 			}
 			// Hide progress container after a short delay on completion
@@ -114,20 +117,30 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 		}
 	}
 
-	private void updateProgress(int percent, String text) {
+	private void updateProgress(int percent, int extractPercent, String text) {
 		progressContainer.setVisibility(View.VISIBLE);
 		progressStatusText.setText(text);
 		installProgressBar.setProgress(percent);
+
+		if (extractPercent != -1) {
+			extractStatusText.setVisibility(View.VISIBLE);
+			extractProgressBar.setVisibility(View.VISIBLE);
+			extractProgressBar.setProgress(extractPercent);
+		} else {
+			extractStatusText.setVisibility(View.GONE);
+			extractProgressBar.setVisibility(View.GONE);
+		}
 
 		if (progressDialog != null && progressDialog.isShowing()) {
 			dialogStatusText.setText(text);
 			dialogProgressBar.setProgress(percent);
 			dialogProgressBar.setIndeterminate(percent == 0);
+			// Optional: we could add the extract bar to the dialog too, but for now let's stick to the main UI
 		}
 	}
 
 	private void showConfirmationDialog(String pkgName, String downloadSize, String installSize, boolean isPackageService) {
-		new AlertDialog.Builder(this)
+		new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
 				.setTitle("Confirm Installation")
 				.setMessage("Package: " + pkgName + "\nDownload size: " + downloadSize + "\nDisk space needed: " + installSize + "\n\nDo you want to continue?")
 				.setPositiveButton("Continue", (dialog, which) -> {
@@ -151,7 +164,7 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 		dialogStatusText.setTextColor(android.graphics.Color.WHITE);
 		dialogProgressBar = view.findViewById(R.id.progressBar);
 
-		progressDialog = new AlertDialog.Builder(this)
+		progressDialog = new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
 				.setTitle("Installing Package")
 				.setView(view)
 				.setPositiveButton("Background", (dialog, which) -> dialog.dismiss())
@@ -176,18 +189,9 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 		setupSearch();
 
 		commandFetcher = new CommandFetcher(this);
-		adapter = new LanguagePackAdapter(this, filteredPacks);
+		adapter = new LanguagePackAdapter(this, filteredPacks, this);
 		packagesList.setAdapter(adapter);
-		packagesList.setOnItemClickListener((parent, view, position, id) -> {
-			LanguagePack pack = filteredPacks.get(position);
-			if (pack.status == LanguagePack.STATUS_INSTALLED) {
-				uninstallPackage(pack);
-			} else if (pack.status == LanguagePack.STATUS_AVAILABLE) {
-				installPackage(pack);
-			} else if (pack.status == LanguagePack.STATUS_INSTALLING) {
-				Toast.makeText(this, "Operation already in progress for " + pack.name, Toast.LENGTH_SHORT).show();
-			}
-		});
+		packagesList.setOnItemClickListener(null); // Click handled by button in adapter
 
 		loadLanguagePacks();
 	}
@@ -224,7 +228,7 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0, 1001, 0, R.string.action_fix_16kb_alignment)
+		menu.add(0, 1002, 0, "Fix Package Manager")
 				.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
 		return true;
 	}
@@ -234,25 +238,11 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 		if (item.getItemId() == android.R.id.home) {
 			finish();
 			return true;
-		} else if (item.getItemId() == 1001) {
-			fix16KBAlignment();
+		} else if (item.getItemId() == 1002) {
+			startTerminalInstallation("dpkg --configure -a && pkg update", "Fix Package Manager");
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}
-
-	private void fix16KBAlignment() {
-		Toast.makeText(this, R.string.msg_fixing_alignment, Toast.LENGTH_SHORT).show();
-		new Thread(() -> {
-			try {
-				File prefixDir = new File(TermuxConstants.TERMUX_PREFIX_DIR_PATH);
-				TermuxPatcher.patchDirectory(prefixDir);
-				mainHandler.post(() -> Toast.makeText(this, R.string.msg_alignment_fixed, Toast.LENGTH_LONG).show());
-			} catch (Exception e) {
-				Log.e(TAG, "Failed to fix alignment", e);
-				mainHandler.post(() -> Toast.makeText(this, R.string.msg_alignment_fix_failed, Toast.LENGTH_LONG).show());
-			}
-		}).start();
 	}
 
 	// --- UI Setup ---
@@ -284,6 +274,8 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 		progressStatusText = findViewById(R.id.progressStatusText);
 		progressStatusText.setTextColor(android.graphics.Color.WHITE);
 		installProgressBar = findViewById(R.id.installProgressBar);
+		extractStatusText = findViewById(R.id.extractStatusText);
+		extractProgressBar = findViewById(R.id.extractProgressBar);
 	}
 
 	/**
@@ -329,39 +321,65 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 	}
 
 	/**
-	 * Checks the installation status of all loaded language packs.
+	 * Checks the installation status of all loaded language packs efficiently.
 	 */
 	private void checkAllPackageStatuses() {
-		for (LanguagePack pack : allPacks) {
-			checkPackageStatus(pack);
-		}
-		adapter.notifyDataSetChanged();
+		new Thread(() -> {
+			java.util.Set<String> installedPackages = new java.util.HashSet<>();
+			try {
+				String prefix = TermuxConstants.TERMUX_PREFIX_DIR_PATH;
+				String binPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh";
+
+				// Use dpkg-query to get all installed packages at once
+				ProcessBuilder pb = new ProcessBuilder(binPath, "-c", "dpkg-query -W -f='${Package}\\n'");
+				pb.environment().put("PREFIX", prefix);
+				pb.environment().put("LD_LIBRARY_PATH", prefix + "/lib");
+				pb.environment().put("PATH", prefix + "/bin:" + System.getenv("PATH"));
+
+				Process process = pb.start();
+				java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()));
+				String lineStr;
+				while ((lineStr = reader.readLine()) != null) {
+					installedPackages.add(lineStr.trim());
+				}
+				process.waitFor();
+			} catch (Exception e) {
+				Log.e(TAG, "Failed to get installed packages list", e);
+			}
+
+			mainHandler.post(() -> {
+				for (LanguagePack pack : allPacks) {
+					if (pack.checkCommand != null && pack.checkCommand.startsWith("check_suggestion:")) {
+						String lang = pack.checkCommand.substring("check_suggestion:".length());
+						File langDir = new File(getFilesDir(), "languages/" + lang);
+						boolean installed = langDir.exists() && langDir.list() != null && langDir.list().length > 0;
+						pack.status = installed ? LanguagePack.STATUS_INSTALLED : LanguagePack.STATUS_AVAILABLE;
+					} else if (pack.key != null && installedPackages.contains(pack.key)) {
+						pack.status = LanguagePack.STATUS_INSTALLED;
+					} else {
+						// Fallback to individual check if key is not found or it's a special command
+						checkPackageStatusIndividual(pack);
+					}
+				}
+				adapter.notifyDataSetChanged();
+			});
+		}).start();
 	}
 
 	/**
-	 * Checks if a specific package is installed on the system.
+	 * Checks if a specific package is installed on the system (individual fallback).
 	 *
 	 * @param pack The language pack to check.
 	 */
-	private void checkPackageStatus(LanguagePack pack) {
-		if (pack.checkCommand != null && pack.checkCommand.startsWith("check_suggestion:")) {
-			String lang = pack.checkCommand.substring("check_suggestion:".length());
-			File langDir = new File(getFilesDir(), "languages/" + lang);
-
-			// A simple check if directory exists and is not empty
-			boolean installed = langDir.exists() && langDir.list() != null && langDir.list().length > 0;
-			pack.status = installed ? LanguagePack.STATUS_INSTALLED : LanguagePack.STATUS_AVAILABLE;
-			return;
-		}
-
+	private void checkPackageStatusIndividual(LanguagePack pack) {
 		if (pack.checkCommand == null || pack.checkCommand.isEmpty()) {
 			pack.status = LanguagePack.STATUS_AVAILABLE;
 			return;
 		}
 
 		try {
-			String prefix = getFilesDir().getPath() + "/usr";
-			String binPath = prefix + "/bin/sh";
+			String prefix = TermuxConstants.TERMUX_PREFIX_DIR_PATH;
+			String binPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh";
 
 			ProcessBuilder pb = new ProcessBuilder(binPath, "-c", pack.checkCommand);
 			pb.environment().put("PREFIX", prefix);
@@ -398,43 +416,129 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 	}
 
 	public void uninstallPackage(LanguagePack pack) {
-		new AlertDialog.Builder(this)
-				.setTitle(getString(R.string.title_uninstall_pkg, pack.name))
-				.setMessage(getString(R.string.msg_confirm_uninstall, pack.name))
-				.setPositiveButton(R.string.label_uninstallation, (dialog, which) -> {
-					startSingleUninstallation(pack);
-				})
-				.setNegativeButton(R.string.action_cancel, null)
-				.show();
-	}
+		progressContainer.setVisibility(View.VISIBLE);
+		progressStatusText.setText("Checking freed space...");
+		installProgressBar.setIndeterminate(true);
 
-	private void startSingleUninstallation(LanguagePack pack) {
-		Intent serviceIntent = new Intent(this, LanguageManagerService.class);
-		serviceIntent.setAction(LanguageManagerService.ACTION_INSTALL_PACKAGE);
-		serviceIntent.putExtra(LanguageManagerService.EXTRA_PACKAGE_KEY, pack.key);
-		serviceIntent.putExtra(LanguageManagerService.EXTRA_PACKAGE_NAME, pack.name);
-		serviceIntent.putExtra(LanguageManagerService.EXTRA_COMMAND, getUninstallCommandString(pack));
-		startService(serviceIntent);
+		new Thread(() -> {
+			String freedSpace = "unknown";
+			try {
+				String prefix = TermuxConstants.TERMUX_PREFIX_DIR_PATH;
+				String binPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh";
+				String command = "apt-get remove -s " + pack.key;
 
-		Toast.makeText(this, R.string.msg_starting_installation, Toast.LENGTH_SHORT).show();
+				ProcessBuilder pb = new ProcessBuilder(binPath, "-c", command);
+				pb.environment().put("PREFIX", prefix);
+				pb.environment().put("LD_LIBRARY_PATH", prefix + "/lib");
+				pb.environment().put("PATH", prefix + "/bin:" + System.getenv("PATH"));
+				pb.redirectErrorStream(true);
+
+				Process process = pb.start();
+				java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()));
+				String line;
+				StringBuilder output = new StringBuilder();
+				while ((line = reader.readLine()) != null) {
+					output.append(line).append("\n");
+				}
+				process.waitFor();
+
+				java.util.regex.Matcher m = java.util.regex.Pattern.compile("([\\d.,]+\\s*[kMG]B) disk space will be freed").matcher(output.toString());
+				if (m.find()) freedSpace = m.group(1);
+			} catch (Exception e) {
+				Log.e(TAG, "Failed to check freed space", e);
+			}
+
+			final String finalFreedSpace = freedSpace;
+			mainHandler.post(() -> {
+				progressContainer.setVisibility(View.GONE);
+				installProgressBar.setIndeterminate(false);
+
+				new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
+						.setTitle(getString(R.string.title_uninstall_pkg, pack.name))
+						.setMessage("Disk space that will be freed: " + finalFreedSpace + "\n\n" + getString(R.string.msg_confirm_uninstall, pack.name))
+						.setPositiveButton(R.string.label_uninstallation, (dialog, which) -> {
+							startTerminalInstallation(getUninstallCommandString(pack), "uninstall " + pack.name.toLowerCase());
+						})
+						.setNegativeButton(R.string.action_cancel, null)
+						.show();
+			});
+		}).start();
 	}
 
 	private String getUninstallCommandString(LanguagePack pack) {
 		if (pack.uninstallCommand != null && pack.uninstallCommand.startsWith("uninstall_suggestion:")) {
 			String lang = pack.uninstallCommand.substring("uninstall_suggestion:".length());
 			File langDir = new File(getFilesDir(), "languages/" + lang);
-			return "rm -rf " + langDir.getAbsolutePath();
+			return "rm -rf \"" + langDir.getAbsolutePath() + "\"";
 		} else {
-			return pack.getUninstallCommand();
+			return "apt-get remove " + pack.key;
 		}
 	}
 
-	/**
-	 * Initiates the installation of a language pack.
-	 *
-	 * @param pack The package to install.
-	 */
-	public void installPackage(LanguagePack pack) {
+	@Override
+	public void onInstallClicked(LanguagePack pack) {
+		if (pack.status == LanguagePack.STATUS_AVAILABLE) {
+			probePackageSizes(pack);
+		} else if (pack.status == LanguagePack.STATUS_READY_TO_INSTALL) {
+			showConfirmationDialog(pack);
+		}
+	}
+
+	@Override
+	public void onUninstallClicked(LanguagePack pack) {
+		uninstallPackage(pack);
+	}
+
+	private void probePackageSizes(LanguagePack pack) {
+		pack.status = LanguagePack.STATUS_PROBING;
+		adapter.notifyDataSetChanged();
+
+		new Thread(() -> {
+			String downloadSize = "unknown";
+			String installSize = "unknown";
+			try {
+				String prefix = TermuxConstants.TERMUX_PREFIX_DIR_PATH;
+				String binPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh";
+				String command = "apt-get install -s " + pack.key;
+
+				ProcessBuilder pb = new ProcessBuilder(binPath, "-c", command);
+				pb.environment().put("PREFIX", prefix);
+				pb.environment().put("LD_LIBRARY_PATH", prefix + "/lib");
+				pb.environment().put("PATH", prefix + "/bin:" + System.getenv("PATH"));
+				pb.redirectErrorStream(true);
+
+				Process process = pb.start();
+				java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()));
+				String line;
+				StringBuilder output = new StringBuilder();
+				while ((line = reader.readLine()) != null) {
+					output.append(line).append("\n");
+				}
+				process.waitFor();
+
+				java.util.regex.Matcher m = java.util.regex.Pattern.compile("Need to get ([\\d.,]+\\s*[kMG]B)").matcher(output.toString());
+				if (m.find()) downloadSize = m.group(1);
+
+				m = java.util.regex.Pattern.compile("After this operation, ([\\d.,]+\\s*[kMG]B)").matcher(output.toString());
+				if (m.find()) installSize = m.group(1);
+			} catch (Exception e) {
+				Log.e(TAG, "Failed to check installation sizes", e);
+			}
+
+			final String finalDownloadSize = downloadSize;
+			final String finalInstallSize = installSize;
+			mainHandler.post(() -> {
+				pack.downloadSize = finalDownloadSize;
+				pack.installSize = finalInstallSize;
+				pack.status = LanguagePack.STATUS_READY_TO_INSTALL;
+				adapter.notifyDataSetChanged();
+			});
+		}).start();
+	}
+
+	private void showConfirmationDialog(LanguagePack pack) {
+		String message = "Download size: " + pack.downloadSize + "\nAdditional disk space: " + pack.installSize + "\n\nDo you want to proceed?";
+
 		LanguagePack companion = findPackByKey(pack.companionKey);
 		boolean showCheckbox = companion != null && companion.status != LanguagePack.STATUS_INSTALLED;
 
@@ -443,10 +547,10 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 			layout.setOrientation(android.widget.LinearLayout.VERTICAL);
 			layout.setPadding(50, 20, 50, 20);
 
-			TextView message = new TextView(this);
-			message.setText(getString(R.string.msg_confirm_install, pack.name));
-			message.setTextColor(android.graphics.Color.WHITE);
-			layout.addView(message);
+			TextView msgView = new TextView(this);
+			msgView.setText(message);
+			msgView.setTextColor(android.graphics.Color.WHITE);
+			layout.addView(msgView);
 
 			android.widget.CheckBox companionCheckBox = new android.widget.CheckBox(this);
 			companionCheckBox.setText("Install the other package for full experience");
@@ -455,30 +559,30 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 			companionCheckBox.setChecked(pack.type == LanguagePack.TYPE_RUNTIME);
 			layout.addView(companionCheckBox);
 
-			new AlertDialog.Builder(this)
-					.setTitle("Install Companion?")
+			new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
+					.setTitle("Install " + pack.name)
 					.setView(layout)
 					.setPositiveButton("Proceed", (dialog, which) -> {
-						startCombinedInstallation(pack, companionCheckBox.isChecked() ? companion : null);
+						installPackageInBackground(pack);
+						if (companionCheckBox.isChecked()) {
+							installPackageInBackground(companion);
+						}
 					})
 					.setNegativeButton(R.string.action_cancel, null)
 					.show();
 		} else {
-			startSingleInstallation(pack);
-			Toast.makeText(this, R.string.msg_starting_installation, Toast.LENGTH_SHORT).show();
+			new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
+					.setTitle("Install " + pack.name)
+					.setMessage(message)
+					.setPositiveButton("Proceed", (dialog, which) -> {
+						installPackageInBackground(pack);
+					})
+					.setNegativeButton(R.string.action_cancel, null)
+					.show();
 		}
 	}
 
-	private void startCombinedInstallation(LanguagePack main, LanguagePack companion) {
-		startSingleInstallation(main);
-		if (companion != null) {
-			startSingleInstallation(companion);
-		}
-
-		Toast.makeText(this, R.string.msg_starting_installation, Toast.LENGTH_SHORT).show();
-	}
-
-	private void startSingleInstallation(LanguagePack pack) {
+	private void installPackageInBackground(LanguagePack pack) {
 		pack.status = LanguagePack.STATUS_INSTALLING;
 		adapter.notifyDataSetChanged();
 
@@ -488,6 +592,16 @@ public class ManageLanguagesActivity extends AppCompatActivity {
 		serviceIntent.putExtra(LanguageManagerService.EXTRA_PACKAGE_NAME, pack.name);
 		serviceIntent.putExtra(LanguageManagerService.EXTRA_COMMAND, getInstallCommandString(pack));
 		startService(serviceIntent);
+	}
+
+	private void startTerminalInstallation(String command, String sessionName) {
+		Intent intent = new Intent(this, TermuxActivity.class);
+		intent.setAction(Intent.ACTION_RUN);
+		intent.setPackage(getPackageName());
+		intent.putExtra("run_command", command);
+		intent.putExtra("session_name", sessionName);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(intent);
 	}
 
 	private String getInstallCommandString(LanguagePack pack) {

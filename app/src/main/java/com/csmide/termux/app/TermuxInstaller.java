@@ -120,8 +120,6 @@ public final class TermuxInstaller {
 			return;
 		}
 
-		// If prefix directory exists, even if its a symlink to a valid directory and
-		// symlink is not broken/dangling
 		if (FileUtils.directoryFileExists(TERMUX_PREFIX_DIR_PATH, true)) {
 			if (TermuxFileUtils.isTermuxPrefixDirectoryEmpty()) {
 				Logger.logInfo(LOG_TAG, "The termux prefix directory \"" + TERMUX_PREFIX_DIR_PATH
@@ -136,7 +134,6 @@ public final class TermuxInstaller {
 									+ "\" exists but app version changed from " + lastBootstrappedVersion + " to "
 									+ currentVersion + ". Redoing bootstrap setup.");
 				} else {
-					// Even if bootstrap is done, ensure bashrc is initialized/updated
 					com.csmide.app.utils.BashrcInitializer.initialize(activity);
 					setupBanner(activity, false);
 					updateScripts(activity);
@@ -160,7 +157,6 @@ public final class TermuxInstaller {
 
 					Error error;
 
-					// Delete prefix staging directory or any file at its destination
 					error = FileUtils.deleteFile("termux prefix staging directory", TERMUX_STAGING_PREFIX_DIR_PATH,
 							true);
 					if (error != null) {
@@ -168,23 +164,18 @@ public final class TermuxInstaller {
 						return;
 					}
 
-					// Delete prefix directory or any file at its destination
 					error = FileUtils.deleteFile("termux prefix directory", TERMUX_PREFIX_DIR_PATH, true);
 					if (error != null) {
 						showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
 						return;
 					}
 
-					// Create prefix staging directory if it does not already exist and set required
-					// permissions
 					error = TermuxFileUtils.isTermuxPrefixStagingDirectoryAccessible(true, true);
 					if (error != null) {
 						showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
 						return;
 					}
 
-					// Create prefix directory if it does not already exist and set required
-					// permissions
 					error = TermuxFileUtils.isTermuxPrefixDirectoryAccessible(true, true);
 					if (error != null) {
 						showBootstrapErrorDialog(activity, whenDone, Error.getErrorMarkdownString(error));
@@ -253,7 +244,6 @@ public final class TermuxInstaller {
 						Os.symlink(symlink.first, symlink.second);
 					}
 
-					// Patch the bootstrap files to replace com.termux with current package name
 					TermuxPatcher.patchBootstrap(TERMUX_STAGING_PREFIX_DIR);
 
 					updateScriptsInDirectory(activity, TERMUX_STAGING_PREFIX_DIR_PATH);
@@ -471,14 +461,7 @@ public final class TermuxInstaller {
 								new File(storageDir, "audiobooks").getAbsolutePath());
 					}
 
-					// Dir 0 should ideally be for primary storage
-					// https://cs.android.com/android/platform/superproject/+/android-12.0.0_r32:frameworks/base/core/java/android/app/ContextImpl.java;l=818
-					// https://cs.android.com/android/platform/superproject/+/android-12.0.0_r32:frameworks/base/core/java/android/os/Environment.java;l=219
-					// https://cs.android.com/android/platform/superproject/+/android-12.0.0_r32:frameworks/base/core/java/android/os/Environment.java;l=181
-					// https://cs.android.com/android/platform/superproject/+/android-12.0.0_r32:frameworks/base/services/core/java/com/android/server/StorageManagerService.java;l=3796
-					// https://cs.android.com/android/platform/superproject/+/android-7.0.0_r36:frameworks/base/services/core/java/com/android/server/MountService.java;l=3053
-
-					// Create "Android/data/com.termux" symlinks
+					// Create "Android/data/com.csmide" symlinks
 					File[] dirs = context.getExternalFilesDirs(null);
 					if (dirs != null && dirs.length > 0) {
 						for (int i = 0; i < dirs.length; i++) {
@@ -492,7 +475,7 @@ public final class TermuxInstaller {
 						}
 					}
 
-					// Create "Android/media/com.termux" symlinks
+					// Create "Android/media/com.csmide" symlinks
 					dirs = context.getExternalMediaDirs();
 					if (dirs != null && dirs.length > 0) {
 						for (int i = 0; i < dirs.length; i++) {
@@ -534,7 +517,7 @@ public final class TermuxInstaller {
 			// 1. Setup apply-banner.sh script
 			File bannerScript = new File(binDir, "apply-banner");
 			try (InputStream in = activity.getAssets().open("apply-banner.sh");
-					OutputStream out = new FileOutputStream(bannerScript)) {
+			     OutputStream out = new FileOutputStream(bannerScript)) {
 				byte[] buffer = new byte[8192];
 				int read;
 				while ((read = in.read(buffer)) != -1) {
@@ -547,7 +530,7 @@ public final class TermuxInstaller {
 			// 2. Setup apply-title.sh script
 			File titleScript = new File(binDir, "apply-title");
 			try (InputStream in = activity.getAssets().open("apply-title.sh");
-					OutputStream out = new FileOutputStream(titleScript)) {
+			     OutputStream out = new FileOutputStream(titleScript)) {
 				byte[] buffer = new byte[8192];
 				int read;
 				while ((read = in.read(buffer)) != -1) {
@@ -562,7 +545,7 @@ public final class TermuxInstaller {
 				String bannerText = activity.getString(R.string.default_banner_text);
 				String bashPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/bash";
 
-				String[] command = new String[] { bashPath, bannerScript.getAbsolutePath(), bannerText };
+				String[] command = new String[]{bashPath, bannerScript.getAbsolutePath(), bannerText};
 				ProcessBuilder pb = new ProcessBuilder(command);
 				pb.environment().put("PREFIX", TermuxConstants.TERMUX_PREFIX_DIR_PATH);
 				pb.environment().put("HOME", TermuxConstants.TERMUX_HOME_DIR_PATH);
