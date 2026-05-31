@@ -17,11 +17,11 @@ import java.util.List;
 public class Errno {
 
 	public static final String TYPE = "Error";
+	private static final HashMap<String, Errno> map = new HashMap<>();
 	public static final Errno ERRNO_SUCCESS = new Errno(TYPE, Activity.RESULT_OK, "Success");
 	public static final Errno ERRNO_CANCELLED = new Errno(TYPE, Activity.RESULT_CANCELED, "Cancelled");
 	public static final Errno ERRNO_MINOR_FAILURES = new Errno(TYPE, Activity.RESULT_FIRST_USER, "Minor failure");
 	public static final Errno ERRNO_FAILED = new Errno(TYPE, Activity.RESULT_FIRST_USER + 1, "Failed");
-	private static final HashMap<String, Errno> map = new HashMap<>();
 	private static final String LOG_TAG = "Errno";
 	/**
 	 * The errno type.

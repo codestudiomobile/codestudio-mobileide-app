@@ -126,7 +126,7 @@ public class EditorActivity extends AppCompatActivity {
 
 		// Load available fonts
 		List<String> fonts = FontManager.getAvailableFonts(this);
-		ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, fonts);
+		ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_codestudio, fonts);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		fontFamilySpinner.setAdapter(adapter);
 

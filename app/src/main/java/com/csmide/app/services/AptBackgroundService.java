@@ -16,6 +16,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.csmide.R;
 import com.csmide.app.activities.ManageLanguagesActivity;
+import com.csmide.termux.shared.termux.TermuxConstants;
 
 /**
  * AptBackgroundService handles the installation of packages via 'apt-get' in the background.
@@ -176,7 +177,7 @@ public class AptBackgroundService extends Service {
 				if (isCustom) {
 					String command = pkg.substring("custom_command:".length());
 					pb = new ProcessBuilder(
-							"/data/data/com.csmide/files/usr/bin/sh",
+							TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/sh",
 							"-c",
 							command
 					);
@@ -184,13 +185,13 @@ public class AptBackgroundService extends Service {
 				} else {
 					// Using pkg install without -y to get the size prompt
 					pb = new ProcessBuilder(
-							"/data/data/com.csmide/files/usr/bin/pkg",
+							TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/pkg",
 							"install",
 							pkg
 					);
 				}
 
-				String prefix = "/data/data/com.csmide/files/usr";
+				String prefix = TermuxConstants.TERMUX_PREFIX_DIR_PATH;
 				pb.environment().put("PREFIX", prefix);
 				pb.environment().put("LD_LIBRARY_PATH", prefix + "/lib");
 				pb.environment().put("PATH", prefix + "/bin:" + System.getenv("PATH"));

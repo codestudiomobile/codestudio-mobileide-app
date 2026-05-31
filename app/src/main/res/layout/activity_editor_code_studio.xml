@@ -81,7 +81,8 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp">
 
                 <TextView
                     android:layout_width="0dp"
@@ -103,7 +104,8 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp">
 
                 <TextView
                     android:layout_width="0dp"

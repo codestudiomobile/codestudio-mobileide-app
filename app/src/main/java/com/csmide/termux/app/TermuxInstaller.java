@@ -209,9 +209,6 @@ public final class TermuxInstaller {
 									if (parts.length != 2)
 										throw new RuntimeException("Malformed symlink line: " + line);
 									String oldPath = parts[0].replace("com.termux", TermuxConstants.TERMUX_PACKAGE_NAME);
-									if (oldPath.contains("termux")) {
-										oldPath = oldPath.replace("termux", "csmide");
-									}
 									String newPath = TERMUX_STAGING_PREFIX_DIR_PATH + "/" + parts[1];
 									symlinks.add(Pair.create(oldPath, newPath));
 
@@ -544,6 +541,7 @@ public final class TermuxInstaller {
 					out.write(buffer, 0, read);
 				}
 			}
+			TermuxPatcher.patchFile(bannerScript);
 			Os.chmod(bannerScript.getAbsolutePath(), 0700);
 
 			// 2. Setup apply-title.sh script
@@ -556,6 +554,7 @@ public final class TermuxInstaller {
 					out.write(buffer, 0, read);
 				}
 			}
+			TermuxPatcher.patchFile(titleScript);
 			Os.chmod(titleScript.getAbsolutePath(), 0700);
 
 			if (applyDefault) {

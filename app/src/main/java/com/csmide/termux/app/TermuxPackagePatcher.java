@@ -82,14 +82,15 @@ public class TermuxPackagePatcher {
 	}
 
 	private static void log(String message) {
+		String msg = (message == null) ? "null" : message;
 		// Use android.util.Log to send to logcat (hidden from terminal screen)
 		try {
-			Log.i(TAG, message);
-		} catch (NoClassDefFoundError e) {
-			// Fallback for non-Android environments
+			Log.i(TAG, msg);
+		} catch (Throwable e) {
+			// Fallback for non-Android environments or Log issues
 		}
 		if (logWriter != null) {
-			logWriter.println(message);
+			logWriter.println(msg);
 			logWriter.flush();
 		}
 	}
@@ -127,6 +128,7 @@ public class TermuxPackagePatcher {
 				if (trimmed.startsWith("/")) {
 					log("Detected path in header, switching to data mode (Protocol 1?)");
 					inHeader = false;
+					// Fall through to process this path
 				} else {
 					continue;
 				}
@@ -186,7 +188,7 @@ public class TermuxPackagePatcher {
 			runCommand(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/dpkg-deb", "-R", debFile.getAbsolutePath(), tempDir.getAbsolutePath());
 
 			log("Renaming entries...");
-			renameEntries(tempDir);
+			TermuxPatcher.renameEntries(tempDir);
 
 			log("Patching content...");
 			TermuxPatcher.patchDirectory(tempDir);
@@ -205,35 +207,11 @@ public class TermuxPackagePatcher {
 		}
 	}
 
-	private static void renameEntries(File dir) {
-		File[] files = dir.listFiles();
-		if (files == null) return;
-
-		for (File child : files) {
-			if (child.isDirectory()) {
-				renameEntries(child);
-			}
-
-			String name = child.getName();
-			String newName = name;
-			if (newName.contains("com.termux")) {
-				newName = newName.replace("com.termux", TermuxConstants.TERMUX_PACKAGE_NAME);
-			}
-			// Rename standalone 'termux' to 'csmide' in filenames as well
-			if (newName.contains("termux")) {
-				newName = newName.replace("termux", "csmide");
-			}
-
-			if (!newName.equals(name)) {
-				File newFile = new File(child.getParentFile(), newName);
-				if (child.renameTo(newFile)) {
-					log("Renamed " + name + " to " + newName);
-				}
-			}
-		}
-	}
-
 	private static void deleteDirectory(File dir) {
+		if (TermuxPatcher.isSymlink(dir)) {
+			dir.delete();
+			return;
+		}
 		File[] files = dir.listFiles();
 		if (files != null) {
 			for (File file : files) {
@@ -257,12 +235,12 @@ public class TermuxPackagePatcher {
 						java.util.Set<java.nio.file.attribute.PosixFilePermission> perms = java.nio.file.attribute.PosixFilePermissions.fromString("rwxr-xr-x");
 						java.nio.file.Files.setPosixFilePermissions(path, perms);
 						log("Fixed permissions for: " + file.getName());
-					} catch (Exception e) {
-						// Fallback to chmod via shell if PosixFilePermissions fail (e.g. non-POSIX FS)
+					} catch (Throwable e) {
+						// Fallback to chmod via shell if PosixFilePermissions fail (e.g. non-POSIX FS or missing class)
 						try {
 							Runtime.getRuntime().exec(new String[]{"chmod", "755", file.getAbsolutePath()}).waitFor();
 							log("Fixed permissions (chmod) for: " + file.getName());
-						} catch (Exception e2) {
+						} catch (Throwable e2) {
 							log("Failed to fix permissions for " + file.getName() + ": " + e.getMessage());
 						}
 					}
@@ -277,11 +255,13 @@ public class TermuxPackagePatcher {
 		log("Exec: " + sb.toString().trim());
 		ProcessBuilder pb = new ProcessBuilder(command);
 		pb.redirectErrorStream(true);
-		String pathEnv = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + ":" + System.getenv("PATH") + ":/system/bin:/system/xbin";
+		String oldPath = System.getenv("PATH");
+		String pathEnv = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + (oldPath != null ? ":" + oldPath : "") + ":/system/bin:/system/xbin";
 		pb.environment().put("PATH", pathEnv);
 		pb.environment().put("LD_LIBRARY_PATH", TermuxConstants.TERMUX_LIB_PREFIX_DIR_PATH);
 		pb.environment().put("PREFIX", TermuxConstants.TERMUX_PREFIX_DIR_PATH);
 		pb.environment().put("TMPDIR", TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH);
+		pb.environment().put("HOME", TermuxConstants.TERMUX_HOME_DIR_PATH);
 		Process p = pb.start();
 		try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
 			String line;

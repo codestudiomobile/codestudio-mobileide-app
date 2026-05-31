@@ -17,6 +17,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import com.csmide.R;
 import com.csmide.app.utils.AppPreferences;
+import com.csmide.termux.app.TermuxPatcher;
 import com.csmide.termux.shared.logger.Logger;
 import com.csmide.termux.shared.termux.TermuxConstants;
 
@@ -24,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -149,6 +151,14 @@ public class CustomizationActivity extends AppCompatActivity {
 				.apply();
 
 		try {
+			// Save the banner file content before running scripts
+			File bannerFile = new File(TermuxConstants.TERMUX_ETC_PREFIX_DIR_PATH + "/termux/banner.txt");
+			File parent = bannerFile.getParentFile();
+			if (parent != null && !parent.exists()) parent.mkdirs();
+			try (FileOutputStream out = new FileOutputStream(bannerFile)) {
+				out.write(generateBanner(banner).getBytes(StandardCharsets.UTF_8));
+			}
+
 			runScript("apply-banner.sh", banner);
 			runScript("apply-title.sh", title);
 			Toast.makeText(this, "Customization applied successfully!", Toast.LENGTH_SHORT).show();
@@ -159,10 +169,13 @@ public class CustomizationActivity extends AppCompatActivity {
 	}
 
 	private void runScript(String scriptName, String arg) throws Exception {
-		File binDir = new File(getFilesDir(), "bin");
+		File binDir = new File(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH);
 		if (!binDir.exists()) binDir.mkdirs();
-		File scriptFile = new File(binDir, scriptName);
+		// Use the same name without .sh extension as TermuxInstaller
+		String finalName = scriptName.replace(".sh", "");
+		File scriptFile = new File(binDir, finalName);
 
+		// Copy and patch if missing or as an update
 		try (InputStream in = getAssets().open(scriptName);
 		     OutputStream out = new FileOutputStream(scriptFile)) {
 			byte[] buffer = new byte[8192];
@@ -171,7 +184,10 @@ public class CustomizationActivity extends AppCompatActivity {
 				out.write(buffer, 0, read);
 			}
 		}
-		scriptFile.setExecutable(true);
+
+		// Ensure the script is patched for the current package name
+		TermuxPatcher.patchFile(scriptFile);
+		scriptFile.setExecutable(true, false);
 
 		String bashPath = TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/bash";
 		String[] command = new String[]{bashPath, scriptFile.getAbsolutePath(), arg};
@@ -181,6 +197,7 @@ public class CustomizationActivity extends AppCompatActivity {
 		pb.environment().put("HOME", TermuxConstants.TERMUX_HOME_DIR_PATH);
 		pb.environment().put("LD_LIBRARY_PATH", TermuxConstants.TERMUX_LIB_PREFIX_DIR_PATH);
 		pb.environment().put("PATH", TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + ":/system/bin");
+		pb.environment().put("TMPDIR", TermuxConstants.TERMUX_TMP_PREFIX_DIR_PATH);
 
 		Process process = pb.start();
 		int exitCode = process.waitFor();

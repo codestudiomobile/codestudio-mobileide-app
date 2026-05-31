@@ -26,8 +26,6 @@ public class TermuxPatcher {
 	private static final String LOG_TAG = "TermuxPatcher";
 	private static final String OLD_PACKAGE_NAME = "com.termux";
 	private static final String NEW_PACKAGE_NAME = TermuxConstants.TERMUX_PACKAGE_NAME;
-	private static final String OLD_TERMUX_NAME = "termux";
-	private static final String NEW_TERMUX_NAME = "csmide";
 
 	private static final Set<String> COMPRESSED_EXTENSIONS = new HashSet<>(Arrays.asList(
 			"gz", "bz2", "xz", "zst", "zip", "apk", "deb", "jar", "png", "jpg", "jpeg", "gif", "pdf"
@@ -39,56 +37,120 @@ public class TermuxPatcher {
 	 * @param stagingDir The directory containing the extracted bootstrap files.
 	 */
 	public static boolean patchBootstrap(File stagingDir) {
-		log("Patching bootstrap in " + stagingDir.getAbsolutePath());
+		log("Patching bootstrap in " + (stagingDir != null ? stagingDir.getAbsolutePath() : "null"));
 		try {
+			if (stagingDir == null || !stagingDir.exists()) {
+				logError("Staging directory does not exist: " + stagingDir, null);
+				return false;
+			}
+
+			log("Renaming entries...");
+			renameEntries(stagingDir);
+
+			log("Patching content...");
 			int patchedCount = patchDirectory(stagingDir);
 			log("Bootstrap patching completed. Patched " + patchedCount + " files.");
 			return true;
 		} catch (Exception e) {
-			Log.e(LOG_TAG, "Bootstrap patching failed", e);
+			logError("Bootstrap patching failed", e);
 			return false;
 		}
 	}
 
+	public static void renameEntries(File dir) {
+		if (dir == null || isSymlink(dir))
+			return; // Do not recurse into symlinked directories
+		File[] files = dir.listFiles();
+		if (files == null)
+			return;
+
+		for (File child : files) {
+			try {
+				if (child.isDirectory()) {
+					renameEntries(child);
+				}
+
+				String name = child.getName();
+				String newName = name;
+				if (newName.contains(OLD_PACKAGE_NAME)) {
+					newName = newName.replace(OLD_PACKAGE_NAME, NEW_PACKAGE_NAME);
+				}
+
+				if (!newName.equals(name)) {
+					File newFile = new File(child.getParentFile(), newName);
+					if (child.renameTo(newFile)) {
+						log("Renamed " + name + " to " + newName);
+					}
+				}
+			} catch (Throwable t) {
+				logError("Error renaming " + child.getAbsolutePath(), t);
+			}
+		}
+	}
+
 	private static void log(String message) {
+		String msg = (message == null) ? "null" : message;
 		try {
-			Log.i(LOG_TAG, message);
-		} catch (NoClassDefFoundError e) {
-			System.out.println(message);
+			Log.i(LOG_TAG, msg);
+		} catch (Throwable e) {
+			System.out.println(msg);
 		}
 	}
 
 	public static int patchDirectory(File file) {
+		if (file == null) return 0;
 		int count = 0;
-		if (isSymlink(file)) {
-			if (patchSymlink(file)) {
-				count++;
-			}
-		} else if (file.isDirectory()) {
-			File[] files = file.listFiles();
-			if (files == null) return 0;
+		try {
+			if (isSymlink(file)) {
+				if (patchSymlink(file)) {
+					count++;
+				}
+			} else if (file.isDirectory()) {
+				File[] files = file.listFiles();
+				if (files == null) return 0;
 
-			for (File child : files) {
-				count += patchDirectory(child);
-			}
-		} else if (file.isFile()) {
-			String name = file.getName();
-			if (name.endsWith(".pyc")) {
-				if (file.delete()) {
-					log("Deleted python bytecode cache: " + file.getAbsolutePath());
-					return 1;
+				for (File child : files) {
+					try {
+						count += patchDirectory(child);
+					} catch (Throwable t) {
+						logError("Failed to patch entry in directory: " + child.getAbsolutePath(), t);
+					}
+				}
+			} else if (file.isFile()) {
+				String name = file.getName();
+				if (name.endsWith(".pyc")) {
+					if (file.delete()) {
+						log("Deleted python bytecode cache: " + file.getAbsolutePath());
+						return 1;
+					}
+				}
+
+				if (patchFile(file)) {
+					count++;
 				}
 			}
-
-			if (patchFile(file)) {
-				count++;
-			}
+		} catch (Throwable t) {
+			logError("Failed to patch: " + file.getAbsolutePath(), t);
 		}
 		return count;
 	}
 
-	private static boolean isSymlink(File file) {
-		return Files.isSymbolicLink(file.toPath());
+	public static boolean isSymlink(File file) {
+		if (file == null) return false;
+		try {
+			// Using getCanonicalFile to check for symlinks in a way compatible with all Android versions.
+			File parent = file.getParentFile();
+			File canon;
+			if (parent == null) {
+				canon = file;
+			} else {
+				File canonParent = parent.getCanonicalFile();
+				canon = new File(canonParent, file.getName());
+			}
+			return !canon.getCanonicalFile().equals(canon.getAbsoluteFile());
+		} catch (Throwable e) {
+			return false;
+		}
 	}
 
 	private static boolean patchSymlink(File file) {
@@ -98,9 +160,6 @@ public class TermuxPatcher {
 			String newTarget = target;
 			if (newTarget.contains(OLD_PACKAGE_NAME)) {
 				newTarget = newTarget.replace(OLD_PACKAGE_NAME, NEW_PACKAGE_NAME);
-			}
-			if (newTarget.contains(OLD_TERMUX_NAME)) {
-				newTarget = newTarget.replace(OLD_TERMUX_NAME, NEW_TERMUX_NAME);
 			}
 
 			if (!newTarget.equals(target)) {
@@ -115,7 +174,7 @@ public class TermuxPatcher {
 		return false;
 	}
 
-	private static boolean patchFile(File file) {
+	public static boolean patchFile(File file) {
 		// Skip patching compressed files in-place to avoid corrupting them
 		String name = file.getName().toLowerCase();
 		int lastDot = name.lastIndexOf('.');
@@ -139,20 +198,12 @@ public class TermuxPatcher {
 		}
 
 		boolean isElf = isElfBinary(file);
-		boolean isTerminfo = file.getAbsolutePath().contains("/share/terminfo/");
 
 		boolean packagePatched = patchStringInFile(file, OLD_PACKAGE_NAME, NEW_PACKAGE_NAME);
-		boolean standalonePatched = false;
-
-		// Second pass: standalone 'termux' replacement for non-ELF, non-terminfo text files
-		// We only do this if it's likely a text file to avoid corrupting arbitrary binaries.
-		if (!isElf && !isTerminfo && isTextFile(file)) {
-			standalonePatched = patchStringInFile(file, OLD_TERMUX_NAME, NEW_TERMUX_NAME);
-		}
 
 		boolean alignmentPatched = isElf && patchElfAlignment(file);
 
-		return packagePatched || standalonePatched || alignmentPatched;
+		return packagePatched || alignmentPatched;
 	}
 
 	private static boolean isElfBinary(File file) {
@@ -190,19 +241,21 @@ public class TermuxPatcher {
 	}
 
 	private static void logError(String message, Throwable e) {
+		String msg = (message == null) ? "null error" : message;
 		try {
-			Log.e(LOG_TAG, message, e);
-		} catch (NoClassDefFoundError err) {
-			System.err.println(message);
+			Log.e(LOG_TAG, msg, e);
+		} catch (Throwable err) {
+			System.err.println(msg);
 			if (e != null) e.printStackTrace();
 		}
 	}
 
 	private static void logWarning(String message) {
+		String msg = (message == null) ? "null warning" : message;
 		try {
-			Log.w(LOG_TAG, message);
-		} catch (NoClassDefFoundError err) {
-			System.err.println("WARNING: " + message);
+			Log.w(LOG_TAG, msg);
+		} catch (Throwable err) {
+			System.err.println("WARNING: " + msg);
 		}
 	}
 
@@ -218,7 +271,7 @@ public class TermuxPatcher {
 		byte[] newBytes = newStr.getBytes(StandardCharsets.UTF_8);
 
 		if (oldBytes.length != newBytes.length) {
-			Log.e(LOG_TAG, "CRITICAL: String length mismatch! " + oldStr + " vs " + newStr);
+			logError("CRITICAL: String length mismatch! " + oldStr + " vs " + newStr, null);
 			return false;
 		}
 
