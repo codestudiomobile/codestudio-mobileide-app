@@ -33,6 +33,8 @@ see [code_studio_architecture_analysis.md](./docs/code_studio_architecture_analy
 
 Additional developer resources:
 
+- [**Getting Started & Setup**](./docs/SETUP.md): Hardware requirements, storage configuration, and
+  troubleshooting.
 - [COMPONENTS.md](./docs/COMPONENTS.md): Quick component-level testing and manual verification
   guide.
 - [WORKFLOW.md](./docs/WORKFLOW.md): Development timeline, progress tracking, and abstraction
@@ -40,9 +42,9 @@ Additional developer resources:
 
 Core code locations:
 
-- `app/src/main/java/com/cs/ide/app`: Core IDE logic, text editors, fragments, and activities (
+- `app/src/main/java/com/csmide/app`: Core IDE logic, text editors, fragments, and activities (
   including `CustomizationActivity.java` and `MainActivity.java`).
-- `app/src/main/java/com/cs/ide/termux`: Terminal rendering, view, and Linux environment bindings.
+- `app/src/main/java/com/csmide/termux`: Terminal rendering, view, and Linux environment bindings.
 - `app/src/main/cpp`: NDK Pseudo-Terminal (PTY) system forks, socket channels, and bootstrap
   loading.
 

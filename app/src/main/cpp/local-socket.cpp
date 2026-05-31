@@ -159,10 +159,10 @@ string getJniResultString(const int retvalParam, const int errnoParam,
            ", errmsg=\"" + errmsgParam + "\"" + ", intData=" + to_string(intDataParam);
 }
 
-/* Get "com/cs/ide/termux/shared/jni/models/JniResult" object that can be returned as result for a JNI call. */
+/* Get "com/csmide/termux/shared/jni/models/JniResult" object that can be returned as result for a JNI call. */
 jobject getJniResult(JNIEnv *env, jstring title, const int retvalParam, const int errnoParam,
                      string errmsgParam, const int intDataParam) {
-    jclass clazz = env->FindClass("com/cs/ide/termux/shared/jni/models/JniResult");
+    jclass clazz = env->FindClass("com/csmide/termux/shared/jni/models/JniResult");
     if (checkJniException(env)) return NULL;
     if (!clazz) {
         log_error(get_title_and_message(env, title,

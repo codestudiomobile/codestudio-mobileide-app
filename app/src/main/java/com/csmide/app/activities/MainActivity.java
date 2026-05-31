@@ -1544,20 +1544,21 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	public void onFileClicked(Uri fileUri, String fileName) {
 		executor.execute(() -> {
 			boolean isBinary = FileUtils.isBinaryFile(this, fileUri);
+			String mimeType = getMimeType(fileUri);
 			runOnUiThread(() -> {
-				if (isBinary) {
-					Toast.makeText(this, R.string.msg_cannot_open_binary_file, Toast.LENGTH_SHORT).show();
-					return;
-				}
-				String mimeType = getMimeType(fileUri);
-				if (FileUtils.isExternalViewType(mimeType)) {
+				if (isBinary || FileUtils.isExternalViewType(mimeType)) {
 					Intent intent = new Intent(Intent.ACTION_VIEW);
 					intent.setDataAndType(fileUri, mimeType != null ? mimeType : "*/*");
 					intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 					try {
 						startActivity(intent);
+						closeLeftNavigation();
 					} catch (Exception e) {
-						Toast.makeText(this, R.string.no_app_found_to_view, Toast.LENGTH_LONG).show();
+						if (isBinary) {
+							Toast.makeText(this, R.string.msg_cannot_open_binary_file, Toast.LENGTH_SHORT).show();
+						} else {
+							Toast.makeText(this, R.string.no_app_found_to_view, Toast.LENGTH_LONG).show();
+						}
 					}
 				} else {
 					openFileInViewPager(fileUri, fileName);

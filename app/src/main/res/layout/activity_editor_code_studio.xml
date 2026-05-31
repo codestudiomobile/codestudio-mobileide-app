@@ -79,22 +79,21 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp">
+                android:paddingVertical="8dp">
 
                 <TextView
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="Font Family"
                     android:textColor="@color/white"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    android:paddingBottom="8dp" />
 
                 <Spinner
                     android:id="@+id/fontFamilySpinner"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:theme="@style/ThemeOverlay.AppCompat.Dark" />
             </LinearLayout>
