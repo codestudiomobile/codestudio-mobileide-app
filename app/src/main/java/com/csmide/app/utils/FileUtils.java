@@ -13,6 +13,8 @@ import androidx.annotation.Nullable;
 
 import com.csmide.app.models.FileItem;
 
+import java.io.File;
+
 /**
  * Utility class for file-related operations, including MIME type detection,
  * file name extraction, and identifying external viewer requirements.
@@ -191,6 +193,9 @@ public class FileUtils {
 	 */
 	public static boolean isDirectory(Context context, Uri uri) {
 		if (uri == null) return false;
+		if (DocumentsContract.isTreeUri(uri) && !DocumentsContract.isDocumentUri(context, uri)) {
+			return true;
+		}
 		try {
 			if (DocumentsContract.isDocumentUri(context, uri)) {
 				String type = null;
@@ -201,6 +206,11 @@ public class FileUtils {
 					}
 				}
 				return DocumentsContract.Document.MIME_TYPE_DIR.equals(type);
+			} else if ("file".equalsIgnoreCase(uri.getScheme())) {
+				File file = new File(uri.getPath());
+				return file.exists() && file.isDirectory();
+			} else if (uri.toString().startsWith("app://com.csmide/internal_storage")) {
+				return true;
 			}
 		} catch (Exception e) {
 			Log.e(TAG, "Error checking if URI is directory: " + uri, e);

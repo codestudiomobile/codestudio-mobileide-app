@@ -1058,14 +1058,26 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 			return;
 		}
 
+		if (folderUri == null) {
+			fileItems.clear();
+			if (filesAdapter != null) filesAdapter.notifyDataSetChanged();
+			return;
+		}
+
 		filesLoadingProgress.setVisibility(View.VISIBLE);
 		executor.execute(() -> {
 			List<FileItem> results = new ArrayList<>();
-			String rootName = FileUtils.getFileName(this, folderUri);
+			String rootName = FileUtils.getAbsolutePathFromUri(this, folderUri);
+			if (rootName == null || rootName.isEmpty()) {
+				rootName = FileUtils.getFileName(this, folderUri);
+			}
 			boolean rootIsDir = FileUtils.isDirectory(this, folderUri);
 			String rootMime = rootIsDir ? DocumentsContract.Document.MIME_TYPE_DIR : FileItem.resolveMimeType(this, folderUri);
 
-			searchInFolderRecursive(folderUri, rootName, rootIsDir, rootMime, query.toLowerCase(), results, 0, true);
+			// For SAF, we need to pass the base Tree URI throughout the recursion.
+			Uri treeBaseUri = ("content".equalsIgnoreCase(folderUri.getScheme()) && DocumentsContract.isTreeUri(folderUri)) ? folderUri : null;
+
+			searchInFolderRecursive(folderUri, treeBaseUri, rootName, rootIsDir, rootMime, query.toLowerCase(), results, 0, true);
 
 			runOnUiThread(() -> {
 				fileItems.clear();
@@ -1078,10 +1090,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		});
 	}
 
-	private boolean searchInFolderRecursive(Uri uri, String name, boolean isDir, String mime, String query, List<FileItem> results, int depth, boolean isRoot) {
+	private boolean searchInFolderRecursive(Uri uri, Uri treeBaseUri, String name, boolean isDir, String mime, String query, List<FileItem> results, int depth, boolean isRoot) {
 		if (uri == null) return false;
 
-		boolean matchesSelf = name.toLowerCase().contains(query);
+		boolean matchesSelf = !isRoot && name.toLowerCase().contains(query);
 		boolean anyChildMatches = false;
 		List<FileItem> childResults = new ArrayList<>();
 
@@ -1099,37 +1111,66 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 							String childName = child.getName();
 							boolean childIsDir = child.isDirectory();
 							String childMime = childIsDir ? DocumentsContract.Document.MIME_TYPE_DIR : FileItem.resolveMimeType(this, Uri.fromFile(child));
-							if (searchInFolderRecursive(Uri.fromFile(child), childName, childIsDir, childMime, query, childResults, depth + 1, false)) {
+							if (searchInFolderRecursive(Uri.fromFile(child), null, childName, childIsDir, childMime, query, childResults, depth + 1, false)) {
 								anyChildMatches = true;
 							}
 						}
 					}
-				} else if ("content".equalsIgnoreCase(uri.getScheme()) && DocumentsContract.isTreeUri(uri)) {
-					String documentId = DocumentsContract.isDocumentUri(this, uri) ? DocumentsContract.getDocumentId(uri) : DocumentsContract.getTreeDocumentId(uri);
-					Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, documentId);
-					try (Cursor cursor = getContentResolver().query(childrenUri,
-							new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-									DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-									DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
-						if (cursor != null && cursor.moveToFirst()) {
-							List<FileItem> childrenItems = new ArrayList<>();
-							do {
-								String id = cursor.getString(0);
-								String childName = cursor.getString(1);
-								String childMime = cursor.getString(2);
-								boolean childIsDir = DocumentsContract.Document.MIME_TYPE_DIR.equals(childMime);
-								Uri childUri = DocumentsContract.buildDocumentUriUsingTree(uri, id);
-								childrenItems.add(new FileItem(childUri, childName, childIsDir, depth + 1, childMime));
-							} while (cursor.moveToNext());
+				} else if (INTERNAL_STORAGE_URI.equals(uri)) {
+					File internalDir = new File(getFilesDir(), "code_studio_files");
+					if (!internalDir.exists()) internalDir.mkdirs();
+					File[] children = internalDir.listFiles();
+					if (children != null) {
+						java.util.Arrays.sort(children, (a, b) -> {
+							if (a.isDirectory() != b.isDirectory()) return a.isDirectory() ? -1 : 1;
+							return a.getName().compareToIgnoreCase(b.getName());
+						});
+						for (File child : children) {
+							String childName = child.getName();
+							boolean childIsDir = child.isDirectory();
+							String childMime = childIsDir ? DocumentsContract.Document.MIME_TYPE_DIR : FileItem.resolveMimeType(this, Uri.fromFile(child));
+							if (searchInFolderRecursive(Uri.fromFile(child), null, childName, childIsDir, childMime, query, childResults, depth + 1, false)) {
+								anyChildMatches = true;
+							}
+						}
+					}
+				} else if ("content".equalsIgnoreCase(uri.getScheme())) {
+					String documentId;
+					if (DocumentsContract.isDocumentUri(this, uri)) {
+						documentId = DocumentsContract.getDocumentId(uri);
+					} else {
+						documentId = DocumentsContract.getTreeDocumentId(uri);
+					}
 
-							childrenItems.sort((a, b) -> {
-								if (a.isDirectory != b.isDirectory) return a.isDirectory ? -1 : 1;
-								return a.displayName.compareToIgnoreCase(b.displayName);
-							});
+					// Use the treeBaseUri if available, otherwise fallback to current uri if it's a tree uri
+					Uri base = (treeBaseUri != null) ? treeBaseUri : (DocumentsContract.isTreeUri(uri) ? uri : null);
+					if (base != null) {
+						Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(base, documentId);
+						try (Cursor cursor = getContentResolver().query(childrenUri,
+								new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+										DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+										DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
+							if (cursor != null && cursor.moveToFirst()) {
+								List<FileItem> childrenItems = new ArrayList<>();
+								do {
+									String id = cursor.getString(0);
+									String childName = cursor.getString(1);
+									String childMime = cursor.getString(2);
+									boolean childIsDir = DocumentsContract.Document.MIME_TYPE_DIR.equals(childMime);
+									Uri childUri = DocumentsContract.buildDocumentUriUsingTree(base, id);
+									childrenItems.add(new FileItem(childUri, childName, childIsDir, depth + 1, childMime));
+								} while (cursor.moveToNext());
 
-							for (FileItem child : childrenItems) {
-								if (searchInFolderRecursive(child.uri, child.displayName, child.isDirectory, child.mimeType, query, childResults, depth + 1, false)) {
-									anyChildMatches = true;
+								childrenItems.sort((a, b) -> {
+									if (a.isDirectory != b.isDirectory)
+										return a.isDirectory ? -1 : 1;
+									return a.displayName.compareToIgnoreCase(b.displayName);
+								});
+
+								for (FileItem child : childrenItems) {
+									if (searchInFolderRecursive(child.uri, base, child.displayName, child.isDirectory, child.mimeType, query, childResults, depth + 1, false)) {
+										anyChildMatches = true;
+									}
 								}
 							}
 						}
@@ -1141,7 +1182,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		}
 
 		if (matchesSelf || anyChildMatches) {
-			if (matchesSelf || !isRoot) {
+			if (!isRoot) {
 				FileItem self = new FileItem(uri, name, isDir, depth, mime);
 				if (isDir) {
 					self.isExpanded = true;
