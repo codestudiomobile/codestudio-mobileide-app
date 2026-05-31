@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/cc_primary_dark"
     android:orientation="vertical"
-    tools:context="com.cs.ide.app.activities.EditorActivity">
+    tools:context="com.csmide.app.activities.EditorActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
@@ -75,6 +75,28 @@
                 android:textColor="@color/cc_accent"
                 android:textSize="14sp"
                 android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Font Family"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+
+                <Spinner
+                    android:id="@+id/fontFamilySpinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:theme="@style/ThemeOverlay.AppCompat.Dark" />
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"

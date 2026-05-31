@@ -4,10 +4,11 @@
     Includes IDE-specific UI strings and inherited Termux environment messages.
 -->
 
-<!DOCTYPE resources [<!ENTITY TERMUX_PACKAGE_NAME "com.cs.ide"><!ENTITY TERMUX_APP_NAME "Termux"><!ENTITY TERMUX_API_APP_NAME "Termux:API"><!ENTITY TERMUX_BOOT_APP_NAME "Termux:Boot"><!ENTITY TERMUX_FLOAT_APP_NAME "Termux:Float"><!ENTITY TERMUX_STYLING_APP_NAME "Termux:Styling"><!ENTITY TERMUX_TASKER_APP_NAME "Termux:Tasker"><!ENTITY TERMUX_WIDGET_APP_NAME "Termux:Widget"><!ENTITY TERMUX_PREFIX_DIR_PATH "/data/data/com.cs.ide/files/usr">]>
+<!DOCTYPE resources [<!ENTITY TERMUX_PACKAGE_NAME "com.csmide"><!ENTITY TERMUX_APP_NAME "Termux"><!ENTITY TERMUX_API_APP_NAME "Termux:API"><!ENTITY TERMUX_BOOT_APP_NAME "Termux:Boot"><!ENTITY TERMUX_FLOAT_APP_NAME "Termux:Float"><!ENTITY TERMUX_STYLING_APP_NAME "Termux:Styling"><!ENTITY TERMUX_TASKER_APP_NAME "Termux:Tasker"><!ENTITY TERMUX_WIDGET_APP_NAME "Termux:Widget"><!ENTITY TERMUX_PREFIX_DIR_PATH "/data/data/com.csmide/files/usr">]>
 
 <resources>
 
+    <string name="html_preview">HTML Preview</string>
     <string name="msg_directory_absolute_path">%1$s Directory Absolute Path: \"%2$s\"</string>
 
     <string name="app_name">Code Studio Mobile IDE</string>

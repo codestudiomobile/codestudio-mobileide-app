@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.cs.ide"
+    namespace = "com.csmide"
     compileSdk = 36
     sourceSets {
         getByName("main") {
@@ -15,7 +15,7 @@ android {
         buildConfig = true
     }
     defaultConfig {
-        applicationId = "com.cs.ide"
+        applicationId = "com.csmide"
         minSdk = 26
         targetSdk = 28
         versionCode = 1

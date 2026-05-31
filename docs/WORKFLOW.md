@@ -17,7 +17,7 @@ an overview of the project and its features, please see the [README.md](../READM
 - **Advanced Package Management**:
     - Implemented a robust `TermuxPackagePatcher` and `TermuxPatcher` byte-replacement engine.
     - Standardized string translations matching exactly **10 characters** (from `com.termux` to
-      `com.cs.ide`), successfully updating pre-compiled ELF binary absolute paths without shifting
+      `com.csmide`), successfully updating pre-compiled ELF binary absolute paths without shifting
       string offsets, section layouts, or structure boundaries.
     - Integrated `apt` and `dpkg` hooks to automatically intercept, extract (`dpkg-deb -R`), patch,
       permission-chmod (`0755` via Os.chmod), and repack (`dpkg-deb -b`) debian packages.

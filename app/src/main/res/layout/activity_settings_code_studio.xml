@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/cc_primary_dark"
     android:orientation="vertical"
-    tools:context="com.cs.ide.app.activities.SettingsActivity">
+    tools:context="com.csmide.app.activities.SettingsActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"

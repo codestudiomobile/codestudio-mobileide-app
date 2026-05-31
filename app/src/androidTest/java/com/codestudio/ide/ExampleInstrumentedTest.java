@@ -1,4 +1,4 @@
-package com.cs.ide.app;
+package com.csmide.app;
 
 import static org.junit.Assert.assertEquals;
 

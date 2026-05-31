@@ -5,16 +5,16 @@
     android:layout_height="match_parent"
     android:background="@color/black"
     android:orientation="vertical"
-    tools:context="com.cs.ide.app.fragments.TerminalFragment">
+    tools:context="com.csmide.app.fragments.TerminalFragment">
 
-    <com.cs.ide.termux.view.TerminalView
+    <com.csmide.termux.view.TerminalView
         android:id="@+id/terminalView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:scrollbars="vertical" />
 
-    <com.cs.ide.termux.shared.termux.extrakeys.ExtraKeysView
+    <com.csmide.termux.shared.termux.extrakeys.ExtraKeysView
         android:id="@+id/terminalExtraKeys"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

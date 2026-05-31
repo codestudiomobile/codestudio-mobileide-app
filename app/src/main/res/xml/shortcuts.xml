@@ -19,8 +19,8 @@
         <intent
             android:name="android.shortcut.conversation"
             android:action="android.intent.action.RUN"
-            android:targetClass="com.cs.ide.termux.app.TermuxActivity"
-            android:targetPackage="com.cs.ide" />
+            android:targetClass="com.csmide.termux.app.TermuxActivity"
+            android:targetPackage="com.csmide" />
     </shortcut>
 
     <shortcut
@@ -32,10 +32,10 @@
         <intent
             android:name="android.shortcut.conversation"
             android:action="android.intent.action.RUN"
-            android:targetClass="com.cs.ide.termux.app.TermuxActivity"
-            android:targetPackage="com.cs.ide">
+            android:targetClass="com.csmide.termux.app.TermuxActivity"
+            android:targetPackage="com.csmide">
             <extra
-                android:name="com.cs.ide.app.failsafe_session"
+                android:name="com.csmide.app.failsafe_session"
                 android:value="true" />
         </intent>
     </shortcut>
@@ -49,8 +49,8 @@
         <intent
             android:name="android.shortcut.conversation"
             android:action="android.intent.action.VIEW"
-            android:targetClass="com.cs.ide.termux.app.activities.SettingsActivity"
-            android:targetPackage="com.cs.ide" />
+            android:targetClass="com.csmide.termux.app.activities.SettingsActivity"
+            android:targetPackage="com.csmide" />
     </shortcut>
 
 </shortcuts>

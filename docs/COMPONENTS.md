@@ -73,7 +73,7 @@ official repositories. **This component is fully functional.**
 ### 🔍 Technical Highlights:
 
 - **Dynamic Binary Translation**: Standard Termux binaries hardcode search paths referring to
-  `/data/data/com.termux`. Because `com.termux` and Code Studio's package name `com.cs.ide` are both
+  `/data/data/com.termux`. Because `com.termux` and Code Studio's package name `com.csmide` are both
   exactly **10 characters** long, the `TermuxPackagePatcher` performs a safe, direct byte-level
   string replacement (`System.arraycopy`) on raw compiled ELF files and shell scripts. This patches
   paths without altering file sizes, string offsets, or ELF memory headers.

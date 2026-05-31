@@ -18,7 +18,7 @@ NEW_TITLE="$1"
 
 # Automatically infer environment prefix if not explicitly set
 if [ -z "$PREFIX" ]; then
-    PREFIX="/data/data/com.cs.ide/files/usr"
+    PREFIX="/data/data/com.csmide/files/usr"
 fi
 
 TITLE_FILE="$PREFIX/etc/termux/title.txt"
