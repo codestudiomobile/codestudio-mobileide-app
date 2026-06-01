@@ -9,7 +9,10 @@ public class AppPreferences {
 	public static final String PREFERENCE_NAME = "AppPreferences";
 
 	// Editor Settings
-	public static final String KEY_EDITOR_STARTUP = "openEditorOnStartup";
+	/**
+	 * Key for the preference to show the welcome screen if no tabs are open or restored.
+	 * Default value is true.
+	 */
 	public static final String KEY_WELCOME_STARTUP = "openWelcomeScreenOnStartup";
 	public static final String KEY_EDITOR_TEXT_SIZE = "editorTextSize";
 	public static final String KEY_PINCH_TO_ZOOM = "pinchToZoom";

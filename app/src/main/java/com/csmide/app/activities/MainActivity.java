@@ -203,8 +203,6 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		mainHandler.removeCallbacks(autoSaveRunnable);
 		performAutoSave(viewPager.getCurrentItem());
 
-		executor.execute(() -> tabManager.saveOpenedTabs(this, viewPagerAdapter, tabLayout));
-
 		getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE)
 				.unregisterOnSharedPreferenceChangeListener(this);
 	}
@@ -297,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	private void initializeTabs() {
 		executor.execute(() -> {
-			TabManager.TabState state = tabManager.loadRecentTabs(this);
+			TabManager.TabState state = new TabManager.TabState(new ArrayList<>(), new ArrayList<>(), -1);
 			runOnUiThread(() -> {
 				viewPagerAdapter = new ViewPagerAdapter(this, state.uris(), state.names());
 				viewPager.setAdapter(viewPagerAdapter);
@@ -1747,39 +1745,33 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		folderUris.clear();
 		folderNames.clear();
 
-		Uri topUri = baseUri != null ? baseUri : currentDirectoryUri;
-		if (topUri == null) topUri = INTERNAL_STORAGE_URI;
-
-		// 1. Add the primary/active folder at the top as "."
-		folderUris.add(topUri);
-		folderNames.add(".");
-
-		// 2. Add App Storage as an option if it wasn't the top one
-		if (!topUri.equals(INTERNAL_STORAGE_URI)) {
-			folderUris.add(INTERNAL_STORAGE_URI);
-			folderNames.add("home");
-		}
-
 		// List for other folders to be sorted alphabetically
 		List<Pair<String, Uri>> otherFolders = new ArrayList<>();
 
-		// 3. If there's an opened root folder different from topUri, add it to the list
-		if (currentDirectoryUri != null && !currentDirectoryUri.equals(topUri) && !currentDirectoryUri.equals(INTERNAL_STORAGE_URI)) {
-			otherFolders.add(new Pair<>(FileUtils.getFileName(this, currentDirectoryUri), currentDirectoryUri));
+		// 1. Add all folders with persistable SAF permissions
+		List<android.content.UriPermission> permissions = getContentResolver().getPersistedUriPermissions();
+		for (android.content.UriPermission permission : permissions) {
+			Uri uri = permission.getUri();
+			if (!folderUris.contains(uri)) {
+				String name = FileUtils.getFileName(this, uri);
+				otherFolders.add(new Pair<>(name, uri));
+			}
 		}
 
-		// 4. Add subfolders of the opened root folder
-		Uri folderToScan = currentDirectoryUri != null ? currentDirectoryUri : (topUri.equals(INTERNAL_STORAGE_URI) ? null : topUri);
-		if (folderToScan != null) {
-			if ("content".equals(folderToScan.getScheme()) && DocumentsContract.isTreeUri(folderToScan)) {
+		// 2. If a baseUri is provided, use it as the primary context
+		Uri contextUri = baseUri != null ? baseUri : currentDirectoryUri;
+
+		// 3. Add subfolders of the context directory
+		if (contextUri != null && !contextUri.equals(INTERNAL_STORAGE_URI)) {
+			if ("content".equals(contextUri.getScheme()) && DocumentsContract.isTreeUri(contextUri)) {
 				try {
-					String parentId = DocumentsContract.isDocumentUri(this, folderToScan) ? DocumentsContract.getDocumentId(folderToScan) : DocumentsContract.getTreeDocumentId(folderToScan);
-					Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(folderToScan, parentId);
+					String parentId = DocumentsContract.isDocumentUri(this, contextUri) ? DocumentsContract.getDocumentId(contextUri) : DocumentsContract.getTreeDocumentId(contextUri);
+					Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(contextUri, parentId);
 					try (Cursor cursor = getContentResolver().query(childrenUri, new String[]{DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE}, null, null, null)) {
 						if (cursor != null && cursor.moveToFirst()) {
 							do {
 								if (DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(2))) {
-									Uri childUri = DocumentsContract.buildDocumentUriUsingTree(folderToScan, cursor.getString(0));
+									Uri childUri = DocumentsContract.buildDocumentUriUsingTree(contextUri, cursor.getString(0));
 									if (!folderUris.contains(childUri)) {
 										otherFolders.add(new Pair<>(cursor.getString(1), childUri));
 									}
@@ -1790,32 +1782,19 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 				} catch (Exception e) {
 					Log.e(TAG, "Error preparing subfolders from SAF", e);
 				}
-			} else if ("file".equals(folderToScan.getScheme())) {
-				try {
-					File dir = new File(folderToScan.getPath());
-					if (dir.exists() && dir.isDirectory()) {
-						File[] children = dir.listFiles();
-						if (children != null) {
-							for (File child : children) {
-								if (child.isDirectory()) {
-									Uri childUri = Uri.fromFile(child);
-									if (!folderUris.contains(childUri)) {
-										otherFolders.add(new Pair<>(child.getName(), childUri));
-									}
-								}
-							}
-						}
-					}
-				} catch (Exception e) {
-					Log.e(TAG, "Error preparing subfolders from File API", e);
-				}
 			}
 		}
 
-		// Sort other folders alphabetically
+		// Sort all gathered folders alphabetically by name
 		otherFolders.sort((p1, p2) -> p1.first.compareToIgnoreCase(p2.first));
 
-		// Add sorted folders to the main lists
+		// 4. Add the current context at the very top as "." if it's valid
+		if (contextUri != null && !contextUri.equals(INTERNAL_STORAGE_URI)) {
+			folderUris.add(contextUri);
+			folderNames.add(".");
+		}
+
+		// 5. Add sorted folders to the main lists, avoiding duplicates
 		for (Pair<String, Uri> pair : otherFolders) {
 			if (!folderUris.contains(pair.second)) {
 				folderNames.add(pair.first);

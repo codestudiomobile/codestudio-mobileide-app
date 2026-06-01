@@ -37,7 +37,6 @@ import io.github.rosemoe.sora.widget.CodeEditor;
  */
 public class EditorActivity extends AppCompatActivity {
 
-	private SwitchCompat openEditorOnStartup;
 	private SwitchCompat openWelcomeScreenOnStartup;
 	private SwitchCompat pinchToZoomSwitch;
 	private SwitchCompat showLineNumbersSwitch;
@@ -94,7 +93,6 @@ public class EditorActivity extends AppCompatActivity {
 			ViewCompat.setOnApplyWindowInsetsListener(rootLayout, DisplayManager::setupDynamicMarginHandling);
 		}
 
-		openEditorOnStartup = findViewById(R.id.openEditorOnStartup);
 		openWelcomeScreenOnStartup = findViewById(R.id.openWelcomeScreenOnStartup);
 		pinchToZoomSwitch = findViewById(R.id.pinchToZoomSwitch);
 		showLineNumbersSwitch = findViewById(R.id.showLineNumbersSwitch);
@@ -114,7 +112,6 @@ public class EditorActivity extends AppCompatActivity {
 	private void loadPreferences() {
 		SharedPreferences prefs = getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE);
 
-		openEditorOnStartup.setChecked(prefs.getBoolean(AppPreferences.KEY_EDITOR_STARTUP, true));
 		openWelcomeScreenOnStartup.setChecked(prefs.getBoolean(AppPreferences.KEY_WELCOME_STARTUP, true));
 		pinchToZoomSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_PINCH_TO_ZOOM, true));
 		showLineNumbersSwitch.setChecked(prefs.getBoolean(AppPreferences.KEY_SHOW_LINE_NUMBERS, true));
@@ -166,9 +163,6 @@ public class EditorActivity extends AppCompatActivity {
 	 * Sets up event listeners for all interactive UI elements to persist changes.
 	 */
 	private void setupListeners(SharedPreferences prefs) {
-		openEditorOnStartup.setOnCheckedChangeListener((v, checked) ->
-				prefs.edit().putBoolean(AppPreferences.KEY_EDITOR_STARTUP, checked).apply());
-
 		openWelcomeScreenOnStartup.setOnCheckedChangeListener((v, checked) ->
 				prefs.edit().putBoolean(AppPreferences.KEY_WELCOME_STARTUP, checked).apply());
 

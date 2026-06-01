@@ -339,7 +339,7 @@
     <string name="menu_folder">MENU</string>
     <string name="menu_save">Save</string>
     <string name="menu_refresh">Refresh</string>
-    <string name="menu_open_file">Open file</string>
+    <string name="menu_open_file">Open external file</string>
     <string name="menu_open_folder">Open Folder</string>
     <string name="menu_open_welcome_screen">Open welcome screen</string>
     <string name="menu_settings">Settings</string>
@@ -351,8 +351,7 @@
     <string name="msg_alignment_fixed">ELF alignment fixed successfully!</string>
     <string name="msg_alignment_fix_failed">Failed to fix ELF alignment.</string>
     <string name="msg_installing_package">Installing package…</string>
-    <string name="pref_open_editor_on_startup">Open editor on startup</string>
-    <string name="pref_open_welcome_screen_on_startup">Open welcome screen on startup</string>
+    <string name="pref_open_welcome_screen_on_startup">Show welcome page if no tabs are open</string>
     <string name="title_create_new_file">Create new file</string>
     <string name="label_save_location">Save location</string>
     <string name="label_filename">Filename</string>

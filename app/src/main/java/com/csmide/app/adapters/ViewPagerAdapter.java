@@ -80,17 +80,16 @@ public class ViewPagerAdapter extends FragmentStateAdapter {
 	}
 
 	/**
-	 * Configures default tabs based on user preferences (e.g., Welcome screen or Untitled file).
+	 * Configures default tabs based on user preferences (e.g., Welcome screen).
 	 */
 	private void setupInitialTabs() {
-		boolean editorStartup = preferences.getBoolean(AppPreferences.KEY_EDITOR_STARTUP, false);
-		boolean welcomeStartup = preferences.getBoolean(AppPreferences.KEY_WELCOME_STARTUP, true);
-		if (welcomeStartup) {
+		boolean showWelcomeOnEmpty = preferences.getBoolean(AppPreferences.KEY_WELCOME_STARTUP, true);
+		if (showWelcomeOnEmpty) {
 			fileUris.add(WELCOME_URI);
 			fileNames.add(activity.getString(R.string.welcome));
 			isPrivateTab.add(false);
-		}
-		if (editorStartup) {
+		} else {
+			// If we don't show welcome, at least provide one empty untitled file
 			fileUris.add(Uri.parse(UNTITLED_URI_PREFIX + "/" + System.currentTimeMillis()));
 			fileNames.add(activity.getString(R.string.untitled) + " 1");
 			isPrivateTab.add(false);
