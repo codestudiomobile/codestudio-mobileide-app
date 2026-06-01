@@ -54,6 +54,14 @@ fi
 # Load bash completion if available
 [ -r "$PREFIX/share/bash-completion/bash_completion" ] && . "$PREFIX/share/bash-completion/bash_completion"
 
+# 2.5 CCR (Compile & Run) Helper
+# This ensures g++ and gcc point to our wrapper which handles automatic execution,
+# cleanup, and executes in a safe environment.
+alias csmide-compile='ccr'
+alias ccr-gcc='ccr -mode gcc'
+alias ccr-gpp='ccr -mode g++'
+alias cscr-mono='cscr'
+
 # Clear the screen
 printf "\033[H\033[2J"
 

@@ -10,11 +10,11 @@
 # 1. Validation: Ensure a title is provided
 if [ -z "$1" ]; then
     echo "Error: No title provided."
-    echo "Usage: apply-title \"Your New Title\""
+    echo "Usage: apply-title \"Your New Title\" or apply-title Your New Title"
     exit 1
 fi
 
-NEW_TITLE="$1"
+NEW_TITLE="$*"
 
 # Automatically infer environment prefix if not explicitly set
 if [ -z "$PREFIX" ]; then

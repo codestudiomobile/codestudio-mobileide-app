@@ -8,7 +8,7 @@
 
 # 1. Validation: Ensure input text is provided
 if [ -z "$1" ]; then
-    echo "Usage: $0 \"your text here\""
+    echo "Usage: $0 \"your text here\" or $0 your text here"
     exit 1
 fi
 
@@ -19,7 +19,9 @@ BANNER_FILE="$PREFIX/etc/termux/banner.txt"
 mkdir -p "$(dirname "$BANNER_FILE")"
 
 # Normalize input to uppercase for character mapping
-input=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+# Support multiple arguments by joining them with spaces
+input_raw="$*"
+input=$(echo "$input_raw" | tr '[:lower:]' '[:upper:]')
 
 # Initialization: Character row mappings (ASCII Font Definition)
 declare -A r1 r2 r3 r4 r5 r6

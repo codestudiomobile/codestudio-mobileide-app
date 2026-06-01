@@ -291,13 +291,10 @@ public class ExecutionManager {
 		String output = (internalBinPath != null) ? internalBinPath : fileNameWithoutExt;
 		String qOutput = (internalBinPath != null) ? "'" + internalBinPath.replace("'", "'\\''") + "'" : qFileNameWithoutExt;
 
-		// For compiled languages, we still need to handle the executable prefix
-		String runCmd = (internalBinPath != null) ? qOutput : "./" + qOutput;
-
 		if (lowerFileName.endsWith(".c")) {
-			return String.format("clang %s -o %s && %s", qFile, qOutput, runCmd);
+			return String.format("gcc %s -o %s", qFile, qOutput);
 		} else if (lowerFileName.endsWith(".cpp")) {
-			return String.format("clang++ %s -o %s && %s", qFile, qOutput, runCmd);
+			return String.format("g++ %s -o %s", qFile, qOutput);
 		} else if (lowerFileName.endsWith(".py") || lowerFileName.endsWith(".pyc")) {
 			// -u for unbuffered output to show results immediately
 			return String.format("python -u %s", qFile);
@@ -311,6 +308,8 @@ public class ExecutionManager {
 			return String.format("java %s", qFileNameWithoutExt);
 		} else if (lowerFileName.endsWith(".sh")) {
 			return String.format("bash %s", qFile);
+		} else if (lowerFileName.endsWith(".cs")) {
+			return String.format("mcs %s && mono %s.exe", qFile, qFileNameWithoutExt);
 		}
 		return null;
 	}

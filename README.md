@@ -14,10 +14,55 @@ workspace where your code and terminal breathe together.
   environment. It automatically synchronizes with the editor, opening at your current working
   directory for a truly integrated experience.
 - **Package Management**: Built-in `apt` and `pkg` management for installing compilers, runtimes,
-  and utilities (Python, Node.js, C++, etc.).
+  and utilities (Python, Node.js, C++, C#, etc.).
+- **Smart Execution Wrappers**: Introduces specialized CLI tools for a streamlined workflow:
+    - `ccr`: Unified C/C++ wrapper. Compiles your code, runs the binary, and automatically deletes
+      the output to keep your workspace clean.
+    - `cscr`: C# wrapper. Compiles using `mcs`, runs with `mono`, and cleans up the `.exe`
+      automatically.
+    - Standard `gcc` and `g++` are symlinked to `ccr` for instant Compile-Run-Cleanup.
 - **Modern UI**: Material Design 3 interface with dynamic themes and customizable layouts. The
-  interface is highly optimized for performance, with asynchronous metadata loading and
-  background text processing to ensure a 60 FPS experience and zero UI thread blocking.
+  interface is highly optimized for performance, with asynchronous metadata loading and background
+  text processing to ensure a 60 FPS experience and zero UI thread blocking.
+- **Customizable Terminal**: Personalize your shell with custom ASCII banners and prompt titles via
+  the built-in Customization dashboard or CLI commands.
+
+## 🛠️ Usage & Commands
+
+CodeStudio provides several custom commands and features to enhance your mobile development
+experience:
+
+### Smart Compiler Wrappers
+
+Use these commands in the terminal for a "one-step" compilation and execution:
+
+- **C/C++**:
+    - `ccr <file.c>`: Compiles with `gcc`, runs, and deletes binary.
+    - `ccr -mode g++ <file.cpp>`: Compiles with `g++`, runs, and deletes binary.
+    - `gcc <file.c>` or `g++ <file.cpp>`: Now use the `ccr` wrapper by default.
+- **C#**:
+    - `cscr <file.cs>`: Compiles with `mcs`, runs with `mono`, and deletes `.exe`.
+    - `cscr-mono`: Alias for the `cscr` command.
+
+### Console Customization
+
+- **Visual Dashboard**: Go to **Settings > Customization** to visually design your terminal's ASCII
+  banner and prompt title.
+- **CLI Commands**:
+    - `apply-banner "MY TEXT"` or `apply-banner MY TEXT`: Instantly update your terminal greeting
+      with a block-letter ASCII banner. Supports multiple unquoted arguments.
+    - `apply-title "MY PROMPT"` or `apply-title MY PROMPT`: Change the title displayed in your shell
+      prompt across all sessions. Supports multiple unquoted arguments.
+
+### IDE Integration
+
+- **One-Tap Run**: Click the "Run" icon in the editor toolbar. CodeStudio automatically detects the
+  language and executes the correct build/run sequence in a synchronized terminal tab.
+- **Hierarchical Search**: Use the search bar in the file explorer to find files. Results are now
+  shown within their folder structure for better context and easier navigation.
+
+## 📁 Project Structure
+
 - **File Management**: Advanced file explorer with support for Android Storage Access Framework (
   SAF). Features a multi-threaded architecture for high-speed file discovery, and a smart "Save As"
   workflow that maintains your workspace layout.
@@ -29,7 +74,7 @@ workspace where your code and terminal breathe together.
 
 For an exhaustive, deep-dive breakdown of the entire system architecture (including JNI, PTY
 management, NDK layers, and packaging pipelines),
-see [code_studio_architecture_analysis.md](./docs/code_studio_architecture_analysis.md).
+see [ARCHITECTURE_ANALYSIS.md](docs/ARCHITECTURE_ANALYSIS.md).
 
 Additional developer resources:
 

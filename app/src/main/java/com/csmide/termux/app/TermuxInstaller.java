@@ -318,6 +318,57 @@ public final class TermuxInstaller {
 
 	private static void updateScripts(Activity activity) {
 		updateScriptsInDirectory(activity, TERMUX_PREFIX_DIR_PATH);
+		setupCCRWrapper(activity);
+	}
+
+	private static void setupCCRWrapper(Activity activity) {
+		Logger.logInfo(LOG_TAG, "Setting up CCR (Compile & Run) wrapper.");
+		try {
+			File binDir = new File(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH);
+			if (!binDir.exists())
+				binDir.mkdirs();
+
+			File wrapperFile = new File(binDir, "ccr");
+			try (InputStream in = activity.getAssets().open("ccr.sh");
+			     OutputStream out = new FileOutputStream(wrapperFile)) {
+				byte[] buffer = new byte[8192];
+				int read;
+				while ((read = in.read(buffer)) != -1) {
+					out.write(buffer, 0, read);
+				}
+			}
+			TermuxPatcher.patchFile(wrapperFile);
+			Os.chmod(wrapperFile.getAbsolutePath(), 0700);
+
+			// Create symlinks for gcc and g++ to point to ccr
+			File gccSymlink = new File(binDir, "gcc");
+			File gppSymlink = new File(binDir, "g++");
+
+			if (gccSymlink.exists() || FileUtils.isSymlink(gccSymlink.getAbsolutePath()))
+				gccSymlink.delete();
+			if (gppSymlink.exists() || FileUtils.isSymlink(gppSymlink.getAbsolutePath()))
+				gppSymlink.delete();
+
+			Os.symlink(wrapperFile.getAbsolutePath(), gccSymlink.getAbsolutePath());
+			Os.symlink(wrapperFile.getAbsolutePath(), gppSymlink.getAbsolutePath());
+
+			// Setup CSCR (C# Compile & Run) wrapper
+			File cscrWrapper = new File(binDir, "cscr");
+			try (InputStream in = activity.getAssets().open("cscr.sh");
+			     OutputStream out = new FileOutputStream(cscrWrapper)) {
+				byte[] buffer = new byte[8192];
+				int read;
+				while ((read = in.read(buffer)) != -1) {
+					out.write(buffer, 0, read);
+				}
+			}
+			TermuxPatcher.patchFile(cscrWrapper);
+			Os.chmod(cscrWrapper.getAbsolutePath(), 0700);
+
+			Logger.logInfo(LOG_TAG, "CCR and CSCR wrappers setup completed.");
+		} catch (Exception e) {
+			Logger.logError(LOG_TAG, "Failed to setup CCR wrapper: " + e.getMessage());
+		}
 	}
 
 	private static void updateScriptsInDirectory(Activity activity, String prefixPath) {

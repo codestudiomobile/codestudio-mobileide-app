@@ -150,6 +150,18 @@
 					"run": "java -jar {{output}}.jar",
 					"suggestion_pack": "https://raw.githubusercontent.com/nishtahir/language-kotlin/master/dist/Kotlin.tmLanguage",
 					"scope_name": "source.kotlin"
+				},
+				"csharp": {
+					"package": "mono",
+					"install": "pkg install mono -y",
+					"uninstall": "pkg uninstall mono -y",
+					"check_installed": "dpkg -s mono",
+					"check_available": "apt-cache show mono",
+					"extension": ".cs",
+					"compile": "mcs {{file}}",
+					"run": "mono {{file_name_no_ext}}.exe",
+					"suggestion_pack": "https://raw.githubusercontent.com/dotnet/csharp-tmLanguage/master/grammars/csharp.tmLanguage",
+					"scope_name": "source.cs"
 				}
 			},
 			"web": {

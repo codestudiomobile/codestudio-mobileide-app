@@ -57,6 +57,11 @@ on their extension. **This component is fully functional.**
 
 - **One-Tap Execution**: Implements "One-Tap" logic that detects file extensions (Python, Node.js,
   C++, etc.) and executes the appropriate runtime in the synchronized terminal.
+- **Smart Execution Wrappers**: Introduces specialized CLI tools `ccr` and `cscr`.
+    - `ccr`: A unified C/C++ wrapper that compiles via `clang/clang++`, executes the resulting
+      binary, and automatically deletes the output binary to maintain a clean workspace.
+    - `cscr`: A C# wrapper that compiles using `mcs`, executes via `mono`, and cleans up the `.exe`
+      output automatically.
 - **Web Preview Engine**: Features a specialized path for HTML/HTM files that copies content to an
   external cache and launches it via a filtered `ACTION_VIEW` intent (excluding the IDE itself to
   prevent recursive windows).
@@ -109,7 +114,7 @@ symlinks are set up on launch, and exposes graphical dashboards for personalizat
 ---
 
 For a comprehensive, native-level architectural and NDK systems deep-dive, see
-the [Comprehensive Architecture Analysis Document](./code_studio_architecture_analysis.md).
+the [Comprehensive Architecture Analysis Document](ARCHITECTURE_ANALYSIS.md).
 
 ## 🚀 Next Step: Abstraction Layers
 

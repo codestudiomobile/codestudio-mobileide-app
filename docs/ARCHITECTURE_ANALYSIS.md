@@ -18,34 +18,40 @@ The codebase is organized into three distinct operational layers that communicat
 asynchronous IPC, Java Native Interface (JNI), and local Unix domain socket protocols:
 
 ```mermaid
-graph TD
-    subgraph UI & Editor Layer (com.csmide.app)
-        A[MainActivity] -->|Tab & Session Control| B[TabManager / ViewPagerAdapter]
-        B -->|Configures Editor| C[TextFragment / CodeView]
-        B -->|Terminal Display| D[TerminalFragment / CompileResultFragment]
-        C -->|Snippet Provider| E[VSCodeSnippetProvider]
-        C -->|Syntax & Bracket Match| F[SoraLanguageManager]
+flowchart TD
+    subgraph "Editor & UI Layer (Java)"
+        MainActivity --> |manages| TabManager
+        MainActivity --> |uses| FilesAdapter
+        TabManager --> |configures| ViewPagerAdapter
+        ViewPagerAdapter --> |instantiates| TextFragment
+        ViewPagerAdapter --> |instantiates| TerminalFragment
+        ViewPagerAdapter --> |instantiates| HtmlPreviewFragment
+        TextFragment --> |uses| SoraEditor
+        SoraEditor --> |loads| TextMateGrammar
     end
 
-    subgraph Native Execution & Terminal Layer (com.csmide.termux)
-        D -->|Session Control| G[TermuxSessionManager]
-        G -->|Binds to Shell Service| H[TermuxService]
-        H -->|Pty I/O Streams| I[TerminalSession / TerminalEmulator]
-        I -->|JNI Bridge| J[JNI Pseudo-Terminal Wrapper]
+    subgraph "Execution Layer (Java/JNI)"
+        ExecutionManager --> |prepares| ExecCache
+        ExecutionManager --> |wraps| ShellCommands
+        ExecutionManager --> |uses| TermuxSessionManager
+        TermuxSessionManager --> |binds| TermuxService
+        TermuxService --> |manages| TerminalSession
     end
 
-    subgraph Background Package Management
-        K[ManageLanguagesActivity] -->|Trigger Install| L[LanguageManagerService]
-        K -->|Apt Package Manager| M[AptBackgroundService]
+    subgraph "Native Layer (C/C++)"
+        TerminalSession --> |I/O via| JNI_PtyBridge
+        JNI_PtyBridge --> |fork/exec| Native_PTY[termux.c]
+        Native_PTY --> |allocates| Linux_Kernel[/dev/ptmx]
     end
 
-    subgraph C/C++ Native NDK Layer (jniLibs / cpp)
-        J -->|fork & execvp| N[termux.c]
-        N -->|Allocate Pseudo-Terminal| O[/dev/ptmx & ioctl]
+    subgraph "Package Management"
+        ManageLanguagesActivity --> |triggers| LanguageManagerService
+        LanguageManagerService --> |uses| AptBackgroundService
+        AptBackgroundService --> |runs| pkg_apt[pkg/apt binaries]
     end
 
-    F -->|Load extensions| P[(VS Code extension Assets)]
-    L -->|CURL download / Unzip| Q[(Local Suggestion Packs)]
+    ShellCommands -.-> |executes in| TerminalSession
+    pkg_apt -.-> |patched by| TermuxPackagePatcher
 ```
 
 ---
@@ -708,3 +714,52 @@ development styling configurations to create a robust and powerful development e
         v                                                   v
 [ File Explorer Drawer ] <--- [ SAF Mount ] <--- [ Unix Terminal PTY (NDK) ]
 ```
+
+---
+
+## 8. User Guide: Custom Commands & Personalization
+
+CodeStudio includes several built-in commands and features to streamline mobile development and
+allow for deep workspace customization.
+
+### 8.1. Compiler Wrappers (Smart Execution)
+
+These commands simplify the traditional Compile-Link-Run-Cleanup lifecycle into a single terminal
+action.
+
+- **`ccr` (C/C++ Compiler & Run)**:
+    - **Usage**: `ccr <filename.c>` or `ccr <filename.cpp>`
+    - **Action**: Automatically detects the language, compiles using `clang/clang++`, runs the
+      resulting binary, and then deletes the binary to keep your workspace clean.
+    - **Manual Mode**: `ccr -mode g++ <file.cpp>` to force a specific compiler.
+    - **Integration**: Standard `gcc` and `g++` commands are symlinked to `ccr`, so you get smart
+      execution by default.
+
+- **`cscr` (C# Compiler & Run)**:
+    - **Usage**: `cscr <filename.cs>`
+    - **Action**: Compiles the C# source using `mcs` and immediately executes the output assembly
+      using the `mono` runtime, followed by automatic cleanup of the `.exe` file.
+
+### 8.2. Workspace Personalization
+
+Customize your terminal environment to make it feel like home. These changes are persistent across
+app restarts.
+
+- **ASCII Banners**:
+    - **GUI**: Go to **Settings > Customization** for a visual editor with live preview.
+    - **CLI**: `apply-banner "MY PROJECT"` or `apply-banner MY PROJECT`.
+    - **Result**: Updates the "Greeting" seen at the top of every new terminal session with a
+      stylized block-letter banner.
+
+- **Prompt Titles**:
+    - **GUI**: Update the "Title Text" field in the Customization dashboard.
+    - **CLI**: `apply-title "DEV MODE"` or `apply-title DEV MODE`.
+    - **Result**: Changes the text displayed in your shell prompt (e.g., `[DEV MODE] /sdcard $`).
+      This updates in real-time across all open terminal tabs.
+
+### 8.3. Advanced IDE Features
+
+- **Hierarchical Search**: Use the search bar in the file explorer to find files recursively.
+  Results are shown within their directory context for better navigation.
+- **HTML Preview**: Run HTML files directly within the IDE. It opens a dedicated browser fragment
+  that supports JS, CSS, and multi-file project structures (images, linked scripts, etc.).
