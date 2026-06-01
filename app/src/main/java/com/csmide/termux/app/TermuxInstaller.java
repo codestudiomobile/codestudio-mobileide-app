@@ -344,9 +344,9 @@ public final class TermuxInstaller {
 			File gccSymlink = new File(binDir, "gcc");
 			File gppSymlink = new File(binDir, "g++");
 
-			if (gccSymlink.exists() || FileUtils.isSymlink(gccSymlink.getAbsolutePath()))
+			if (gccSymlink.exists() || FileUtils.symlinkFileExists(gccSymlink.getAbsolutePath()))
 				gccSymlink.delete();
-			if (gppSymlink.exists() || FileUtils.isSymlink(gppSymlink.getAbsolutePath()))
+			if (gppSymlink.exists() || FileUtils.symlinkFileExists(gppSymlink.getAbsolutePath()))
 				gppSymlink.delete();
 
 			Os.symlink(wrapperFile.getAbsolutePath(), gccSymlink.getAbsolutePath());

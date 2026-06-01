@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	private final ExecutorService executor = Executors.newFixedThreadPool(4); // Increased pool for better parallelism
 	private final List<FileItem> fileItems = new ArrayList<>();
 	private final Map<String, String> tabSaveTimes = new HashMap<>();
+	private final Map<Uri, Object> fileLocks = new HashMap<>();
 	private final ArrayList<Uri> folderUris = new ArrayList<>();
 	private final ArrayList<String> folderNames = new ArrayList<>();
 	public Uri currentFileUri;
@@ -1351,16 +1352,23 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	}
 
 	private void saveUriContent(Uri uri, byte[] content) {
-		try (OutputStream os = getContentResolver().openOutputStream(uri, "wt")) {
-			if (os != null) {
-				os.write(content);
-				os.flush();
+		Object lock;
+		synchronized (fileLocks) {
+			lock = fileLocks.computeIfAbsent(uri, k -> new Object());
+		}
+
+		synchronized (lock) {
+			try (OutputStream os = getContentResolver().openOutputStream(uri, "wt")) {
+				if (os != null) {
+					os.write(content);
+					os.flush();
+				}
+				if ("file".equalsIgnoreCase(uri.getScheme())) {
+					android.media.MediaScannerConnection.scanFile(this, new String[]{uri.getPath()}, null, null);
+				}
+			} catch (IOException e) {
+				Log.e(TAG, "Failed to save URI content: " + uri, e);
 			}
-			if ("file".equalsIgnoreCase(uri.getScheme())) {
-				android.media.MediaScannerConnection.scanFile(this, new String[]{uri.getPath()}, null, null);
-			}
-		} catch (IOException e) {
-			Log.e(TAG, "Failed to save URI content: " + uri, e);
 		}
 	}
 
