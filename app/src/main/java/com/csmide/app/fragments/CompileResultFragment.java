@@ -151,6 +151,13 @@ public class CompileResultFragment extends Fragment implements ServiceConnection
 		}
 	}
 
+	public void stopExecution() {
+		if (terminalSession != null && terminalSession.isRunning()) {
+			terminalSession.finishIfRunning();
+			Toast.makeText(getContext(), "Execution stopped.", Toast.LENGTH_SHORT).show();
+		}
+	}
+
 	private void applyPreferences() {
 		if (terminalView == null || !isAdded()) return;
 		SharedPreferences prefs = requireContext().getSharedPreferences(com.csmide.app.utils.AppPreferences.PREFERENCE_NAME, android.content.Context.MODE_PRIVATE);

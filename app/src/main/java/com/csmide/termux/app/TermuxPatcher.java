@@ -60,6 +60,10 @@ public class TermuxPatcher {
 	public static void renameEntries(File dir) {
 		if (dir == null || isSymlink(dir))
 			return; // Do not recurse into symlinked directories
+
+		// CRITICAL: Sandbox Guard to protect external storage
+		if (!isSafePath(dir)) return;
+
 		File[] files = dir.listFiles();
 		if (files == null)
 			return;
@@ -99,6 +103,13 @@ public class TermuxPatcher {
 
 	public static int patchDirectory(File file) {
 		if (file == null) return 0;
+
+		// CRITICAL: Sandbox Guard to protect external storage
+		if (!isSafePath(file)) {
+			log("Skipping unsafe path: " + file.getAbsolutePath());
+			return 0;
+		}
+
 		int count = 0;
 		try {
 			if (isSymlink(file)) {
@@ -221,18 +232,19 @@ public class TermuxPatcher {
 		try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
 			long length = raf.length();
 			if (length == 0) return true;
-			
+
 			// Read sample to check for binary-ness
 			byte[] buffer = new byte[(int) Math.min(length, 8192)];
 			raf.readFully(buffer);
-			
+
 			int nullCount = 0;
 			int controlChars = 0;
 			for (byte b : buffer) {
 				if (b == 0) nullCount++;
-				else if (b < 32 && b != '\n' && b != '\r' && b != '\t' && b != 27 /* ESC */) controlChars++;
+				else if (b < 32 && b != '\n' && b != '\r' && b != '\t' && b != 27 /* ESC */)
+					controlChars++;
 			}
-			
+
 			// Heuristic: few nulls and few control chars usually means text
 			return (nullCount * 100.0 / buffer.length) < 0.1 && (controlChars * 100.0 / buffer.length) < 2.0;
 		} catch (IOException e) {
@@ -426,6 +438,22 @@ public class TermuxPatcher {
 			return modified;
 		} catch (Exception e) {
 			// Silent fail for non-compatible or malformed files
+			return false;
+		}
+	}
+
+	/**
+	 * Strict Sandbox Guard.
+	 * Returns true ONLY if the file resides within the application's private internal storage.
+	 * This prevents accidental modification of user's SD card/external files via symlinks.
+	 */
+	public static boolean isSafePath(File file) {
+		if (file == null) return false;
+		try {
+			String canonicalPath = file.getCanonicalPath();
+			// Root is /data/data/com.csmide
+			return canonicalPath.startsWith(TermuxConstants.TERMUX_INTERNAL_PRIVATE_APP_DATA_DIR_PATH);
+		} catch (Exception e) {
 			return false;
 		}
 	}

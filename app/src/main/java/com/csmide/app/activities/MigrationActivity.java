@@ -1,13 +1,16 @@
 package com.csmide.app.activities;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -18,27 +21,22 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.csmide.R;
+import com.csmide.app.services.MigrationService;
 import com.csmide.termux.shared.logger.Logger;
 import com.csmide.termux.shared.termux.TermuxConstants;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 public class MigrationActivity extends AppCompatActivity {
 
 	private static final String LOG_TAG = "MigrationActivity";
-	private static final String BACKUP_FILE_NAME = "termux-backup.tar.gz";
 	private static final String INSTRUCTIONS_FILE_NAME = "termux-migration-instructions.txt";
-	private static final String HOME_OLD = "home.old";
-	private static final String USR_OLD = "usr.old";
 	private final ActivityResultLauncher<String> createDocumentLauncher = registerForActivityResult(
 			new ActivityResultContracts.CreateDocument("text/plain"),
 			uri -> {
@@ -50,6 +48,30 @@ public class MigrationActivity extends AppCompatActivity {
 	private TextView tvImportStatus;
 	private Button btnCopyScript, btnImportBackup, btnExportInstructions;
 	private ProgressBar pbImport;
+
+	private final BroadcastReceiver migrationReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (MigrationService.ACTION_PROGRESS_UPDATE.equals(intent.getAction())) {
+				String text = intent.getStringExtra(MigrationService.EXTRA_STATUS_TEXT);
+				boolean isComplete = intent.getBooleanExtra(MigrationService.EXTRA_IS_COMPLETE, false);
+				boolean isSuccess = intent.getBooleanExtra(MigrationService.EXTRA_IS_SUCCESS, false);
+
+				tvImportStatus.setVisibility(View.VISIBLE);
+				tvImportStatus.setText(text);
+				pbImport.setVisibility(isComplete ? View.GONE : View.VISIBLE);
+
+				if (isComplete) {
+					btnImportBackup.setEnabled(true);
+					if (isSuccess) {
+						Toast.makeText(MigrationActivity.this, R.string.msg_import_success, Toast.LENGTH_LONG).show();
+					}
+				} else {
+					btnImportBackup.setEnabled(false);
+				}
+			}
+		}
+	};
 	private final ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
 			new ActivityResultContracts.StartActivityForResult(),
 			result -> {
@@ -108,6 +130,28 @@ public class MigrationActivity extends AppCompatActivity {
 		});
 	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		IntentFilter filter = new IntentFilter(MigrationService.ACTION_PROGRESS_UPDATE);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			registerReceiver(migrationReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+		} else {
+			registerReceiver(migrationReceiver, filter);
+		}
+
+		// Request current status if service is running
+		Intent intent = new Intent(this, MigrationService.class);
+		intent.setAction(MigrationService.ACTION_GET_STATUS);
+		startService(intent);
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		unregisterReceiver(migrationReceiver);
+	}
+
 	private void saveInstructionsToUri(Uri uri) {
 		String instructions = getString(R.string.migration_instructions_content);
 
@@ -123,13 +167,26 @@ public class MigrationActivity extends AppCompatActivity {
 	}
 
 	private void importBackup(Uri uri) {
-		new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
-				.setTitle(R.string.title_import_backup)
-				.setMessage(R.string.msg_confirm_import)
-				.setPositiveButton(R.string.action_proceed, (dialog, which) -> startImportTask(uri))
-				.setNegativeButton(R.string.action_cancel, (dialog, which) -> btnImportBackup.setEnabled(true))
+		View v = LayoutInflater.from(this).inflate(R.layout.dialog_confirm_migration, null);
+		Button proceedBtn = v.findViewById(R.id.proceed);
+		Button cancelBtn = v.findViewById(R.id.cancel);
+
+		final AlertDialog dialog = new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
+				.setView(v)
 				.setCancelable(false)
-				.show();
+				.create();
+
+		proceedBtn.setOnClickListener(view -> {
+			startImportTask(uri);
+			dialog.dismiss();
+		});
+
+		cancelBtn.setOnClickListener(view -> {
+			btnImportBackup.setEnabled(true);
+			dialog.dismiss();
+		});
+
+		dialog.show();
 	}
 
 	private void startImportTask(Uri uri) {
@@ -138,165 +195,14 @@ public class MigrationActivity extends AppCompatActivity {
 		tvImportStatus.setVisibility(View.VISIBLE);
 		tvImportStatus.setText(R.string.msg_importing);
 
-		new Thread(() -> {
-			try {
-				// 1. Copy URI to a temporary file in app storage
-				File tempFile = new File(getCacheDir(), BACKUP_FILE_NAME);
-				try (InputStream in = getContentResolver().openInputStream(uri);
-				     OutputStream out = new FileOutputStream(tempFile)) {
-					byte[] buffer = new byte[8192];
-					int read;
-					if (in != null) {
-						while ((read = in.read(buffer)) != -1) {
-							out.write(buffer, 0, read);
-						}
-					}
-				}
-
-				// 3. Find tar before moving directories
-				String tarPath = null;
-				File termuxTar = new File(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH + "/tar");
-				if (termuxTar.exists()) {
-					tarPath = termuxTar.getAbsolutePath();
-				}
-
-				// 2. Backup existing home and usr (Don't delete backups until success)
-				File homeDir = TermuxConstants.TERMUX_HOME_DIR;
-				File usrDir = TermuxConstants.TERMUX_PREFIX_DIR;
-
-				File homeOld = new File(homeDir.getParent(), HOME_OLD);
-				File usrOld = new File(usrDir.getParent(), USR_OLD);
-
-				// If previous backups exist and current dirs exist, we must decide.
-				// To be safe, let's keep one level of backup and rename existing old to .bak if they exist
-				File homeBak = new File(homeDir.getParent(), HOME_OLD + ".bak");
-				File usrBak = new File(usrDir.getParent(), USR_OLD + ".bak");
-				if (homeOld.exists()) {
-					deleteRecursive(homeBak);
-					homeOld.renameTo(homeBak);
-				}
-				if (usrOld.exists()) {
-					deleteRecursive(usrBak);
-					usrOld.renameTo(usrBak);
-				}
-
-				// Move current to old
-				boolean homeMoved = false;
-				boolean usrMoved = false;
-				if (homeDir.exists()) {
-					homeMoved = homeDir.renameTo(homeOld);
-					if (!homeMoved) {
-						Logger.logWarn(LOG_TAG, "Failed to rename home directory to backup.");
-					}
-				}
-				if (usrDir.exists()) {
-					usrMoved = usrDir.renameTo(usrOld);
-					if (!usrMoved) {
-						Logger.logWarn(LOG_TAG, "Failed to rename usr directory to backup.");
-					}
-				}
-
-				if (!homeDir.exists()) homeDir.mkdirs();
-				if (!usrDir.exists()) usrDir.mkdirs();
-
-				// Update tarPath if it was in usrDir and now moved to usrOld
-				if (tarPath != null && tarPath.startsWith(usrDir.getAbsolutePath())) {
-					tarPath = usrOld.getAbsolutePath() + tarPath.substring(usrDir.getAbsolutePath().length());
-				}
-
-				if (tarPath == null || !new File(tarPath).exists()) {
-					if (new File("/system/bin/tar").exists()) {
-						tarPath = "/system/bin/tar";
-					} else if (new File("/system/xbin/tar").exists()) {
-						tarPath = "/system/xbin/tar";
-					} else {
-						// ROLLBACK
-						if (homeMoved) {
-							deleteRecursive(homeDir);
-							homeOld.renameTo(homeDir);
-						}
-						if (usrMoved) {
-							deleteRecursive(usrDir);
-							usrOld.renameTo(usrDir);
-						}
-						throw new Exception(getString(R.string.msg_error_tar_not_found));
-					}
-				}
-
-				ProcessBuilder pb = new ProcessBuilder(
-						tarPath, "-zxpf", tempFile.getAbsolutePath(), "-C", TermuxConstants.TERMUX_FILES_DIR_PATH
-				);
-
-				// Set environment variables for Termux tar to find its libraries and helper tools (like gzip) after move
-				if (tarPath.startsWith(usrOld.getAbsolutePath())) {
-					String binPath = usrOld.getAbsolutePath() + "/bin";
-					String libPath = usrOld.getAbsolutePath() + "/lib";
-					pb.environment().put("LD_LIBRARY_PATH", libPath);
-					pb.environment().put("PATH", binPath + ":" + System.getenv("PATH"));
-				}
-
-				pb.redirectErrorStream(true);
-				Process process = pb.start();
-
-				StringBuilder tarOutput = new StringBuilder();
-				try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-					String line;
-					while ((line = reader.readLine()) != null) {
-						tarOutput.append(line).append("\n");
-					}
-				}
-
-				int exitCode = process.waitFor();
-
-				if (exitCode == 0) {
-					// SUCCESS: Now it's safe to delete old backups if we want, or keep them.
-					// Let's keep them for now, but delete .bak
-					deleteRecursive(homeBak);
-					deleteRecursive(usrBak);
-
-					runOnUiThread(() -> {
-						tvImportStatus.setText(R.string.msg_import_success);
-						pbImport.setVisibility(View.GONE);
-						Toast.makeText(this, R.string.msg_import_success, Toast.LENGTH_LONG).show();
-					});
-				} else {
-					// ROLLBACK on failure
-					if (homeMoved) {
-						deleteRecursive(homeDir);
-						homeOld.renameTo(homeDir);
-					}
-					if (usrMoved) {
-						deleteRecursive(usrDir);
-						usrOld.renameTo(usrDir);
-					}
-
-					throw new Exception("Tar exited with code " + exitCode + (tarOutput.length() > 0 ? ": " + tarOutput.toString().trim() : ""));
-				}
-
-			} catch (Exception e) {
-				Logger.logStackTraceWithMessage(LOG_TAG, "Import failed", e);
-				runOnUiThread(() -> {
-					tvImportStatus.setText(getString(R.string.msg_import_failed, e.getMessage()));
-					pbImport.setVisibility(View.GONE);
-					btnImportBackup.setEnabled(true);
-				});
-			} finally {
-				File tempFile = new File(getCacheDir(), BACKUP_FILE_NAME);
-				if (tempFile.exists()) tempFile.delete();
-			}
-		}).start();
-	}
-
-	private void deleteRecursive(File fileOrDirectory) {
-		if (fileOrDirectory.isDirectory()) {
-			File[] children = fileOrDirectory.listFiles();
-			if (children != null) {
-				for (File child : children) {
-					deleteRecursive(child);
-				}
-			}
+		Intent intent = new Intent(this, MigrationService.class);
+		intent.setAction(MigrationService.ACTION_START_IMPORT);
+		intent.putExtra(MigrationService.EXTRA_BACKUP_URI, uri);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			startForegroundService(intent);
+		} else {
+			startService(intent);
 		}
-		fileOrDirectory.delete();
 	}
 
 	@Override

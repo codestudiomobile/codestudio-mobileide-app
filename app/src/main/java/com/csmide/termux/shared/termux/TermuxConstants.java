@@ -393,6 +393,7 @@ public final class TermuxConstants {
 			public static final String EXTRA_FAILSAFE_SESSION = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.failsafe_session";
 			public static final String ACTION_NOTIFY_APP_CRASH = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.notify_app_crash";
 			public static final String ACTION_RELOAD_STYLE = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.reload_style";
+			public static final String ACTION_RESTART_TERMINAL = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.restart_terminal";
 
 			@Deprecated
 			public static final String EXTRA_RELOAD_STYLE = TermuxConstants.TERMUX_PACKAGE_NAME + ".app.reload_style";

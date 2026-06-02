@@ -920,8 +920,13 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 		intentFilter.addAction(TERMUX_ACTIVITY.ACTION_NOTIFY_APP_CRASH);
 		intentFilter.addAction(TERMUX_ACTIVITY.ACTION_RELOAD_STYLE);
 		intentFilter.addAction(TERMUX_ACTIVITY.ACTION_REQUEST_PERMISSIONS);
+		intentFilter.addAction(TERMUX_ACTIVITY.ACTION_RESTART_TERMINAL);
 
-		registerReceiver(mTermuxActivityBroadcastReceiver, intentFilter);
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+			registerReceiver(mTermuxActivityBroadcastReceiver, intentFilter, Context.RECEIVER_EXPORTED);
+		} else {
+			registerReceiver(mTermuxActivityBroadcastReceiver, intentFilter);
+		}
 	}
 
 	private void unregisterTermuxActivityBroadcastReceiver() {
@@ -970,6 +975,18 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 		}
 	}
 
+	private void restartTerminal() {
+		if (mTermuxService != null) {
+			Intent stopServiceIntent = new Intent(this, TermuxService.class);
+			stopServiceIntent.setAction(TermuxConstants.TERMUX_APP.TERMUX_SERVICE.ACTION_STOP_SERVICE);
+			startService(stopServiceIntent);
+		}
+		finish();
+		Intent intent = newInstance(this);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+		startActivity(intent);
+	}
+
 	class TermuxActivityBroadcastReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -990,6 +1007,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 					case TERMUX_ACTIVITY.ACTION_REQUEST_PERMISSIONS:
 						Logger.logDebug(LOG_TAG, "Received intent to request storage permissions");
 						requestStoragePermission(false);
+						return;
+					case TERMUX_ACTIVITY.ACTION_RESTART_TERMINAL:
+						Logger.logDebug(LOG_TAG, "Received intent to restart terminal");
+						restartTerminal();
 						return;
 					default:
 				}

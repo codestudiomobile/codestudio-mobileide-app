@@ -34,7 +34,7 @@
                 android:focusable="true"
                 android:padding="12dp"
                 android:singleLine="true"
-                android:text="@string/menu_open_folder"
+                android:text="@string/action_open_external_folder"
                 android:textColor="@color/cc_accent"
                 android:textSize="18sp" />
 
@@ -48,7 +48,7 @@
                 android:focusable="true"
                 android:padding="12dp"
                 android:singleLine="true"
-                android:text="@string/menu_open_file"
+                android:text="@string/action_open_file"
                 android:textColor="@color/cc_accent"
                 android:textSize="18sp" />
 

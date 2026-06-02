@@ -319,6 +319,31 @@ public final class TermuxInstaller {
 	private static void updateScripts(Activity activity) {
 		updateScriptsInDirectory(activity, TERMUX_PREFIX_DIR_PATH);
 		setupCCRWrapper(activity);
+		setupRestartTerminalWrapper(activity);
+	}
+
+	private static void setupRestartTerminalWrapper(Activity activity) {
+		Logger.logInfo(LOG_TAG, "Setting up Restart Terminal wrapper.");
+		try {
+			File binDir = new File(TermuxConstants.TERMUX_BIN_PREFIX_DIR_PATH);
+			if (!binDir.exists())
+				binDir.mkdirs();
+
+			File wrapperFile = new File(binDir, "restart-terminal");
+			try (InputStream in = activity.getAssets().open("restart-terminal.sh");
+			     OutputStream out = new FileOutputStream(wrapperFile)) {
+				byte[] buffer = new byte[8192];
+				int read;
+				while ((read = in.read(buffer)) != -1) {
+					out.write(buffer, 0, read);
+				}
+			}
+			TermuxPatcher.patchFile(wrapperFile);
+			Os.chmod(wrapperFile.getAbsolutePath(), 0700);
+			Logger.logInfo(LOG_TAG, "Restart Terminal wrapper setup completed.");
+		} catch (Exception e) {
+			Logger.logError(LOG_TAG, "Failed to setup Restart Terminal wrapper: " + e.getMessage());
+		}
 	}
 
 	private static void setupCCRWrapper(Activity activity) {

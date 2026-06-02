@@ -355,6 +355,8 @@
     <string name="title_create_new_file">Create new file</string>
     <string name="label_save_location">Save location</string>
     <string name="label_filename">Filename</string>
+    <string name="action_open_external_folder">Open External Folder</string>
+    <string name="action_open_file">Open File</string>
     <string name="action_open_file_internal">Open File from Internal Storage</string>
     <string name="action_open_editor_settings">Open Editor Settings</string>
     <string name="title_compile_result">Compile Result</string>

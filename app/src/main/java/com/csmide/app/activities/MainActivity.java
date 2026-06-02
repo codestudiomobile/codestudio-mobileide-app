@@ -1,7 +1,9 @@
 package com.csmide.app.activities;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Typeface;
@@ -54,6 +56,7 @@ import com.csmide.app.dialogs.CreateFileDialog;
 import com.csmide.app.editor.TabManager;
 import com.csmide.app.execution.CommandUpdater;
 import com.csmide.app.execution.ExecutionManager;
+import com.csmide.app.fragments.CompileResultFragment;
 import com.csmide.app.fragments.HtmlPreviewFragment;
 import com.csmide.app.fragments.TerminalFragment;
 import com.csmide.app.fragments.TextFragment;
@@ -118,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	private TextView currentFolderTitle;
 	private ImageButton refreshFolder;
 	private ImageButton collapseAllFolders;
+	private ImageButton createNewItem;
 	private ProgressBar progressBar;
 	private ProgressBar filesLoadingProgress;
 	private EditText searchFiles;
@@ -135,6 +139,26 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	private boolean editMenuVisible = false;
 	private boolean stopMenuVisible = false;
 	private boolean isAutoSaveActive = false;
+
+	private final BroadcastReceiver restartTerminalReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			if (com.csmide.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY.ACTION_RESTART_TERMINAL.equals(intent.getAction())) {
+				restartTerminalTabs();
+			}
+		}
+	};
+
+	private void restartTerminalTabs() {
+		if (viewPagerAdapter == null) return;
+		for (int i = 0; i < viewPagerAdapter.getItemCount(); i++) {
+			Fragment fragment = viewPagerAdapter.getFragment(i);
+			if (fragment instanceof TerminalFragment) {
+				// Refresh terminal session
+				viewPagerAdapter.notifyItemChanged(i);
+			}
+		}
+	}
 
 	private final Runnable autoSaveRunnable = new Runnable() {
 		@Override
@@ -184,6 +208,13 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		mainHandler.postDelayed(() -> {
 			CommandUpdater.checkForUpdates(this);
 		}, 1000);
+
+		IntentFilter filter = new IntentFilter(com.csmide.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY.ACTION_RESTART_TERMINAL);
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+			registerReceiver(restartTerminalReceiver, filter, Context.RECEIVER_EXPORTED);
+		} else {
+			registerReceiver(restartTerminalReceiver, filter);
+		}
 	}
 
 	@Override
@@ -203,6 +234,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		mainHandler.removeCallbacks(autoSaveRunnable);
 		performAutoSave(viewPager.getCurrentItem());
 
+		if (tabManager != null && viewPagerAdapter != null) {
+			tabManager.saveOpenedTabs(this, viewPagerAdapter, tabLayout);
+		}
+
 		getSharedPreferences(AppPreferences.PREFERENCE_NAME, MODE_PRIVATE)
 				.unregisterOnSharedPreferenceChangeListener(this);
 	}
@@ -210,6 +245,9 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	@Override
 	protected void onStop() {
 		super.onStop();
+		if (tabManager != null && viewPagerAdapter != null) {
+			tabManager.saveOpenedTabs(this, viewPagerAdapter, tabLayout);
+		}
 		if (isFinishing()) {
 			closePrivateTabs();
 		}
@@ -220,6 +258,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		super.onDestroy();
 		closePrivateTabs();
 		executor.shutdown();
+		try {
+			unregisterReceiver(restartTerminalReceiver);
+		} catch (Exception ignored) {
+		}
 	}
 
 	@Override
@@ -253,6 +295,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		currentFolderTitle = findViewById(R.id.currentFolderTitle);
 		refreshFolder = findViewById(R.id.refreshFilesFolders);
 		collapseAllFolders = findViewById(R.id.collapseAllFolders);
+		createNewItem = findViewById(R.id.createNewItem);
 		filesLoadingProgress = findViewById(R.id.filesLoadingProgress);
 		searchFiles = findViewById(R.id.searchFiles);
 		clearSearch = findViewById(R.id.clearSearch);
@@ -295,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 	private void initializeTabs() {
 		executor.execute(() -> {
-			TabManager.TabState state = new TabManager.TabState(new ArrayList<>(), new ArrayList<>(), -1);
+			TabManager.TabState state = tabManager.loadRecentTabs(this);
 			runOnUiThread(() -> {
 				viewPagerAdapter = new ViewPagerAdapter(this, state.uris(), state.names());
 				viewPager.setAdapter(viewPagerAdapter);
@@ -463,6 +506,9 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		if (id == R.id.runFile) {
 			handleRunFile();
 			return true;
+		} else if (id == R.id.stopExecution) {
+			handleStopExecution();
+			return true;
 		} else if (id == R.id.openNewTerminal) {
 			return openNewTerminal();
 		} else if (id == R.id.editFile) {
@@ -608,7 +654,20 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		if (position < viewPagerAdapter.fileUris.size()) {
 			Uri uri = viewPagerAdapter.fileUris.get(position);
 			if (uri != null) {
-				runMenuVisible = extensionAllowsRun(uri);
+				String uriStr = uri.toString();
+				boolean isCompileTab = uriStr.startsWith("app://com.csmide/compile");
+				boolean isHtmlPreview = uriStr.startsWith(com.csmide.app.adapters.ViewPagerAdapter.HTML_PREVIEW_URI_PREFIX);
+
+				if (isCompileTab || isHtmlPreview) {
+					runMenuVisible = false;
+					stopMenuVisible = true;
+					editMenuVisible = true;
+				} else {
+					runMenuVisible = extensionAllowsRun(uri);
+					stopMenuVisible = false;
+					editMenuVisible = false;
+				}
+
 				executor.execute(() -> {
 					FileItem item = FileUtils.getFileItemFromUri(this, uri);
 					runOnUiThread(() -> {
@@ -617,9 +676,13 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 				});
 			} else {
 				runMenuVisible = false;
+				stopMenuVisible = false;
+				editMenuVisible = false;
 			}
 		} else {
 			runMenuVisible = false;
+			stopMenuVisible = false;
+			editMenuVisible = false;
 		}
 
 		boolean isPrivate = (position < viewPagerAdapter.isPrivateTab.size() && viewPagerAdapter.isPrivateTab.get(position));
@@ -965,6 +1028,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 			filesList.setLayoutManager(new LinearLayoutManager(this));
 			filesList.setAdapter(filesAdapter);
 			collapseAllFolders.setOnClickListener(v -> filesAdapter.collapseAllFolders());
+			createNewItem.setOnClickListener(v -> {
+				closeLeftNavigation();
+				showCreateFileDialog(null, 0);
+			});
 			refreshFolder.setOnClickListener(v -> refreshFileList());
 		}
 		refreshFileList();
@@ -1242,24 +1309,44 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		else Toast.makeText(this, R.string.no_file_selected_to_run, Toast.LENGTH_SHORT).show();
 	}
 
+	private void handleStopExecution() {
+		int currentTabPos = tabLayout.getSelectedTabPosition();
+		if (currentTabPos != -1) {
+			Fragment fragment = viewPagerAdapter.getFragment(currentTabPos);
+			if (fragment instanceof CompileResultFragment) {
+				((CompileResultFragment) fragment).stopExecution();
+			} else if (fragment instanceof HtmlPreviewFragment) {
+				viewPagerAdapter.removeTab(currentTabPos);
+			}
+		}
+	}
+
 	private void handleEditFile() {
 		int currentTabPos = tabLayout.getSelectedTabPosition();
 		if (currentTabPos != -1) {
 			String currentTabName = viewPagerAdapter.fileNames.get(currentTabPos);
-			String runPrefix = getString(R.string.running_prefix, "");
+			String runPrefix = getString(R.string.run_prefix, "");
 			if (currentTabName.startsWith(runPrefix)) {
 				String originalFileName = currentTabName.substring(runPrefix.length());
 				int originalFileTabPos = viewPagerAdapter.findTabPositionByName(originalFileName);
+
 				if (originalFileTabPos != -1) {
 					tabLayout.selectTab(tabLayout.getTabAt(originalFileTabPos));
-					viewPager.setCurrentItem(originalFileTabPos);
-					viewPagerAdapter.removeTab(currentTabPos);
+					viewPager.setCurrentItem(originalFileTabPos, false);
+				} else {
+					// If the file tab is not open, try to find it via the URI in the compile tab's URI
+					Uri currentUri = viewPagerAdapter.fileUris.get(currentTabPos);
+					String sourceUriStr = currentUri.getQueryParameter("source_uri");
+					if (sourceUriStr != null) {
+						openFileInViewPager(Uri.parse(sourceUriStr), originalFileName);
+					}
 				}
+				// Optionally remove the run tab when switching back to edit? 
+				// The user didn't explicitly ask to remove it, but previously it did.
+				// user said "open the respective file tab/open the file to edit".
+				// I'll keep it for now as it's common IDE behavior to switch.
 			}
 		}
-		runMenuVisible = true;
-		stopMenuVisible = false;
-		editMenuVisible = false;
 		invalidateOptionsMenu();
 	}
 
@@ -1509,18 +1596,36 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 			}
 
 			runOnUiThread(() -> {
-				AlertDialog.Builder b = new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog);
-				b.setTitle(getString(R.string.import_file_title, sourceFileName));
-				View v = LayoutInflater.from(this).inflate(R.layout.dialog_create_file_folder, null);
-				EditText input = v.findViewById(R.id.input_name);
-				Spinner s = v.findViewById(R.id.spinner_folder);
-				input.setText(sourceFileName);
+				View v = LayoutInflater.from(this).inflate(R.layout.dialog_create_file_code_studio, null);
+				TextView title = v.findViewById(R.id.dialogTitle);
+				EditText input = v.findViewById(R.id.fileName);
+				Spinner s = v.findViewById(R.id.locationSpinner);
+				android.widget.Button importBtn = v.findViewById(R.id.create);
+				android.widget.Button cancelBtn = v.findViewById(R.id.cancel);
+
+				if (title != null)
+					title.setText(getString(R.string.import_file_title, sourceFileName));
+				if (input != null) input.setText(sourceFileName);
+				if (importBtn != null) importBtn.setText(R.string.import_file);
+
 				ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.spinner_item_codestudio, names);
 				adapter.setDropDownViewResource(R.layout.spinner_item_codestudio);
-				s.setAdapter(adapter);
-				b.setView(v);
-				b.setPositiveButton(R.string.import_file, (d, w) -> importFileAsync(sourceUri, uris.get(s.getSelectedItemPosition()), input.getText().toString().trim()));
-				b.setNegativeButton(R.string.action_cancel, null).show();
+				if (s != null) s.setAdapter(adapter);
+
+				final AlertDialog dialog = new AlertDialog.Builder(this, R.style.CodeStudio_AlertDialog)
+						.setView(v)
+						.create();
+
+				if (importBtn != null) {
+					importBtn.setOnClickListener(view -> {
+						importFileAsync(sourceUri, uris.get(s != null ? s.getSelectedItemPosition() : 0), input != null ? input.getText().toString().trim() : sourceFileName);
+						dialog.dismiss();
+					});
+				}
+				if (cancelBtn != null) {
+					cancelBtn.setOnClickListener(view -> dialog.dismiss());
+				}
+				dialog.show();
 			});
 		});
 	}
@@ -1528,11 +1633,21 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 	private void importFileAsync(Uri source, Uri targetFolder, String name) {
 		executor.execute(() -> {
 			try {
+				try {
+					getContentResolver().takePersistableUriPermission(source, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+				} catch (SecurityException ignored) {
+				}
+
 				String mime = getContentResolver().getType(source);
 				if (mime == null)
 					mime = MimeTypeMap.getSingleton().getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(name));
 				Uri newUri = DocumentsContract.createDocument(getContentResolver(), targetFolder, mime != null ? mime : "application/octet-stream", name);
 				if (newUri != null) {
+					try {
+						getContentResolver().takePersistableUriPermission(newUri, Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+					} catch (SecurityException ignored) {
+					}
+
 					try (java.io.InputStream is = getContentResolver().openInputStream(source);
 					     java.io.OutputStream os = getContentResolver().openOutputStream(newUri)) {
 						byte[] buffer = new byte[8192];

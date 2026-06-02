@@ -216,6 +216,12 @@
             android:foregroundServiceType="specialUse"
             tools:ignore="ForegroundServicePermission" />
         <service
+            android:name="com.csmide.app.services.MigrationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:ignore="ForegroundServicePermission" />
+        <service
             android:name="com.csmide.termux.app.RunCommandService"
             android:exported="true"
             android:permission="com.csmide.permission.RUN_COMMAND">

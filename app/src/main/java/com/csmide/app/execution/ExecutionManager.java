@@ -127,7 +127,7 @@ public class ExecutionManager {
 		String wrappedCommand = wrapCommand(resolvedCommand, sessionDirPath, cwd);
 
 		activity.runOnUiThread(() -> {
-			executeInTerminal(activity, wrappedCommand, cwd, fileName.toLowerCase(), sessionDirPath, activity.viewPager.getCurrentItem() + 1);
+			executeInTerminal(activity, wrappedCommand, cwd, fileName, sessionDirPath, activity.viewPager.getCurrentItem() + 1, Uri.fromFile(new File(absolutePath)));
 		});
 	}
 
@@ -173,7 +173,7 @@ public class ExecutionManager {
 		String wrappedCommand = wrapCommand(resolvedCommand, sessionDir.getAbsolutePath(), sessionDir.getAbsolutePath());
 
 		activity.runOnUiThread(() -> {
-			executeInTerminal(activity, wrappedCommand, sessionDir.getAbsolutePath(), fileName.toLowerCase(), sessionDir.getAbsolutePath(), activity.viewPager.getCurrentItem() + 1);
+			executeInTerminal(activity, wrappedCommand, sessionDir.getAbsolutePath(), fileName, sessionDir.getAbsolutePath(), activity.viewPager.getCurrentItem() + 1, item.uri);
 		});
 	}
 
@@ -385,6 +385,7 @@ public class ExecutionManager {
 			Uri previewUri = Uri.parse(com.csmide.app.adapters.ViewPagerAdapter.HTML_PREVIEW_URI_PREFIX)
 					.buildUpon()
 					.appendQueryParameter("url", fileUri.toString())
+					.appendQueryParameter("source_uri", fileUri.toString()) // Include for edit button
 					.build();
 
 			int existingPos = MainActivity.viewPagerAdapter.findTabPositionByName(tabTitle);
@@ -393,7 +394,8 @@ public class ExecutionManager {
 				MainActivity.viewPagerAdapter.updateTabInfo(oldUri, previewUri, tabTitle);
 				activity.viewPager.setCurrentItem(existingPos, false);
 			} else {
-				int pos = MainActivity.viewPagerAdapter.addTab(previewUri, tabTitle, true);
+				int insertIndex = activity.viewPager.getCurrentItem() + 1;
+				int pos = MainActivity.viewPagerAdapter.insertTab(insertIndex, previewUri, tabTitle, true);
 				activity.viewPager.setCurrentItem(pos, false);
 			}
 		} else {
@@ -409,7 +411,7 @@ public class ExecutionManager {
 		}
 	}
 
-	private static void executeInTerminal(MainActivity activity, String command, String cwd, String labelName, String sessionDirPath, int insertIndex) {
+	private static void executeInTerminal(MainActivity activity, String command, String cwd, String labelName, String sessionDirPath, int insertIndex, Uri sourceUri) {
 		try {
 			String tabTitle = activity.getString(R.string.run_prefix, labelName);
 
@@ -419,6 +421,7 @@ public class ExecutionManager {
 					.appendQueryParameter("cwd", cwd)
 					.appendQueryParameter("session_dir", sessionDirPath)
 					.appendQueryParameter("label", labelName)
+					.appendQueryParameter("source_uri", sourceUri != null ? sourceUri.toString() : null)
 					.appendQueryParameter("timestamp", String.valueOf(System.nanoTime())) // Force uniqueness to re-run
 					.build();
 

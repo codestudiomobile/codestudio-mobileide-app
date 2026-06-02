@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/navHeader"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -63,6 +64,18 @@
         android:orientation="horizontal">
 
         <ImageButton
+            android:id="@+id/createNewItem"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="@string/desc_collapse_all"
+            android:focusable="true"
+            android:src="@drawable/ic_symbol_plus"
+            app:tint="@color/ide_text_secondary" />
+
+        <ImageButton
             android:id="@+id/collapseAllFolders"
             android:layout_width="32dp"
             android:layout_height="32dp"
@@ -72,7 +85,7 @@
             android:contentDescription="@string/desc_collapse_all"
             android:focusable="true"
             android:src="@drawable/ic_collapse_all"
-            android:tint="@color/ide_text_secondary" />
+            app:tint="@color/ide_text_secondary" />
 
         <ImageButton
             android:id="@+id/refreshFilesFolders"
@@ -84,6 +97,6 @@
             android:contentDescription="@string/desc_refresh_folder"
             android:focusable="true"
             android:src="@drawable/ic_refresh"
-            android:tint="@color/ide_text_secondary" />
+            app:tint="@color/ide_text_secondary" />
     </LinearLayout>
 </LinearLayout>
