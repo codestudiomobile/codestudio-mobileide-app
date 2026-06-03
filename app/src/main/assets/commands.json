@@ -74,6 +74,11 @@
 					"run": "lua {{file}}",
 					"suggestion_pack": "https://raw.githubusercontent.com/textmate/lua.tmbundle/master/Syntaxes/Lua.tmLanguage",
 					"scope_name": "source.lua"
+				},
+				"yaml": {
+					"extension": ".yaml",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/yaml.tmbundle/master/Syntaxes/YAML.tmLanguage",
+					"scope_name": "source.yaml"
 				}
 			},
 			"compiled": {
@@ -158,10 +163,35 @@
 					"check_installed": "dpkg -s mono",
 					"check_available": "apt-cache show mono",
 					"extension": ".cs",
-					"compile": "mcs {{file}}",
-					"run": "mono {{file_name_no_ext}}.exe",
+					"compile": "mcs {{file}} -out:{{output}}.exe",
+					"run": "mono {{output}}.exe",
 					"suggestion_pack": "https://raw.githubusercontent.com/dotnet/csharp-tmLanguage/master/grammars/csharp.tmLanguage",
 					"scope_name": "source.cs"
+				},
+				"swift": {
+					"package": "swift",
+					"install": "pkg install swift -y",
+					"uninstall": "pkg uninstall swift -y",
+					"check_installed": "dpkg -s swift",
+					"check_available": "apt-cache show swift",
+					"extension": ".swift",
+					"compile": "swiftc {{file}} -o {{output}}",
+					"run": "./{{output}}",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/swift.tmbundle/master/Syntaxes/Swift.tmLanguage",
+					"scope_name": "source.swift"
+				},
+				"dart": {
+					"package": "dart",
+					"install": "pkg install dart -y",
+					"uninstall": "pkg uninstall dart -y",
+					"check_installed": "dpkg -s dart",
+					"check_available": "apt-cache show dart",
+					"extension": ".dart",
+					"compile": "dart compile exe {{file}} -o {{output}}",
+					"run": "./{{output}}",
+					"direct_run": "dart run {{file}}",
+					"suggestion_pack": "https://raw.githubusercontent.com/dart-lang/dart-syntax/master/grammars/dart.json",
+					"scope_name": "source.dart"
 				}
 			},
 			"web": {
@@ -179,6 +209,31 @@
 					"extension": ".html",
 					"suggestion_pack": "https://raw.githubusercontent.com/textmate/html.tmbundle/master/Syntaxes/HTML.tmLanguage",
 					"scope_name": "text.html.basic"
+				},
+				"json": {
+					"extension": ".json",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/json.tmbundle/master/Syntaxes/JSON.tmLanguage",
+					"scope_name": "source.json"
+				},
+				"xml": {
+					"extension": ".xml",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/xml.tmbundle/master/Syntaxes/XML.plist",
+					"scope_name": "text.xml"
+				},
+				"markdown": {
+					"extension": ".md",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/markdown.tmbundle/master/Syntaxes/Markdown.tmLanguage",
+					"scope_name": "text.html.markdown"
+				},
+				"less": {
+					"extension": ".less",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/less.tmbundle/master/Syntaxes/Less.tmLanguage",
+					"scope_name": "source.css.less"
+				},
+				"scss": {
+					"extension": ".scss",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/scss.tmbundle/master/Syntaxes/SCSS.tmLanguage",
+					"scope_name": "source.css.scss"
 				}
 			},
 			"shell_scripting": {
@@ -193,6 +248,27 @@
 					"permission_fix": "chmod +x {{file}}",
 					"suggestion_pack": "https://raw.githubusercontent.com/textmate/shellscript.tmbundle/master/Syntaxes/Shell-Unix-Bash.tmLanguage",
 					"scope_name": "source.shell"
+				},
+				"make": {
+					"package": "make",
+					"install": "pkg install make -y",
+					"uninstall": "pkg uninstall make -y",
+					"check_installed": "dpkg -s make",
+					"check_available": "apt-cache show make",
+					"extension": "Makefile",
+					"run": "make",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/make.tmbundle/master/Syntaxes/Makefile.tmLanguage",
+					"scope_name": "source.makefile"
+				},
+				"powershell": {
+					"extension": ".ps1",
+					"suggestion_pack": "https://raw.githubusercontent.com/PowerShell/PowerShell/master/assets/powershell.tmLanguage.json",
+					"scope_name": "source.powershell"
+				},
+				"ini": {
+					"extension": ".ini",
+					"suggestion_pack": "https://raw.githubusercontent.com/textmate/ini.tmbundle/master/Syntaxes/Ini.tmLanguage",
+					"scope_name": "source.ini"
 				}
 			}
 		},

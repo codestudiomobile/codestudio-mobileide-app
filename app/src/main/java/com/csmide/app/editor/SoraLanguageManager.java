@@ -2,13 +2,9 @@ package com.csmide.app.editor;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
-
-import com.csmide.R;
 import com.csmide.app.execution.CommandFetcher;
 import com.csmide.app.services.LanguageManagerService;
 import com.itsaky.androidide.treesitter.TSLanguage;
@@ -129,6 +125,7 @@ public class SoraLanguageManager {
 			if (extensions == null) return;
 
 			for (String extDir : extensions) {
+				if (extDir.endsWith(".json")) continue;
 				String packageJsonPath = "vscode_extensions/" + extDir + "/package.json";
 				try {
 					String json = IOUtils.toString(context.getAssets().open(packageJsonPath), StandardCharsets.UTF_8);
@@ -145,16 +142,17 @@ public class SoraLanguageManager {
 							String path = g.getString("path");
 							if (path.startsWith("./")) path = path.substring(2);
 							String fullPath = "vscode_extensions/" + extDir + "/" + path;
+							String langName = g.optString("language", extDir);
 
 							try {
 								GrammarRegistry.getInstance().loadGrammar(
 										DefaultGrammarDefinition.withGrammarSource(
 												IGrammarSource.fromInputStream(context.getAssets().open(fullPath), scopeName + ".json", StandardCharsets.UTF_8),
-												extDir,
+												langName,
 												scopeName
 										)
 								);
-								Log.d(TAG, "Loaded VSCode Grammar: " + scopeName);
+								Log.d(TAG, "Loaded VSCode Grammar: " + scopeName + " for " + langName);
 							} catch (Exception e) {
 								Log.e(TAG, "Error loading grammar: " + fullPath, e);
 							}
@@ -178,17 +176,17 @@ public class SoraLanguageManager {
 							JSONArray exts = l.optJSONArray("extensions");
 							if (exts != null) {
 								String mainScope = findScopeForLanguageId(grammars, id);
+								if (mainScope == null) mainScope = "source." + id;
 								for (int j = 0; j < exts.length(); j++) {
 									String ext = exts.getString(j).replace(".", "");
 									extensionToLangIdMap.put(ext, id);
-									if (mainScope != null) {
-										extensionToScopeMap.put(ext, mainScope);
-									}
+									extensionToScopeMap.put(ext, mainScope);
 								}
 							}
 						}
 					}
 
+					/*
 					// Register Snippets
 					JSONArray snippets = contributes.optJSONArray("snippets");
 					if (snippets != null) {
@@ -198,9 +196,12 @@ public class SoraLanguageManager {
 							String path = s.getString("path");
 							if (path.startsWith("./")) path = path.substring(2);
 							String assetPath = "vscode_extensions/" + extDir + "/" + path;
-							languageSnippetProviders.put(langId, new VSCodeSnippetProvider(context, assetPath));
+							if (!languageSnippetProviders.containsKey(langId)) {
+								languageSnippetProviders.put(langId, new VSCodeSnippetProvider(context, assetPath));
+							}
 						}
 					}
+					*/
 
 				} catch (Exception e) {
 					Log.e(TAG, "Error processing VSCode extension: " + extDir, e);
@@ -213,6 +214,20 @@ public class SoraLanguageManager {
 
 	private String findScopeForLanguageId(JSONArray grammars, String langId) {
 		if (grammars == null) return null;
+		// Preference 1: scopeName exactly matches "source.<langId>" or "text.<langId>"
+		for (int i = 0; i < grammars.length(); i++) {
+			try {
+				JSONObject g = grammars.getJSONObject(i);
+				if (g.has("language") && g.getString("language").equals(langId)) {
+					String scope = g.getString("scopeName");
+					if (scope.equals("source." + langId) || scope.equals("text." + langId)) {
+						return scope;
+					}
+				}
+			} catch (Exception ignored) {
+			}
+		}
+		// Preference 2: first grammar that matches the language ID
 		for (int i = 0; i < grammars.length(); i++) {
 			try {
 				JSONObject g = grammars.getJSONObject(i);
@@ -256,8 +271,9 @@ public class SoraLanguageManager {
 
 		if (loadedLanguages.containsKey(cleanExt)) {
 			Language lang = loadedLanguages.get(cleanExt);
+			ensureThemeApplied(editor);
 			editor.setEditorLanguage(lang);
-			attachSnippets(editor, cleanExt);
+			// attachSnippets(editor, cleanExt);
 			enableCompletion(editor);
 			return;
 		}
@@ -266,11 +282,12 @@ public class SoraLanguageManager {
 
 		if (scopeName != null) {
 			try {
+				ensureThemeApplied(editor);
 				TextMateLanguage lang = TextMateLanguage.create(scopeName, true);
 				Language wrapped = wrapAndConfigureLanguage(lang, cleanExt);
 				loadedLanguages.put(cleanExt, wrapped);
 				editor.setEditorLanguage(wrapped);
-				attachSnippets(editor, cleanExt);
+				// attachSnippets(editor, cleanExt);
 				enableCompletion(editor);
 				return;
 			} catch (Exception e) {
@@ -308,7 +325,7 @@ public class SoraLanguageManager {
 		}
 
 		enableCompletion(editor);
-		promptInstallLanguagePack(editor, langName, cleanExt);
+		// promptInstallLanguagePack(editor, langName, cleanExt);
 	}
 
 	private void enableCompletion(CodeEditor editor) {
@@ -378,7 +395,7 @@ public class SoraLanguageManager {
 
 			loadedLanguages.put(extension, wrapAndConfigureLanguage(lang, extension));
 			editor.setEditorLanguage(loadedLanguages.get(extension));
-			attachSnippets(editor, extension);
+			// attachSnippets(editor, extension);
 
 		} catch (Exception e) {
 			Log.e(TAG, "Error loading Tree-sitter language: " + langName, e);
@@ -400,7 +417,7 @@ public class SoraLanguageManager {
 			TextMateLanguage lang = TextMateLanguage.create(scope, true);
 			loadedLanguages.put(extension, wrapAndConfigureLanguage(lang, extension));
 			editor.setEditorLanguage(loadedLanguages.get(extension));
-			attachSnippets(editor, extension);
+			// attachSnippets(editor, extension);
 
 			Log.d(TAG, "Loaded TextMate language for " + langName + " with scope " + scope);
 		} catch (Exception e) {
@@ -467,7 +484,12 @@ public class SoraLanguageManager {
 		}
 	}
 
+	/**
+	 * Prompt the user to install a language pack.
+	 * TODO: yet to complete - implementing background installation and status tracking.
+	 */
 	private void promptInstallLanguagePack(CodeEditor editor, String langName, String extension) {
+		/*
 		SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 		String prefKey = "asked_" + langName;
 		if (!prefs.getBoolean(prefKey, false)) {
@@ -494,6 +516,7 @@ public class SoraLanguageManager {
 		} else {
 			editor.setEditorLanguage(new EmptyLanguage());
 		}
+		*/
 	}
 
 	private List<String> getRelatedLanguages(String langName) {
@@ -549,12 +572,13 @@ public class SoraLanguageManager {
 		if (configJson == null) return null;
 		try {
 			JSONObject languages = new JSONObject(configJson).optJSONObject("termux_programming_environment").optJSONObject("languages");
+			String dottedExt = extension.startsWith(".") ? extension : "." + extension;
 			for (String category : new String[]{"interpreted", "compiled", "shell_scripting", "web"}) {
 				JSONObject catObj = languages.optJSONObject(category);
 				if (catObj == null) continue;
 				for (java.util.Iterator<String> it = catObj.keys(); it.hasNext(); ) {
 					String key = it.next();
-					if (extension.equalsIgnoreCase(catObj.getJSONObject(key).optString("extension")))
+					if (dottedExt.equalsIgnoreCase(catObj.getJSONObject(key).optString("extension")))
 						return key;
 				}
 			}

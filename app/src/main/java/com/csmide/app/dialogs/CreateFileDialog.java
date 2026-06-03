@@ -237,7 +237,10 @@ public class CreateFileDialog extends DialogFragment {
 	private String resolveMimeType(String extension) {
 		String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
 		if (mimeType == null) {
-			String[] allowedExtensions = {"txt", "java", "xml", "html", "css", "js", "json", "md", "py", "c", "cpp", "kt"};
+			String[] allowedExtensions = {
+					"txt", "java", "xml", "html", "css", "js", "json", "md", "py", "c", "cpp", "kt",
+					"cs", "rs", "go", "rb", "php", "lua", "pl", "sh", "swift", "dart", "yaml", "yml", "make", "ps1", "bat", "cmd"
+			};
 			for (String ext : allowedExtensions) {
 				if (extension.equals(ext)) {
 					return "text/plain";
@@ -246,6 +249,10 @@ public class CreateFileDialog extends DialogFragment {
 			Toast.makeText(requireContext(), "Unsupported file type", Toast.LENGTH_LONG).show();
 			return null;
 		} else if (!mimeType.startsWith("text/") && !mimeType.equals("application/json") && !mimeType.equals("application/xml")) {
+			// Some common extensions might resolve to application/* but are still text-based for us
+			if (extension.equals("js") || extension.equals("dart") || extension.equals("json") || extension.equals("yaml") || extension.equals("yml")) {
+				return mimeType;
+			}
 			Toast.makeText(requireContext(), "Unsupported MIME type: " + mimeType, Toast.LENGTH_LONG).show();
 			return null;
 		}

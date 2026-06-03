@@ -261,16 +261,24 @@ public class ExecutionManager {
 		String name = FileUtils.getFileName(context, fileUri);
 		if (name == null) return false;
 
-		String extension = "";
+		if (name.equalsIgnoreCase("Makefile")) return true;
+
+		String extension;
 		int i = name.lastIndexOf('.');
 		if (i >= 0) {
-			extension = name.substring(i);
+			extension = name.substring(i).toLowerCase();
+		} else {
+			extension = name.toLowerCase();
 		}
 
 		if (extension.isEmpty()) return false;
 
-		String lower = extension.toLowerCase();
-		if (lower.equals(".html") || lower.equals(".htm") || lower.equals(".xml") || lower.equals(".class") || lower.equals(".pyc")) {
+		String lower = extension;
+		// Hardcoded common ones for immediate availability
+		if (lower.endsWith(".html") || lower.endsWith(".htm") || lower.endsWith(".xml") ||
+				lower.endsWith(".class") || lower.endsWith(".pyc") ||
+				lower.endsWith(".cs") || lower.endsWith(".cpp") || lower.endsWith(".c") ||
+				lower.equals("cs") || lower.equals("cpp") || lower.equals("c")) {
 			return true;
 		}
 
@@ -309,7 +317,7 @@ public class ExecutionManager {
 		} else if (lowerFileName.endsWith(".sh")) {
 			return String.format("bash %s", qFile);
 		} else if (lowerFileName.endsWith(".cs")) {
-			return String.format("mcs %s && mono %s.exe", qFile, qFileNameWithoutExt);
+			return String.format("mcs %s -out:%s.exe && mono %s.exe", qFile, qOutput, qOutput);
 		}
 		return null;
 	}

@@ -164,6 +164,9 @@ public class CommandFetcher {
 		int i = fileName.lastIndexOf('.');
 		if (i > 0) {
 			extension = fileName.substring(i);
+		} else {
+			// For files like Makefile
+			extension = fileName;
 		}
 
 		String configJson = loadConfigurationJson();
@@ -176,7 +179,9 @@ public class CommandFetcher {
 			JSONObject languages = env.optJSONObject("languages");
 			if (languages == null) return null;
 
-			String[] categories = {"interpreted", "compiled", "shell_scripting"};
+			String cleanExt = extension.startsWith(".") || extension.equals("Makefile") ? extension : "." + extension;
+
+			String[] categories = {"interpreted", "compiled", "shell_scripting", "web", "tools"};
 			for (String category : categories) {
 				JSONObject catObj = languages.optJSONObject(category);
 				if (catObj == null) continue;
@@ -184,7 +189,8 @@ public class CommandFetcher {
 				while (langKeys.hasNext()) {
 					String langKey = langKeys.next();
 					JSONObject lang = catObj.getJSONObject(langKey);
-					if (extension.equalsIgnoreCase(lang.optString("extension"))) {
+					String supportedExt = lang.optString("extension", "");
+					if (!supportedExt.isEmpty() && cleanExt.equalsIgnoreCase(supportedExt)) {
 						// Only use internal output path for compiled languages that aren't JVM-based (Java/Kotlin use their own ways)
 						boolean useInternal = category.equals("compiled") && !langKey.equals("java") && !langKey.equals("kotlin");
 						return buildCommand(lang, absoluteFilePath, useInternal ? internalOutputPath : null);
@@ -266,7 +272,7 @@ public class CommandFetcher {
 	 * @return True if supported, false otherwise.
 	 */
 	public boolean isExtensionSupported(String extension) {
-		if (extension == null) return false;
+		if (extension == null || extension.isEmpty()) return false;
 		String configJson = loadConfigurationJson();
 		if (configJson == null) return false;
 		try {
@@ -276,20 +282,23 @@ public class CommandFetcher {
 			JSONObject languages = env.optJSONObject("languages");
 			if (languages == null) return false;
 
-			String[] categories = {"interpreted", "compiled", "shell_scripting"};
+			String cleanExt = (extension.startsWith(".") || extension.equals("Makefile")) ? extension : "." + extension;
+
+			String[] categories = {"interpreted", "compiled", "shell_scripting", "web", "tools"};
 			for (String category : categories) {
 				JSONObject catObj = languages.optJSONObject(category);
 				if (catObj == null) continue;
 				Iterator<String> langKeys = catObj.keys();
 				while (langKeys.hasNext()) {
 					JSONObject lang = catObj.getJSONObject(langKeys.next());
-					if (extension.equalsIgnoreCase(lang.optString("extension"))) {
+					String supportedExt = lang.optString("extension", "");
+					if (!supportedExt.isEmpty() && cleanExt.equalsIgnoreCase(supportedExt)) {
 						return true;
 					}
 				}
 			}
 		} catch (Exception e) {
-			Log.e(TAG, "Error checking extension support", e);
+			Log.e(TAG, "Error checking extension support for " + extension, e);
 		}
 		return false;
 	}

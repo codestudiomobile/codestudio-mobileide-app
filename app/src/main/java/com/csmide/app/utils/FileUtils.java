@@ -87,6 +87,15 @@ public class FileUtils {
 						return "text/x-perl";
 					case "lua":
 						return "text/x-lua";
+					case "rs":
+						return "text/x-rust";
+					case "swift":
+						return "text/x-swift";
+					case "dart":
+						return "text/x-dart";
+					case "yaml":
+					case "yml":
+						return "text/x-yaml";
 					default:
 						return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
 				}
@@ -179,6 +188,33 @@ public class FileUtils {
 				return "css";
 			case "sh":
 				return "shell";
+			case "rs":
+				return "rust";
+			case "go":
+				return "go";
+			case "kt":
+				return "kotlin";
+			case "rb":
+				return "ruby";
+			case "php":
+				return "php";
+			case "cs":
+				return "csharp";
+			case "lua":
+				return "lua";
+			case "swift":
+				return "swift";
+			case "dart":
+				return "dart";
+			case "xml":
+				return "xml";
+			case "json":
+				return "json";
+			case "yaml":
+			case "yml":
+				return "yaml";
+			case "md":
+				return "markdown";
 			default:
 				return extension;
 		}
