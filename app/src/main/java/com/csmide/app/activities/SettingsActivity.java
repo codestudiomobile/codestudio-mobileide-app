@@ -33,7 +33,7 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
 
 		// Define the list of settings options
 		settingsItems = new String[]{
-				getString(R.string.title_manage_languages),
+				// getString(R.string.title_manage_languages), // yet to complete
 				getString(R.string.action_open_editor_settings),
 				getString(R.string.title_customization),
 				getString(R.string.title_migration),
@@ -79,7 +79,9 @@ public class SettingsActivity extends AppCompatActivity implements AdapterView.O
 		String selectedItem = (String) parent.getItemAtPosition(position);
 
 		if (selectedItem.equals(getString(R.string.title_manage_languages))) {
-			startActivity(new Intent(this, ManageLanguagesActivity.class));
+			// yet to complete
+			android.widget.Toast.makeText(this, "Language Management is coming soon!", android.widget.Toast.LENGTH_SHORT).show();
+			// startActivity(new Intent(this, ManageLanguagesActivity.class));
 		} else if (selectedItem.equals(getString(R.string.action_open_editor_settings))) {
 			startActivity(new Intent(this, EditorActivity.class));
 		} else if (selectedItem.equals(getString(R.string.title_customization))) {

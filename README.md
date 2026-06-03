@@ -12,15 +12,22 @@ workspace where your code and terminal breathe together.
   auto-completion, and multi-language support via VS Code extensions.
 - **Integrated Terminal**: A full-featured terminal powered by Termux, providing a robust Linux
   environment. It automatically synchronizes with the editor, opening at your current working
-  directory for a truly integrated experience.
+  directory for a truly integrated experience. Includes a specialized `restart-terminal` command to
+  instantly refresh your environment.
+- **Persistent Workspace**: Your coding session is always preserved. CodeStudio automatically
+  restores all open tabs and your active file when you reopen the app or after an update.
 - **Package Management**: Built-in `apt` and `pkg` management for installing compilers, runtimes,
-  and utilities (Python, Node.js, C++, C#, etc.).
+  and utilities (Python, Node.js, C++, C#, etc.). *(Note: High-level GUI for package management is
+  currently pending)*
 - **Smart Execution Wrappers**: Introduces specialized CLI tools for a streamlined workflow:
     - `ccr`: Unified C/C++ wrapper. Compiles your code, runs the binary, and automatically deletes
       the output to keep your workspace clean.
     - `cscr`: C# wrapper. Compiles using `mcs`, runs with `mono`, and cleans up the `.exe`
       automatically.
     - Standard `gcc` and `g++` are symlinked to `ccr` for instant Compile-Run-Cleanup.
+- **Environment Management**:
+    - `restart-terminal`: A custom command to kill active terminal sessions and restart the
+      terminal subsystem. Perfect for reloading environment variables or clearing stuck processes.
 - **Modern UI**: Material Design 3 interface with dynamic themes and customizable layouts. The
   interface is highly optimized for performance, with asynchronous metadata loading and background
   text processing to ensure a 60 FPS experience and zero UI thread blocking.
@@ -56,8 +63,12 @@ Use these commands in the terminal for a "one-step" compilation and execution:
 
 ### IDE Integration
 
-- **One-Tap Run**: Click the "Run" icon in the editor toolbar. CodeStudio automatically detects the
-  language and executes the correct build/run sequence in a synchronized terminal tab.
+- **Smart One-Tap Run**: Click the "Run" icon in the editor toolbar. CodeStudio automatically
+  detects the language and executes the build/run sequence in a synchronized terminal tab inserted
+  immediately to the right of your source file for easy context switching.
+- **Responsive Controls**: Execution tabs (Terminal and HTML Preview) feature dedicated **Edit** and
+  **Stop** buttons. The "Edit" button intelligently returns you to the source file (reopening it if
+  necessary), and "Stop" allows you to terminate processes or close previews instantly.
 - **Hierarchical Search**: Use the search bar in the file explorer to find files. Results are now
   shown within their folder structure for better context and easier navigation.
 
@@ -107,8 +118,16 @@ For step-by-step styling instructions, see [CUSTOMIZATION.md](./docs/CUSTOMIZATI
 CodeStudio is currently under active development. For a detailed roadmap of past progress and
 upcoming milestones, please see our [WORKFLOW.md](./docs/WORKFLOW.md).
 
-- **Package Management**: Fully functional with automatic package name patching and `apt`
-  integration.
+- **Package Management**: The core `apt` and `pkg` infrastructure is fully functional with automatic
+  package name patching. However, the high-level **Manage Languages** UI and the **Code Formatter**
+  components are still under development and have been temporarily disabled in the production APK
+  to ensure stability.
+- **Ongoing Improvements**: We are working to finalize these modules shortly. Future updates will
+  enable these features without requiring a full reinstallation of the app, as they are independent
+  of the underlying Termux backend.
+- **Current Usage**: The app is fully usable for coding and execution. While the graphical package
+  manager is pending, you can still install packages directly via the terminal with a little
+  patience.
 - **Code Execution**: Stable "One-Tap" execution for multiple languages directly from the editor.
 - **Current Focus**: Creating **Abstraction Layers** to provide a cleaner, non-intimidating
   interface for terminal-based processes.
@@ -116,6 +135,7 @@ upcoming milestones, please see our [WORKFLOW.md](./docs/WORKFLOW.md).
 Experimental features:
 
 - **LSP Support**: Integration of Language Server Protocol is in the early stages.
+- **Auto-Formatting**: Built-in code formatter integration is pending.
 
 ## 📥 Download
 

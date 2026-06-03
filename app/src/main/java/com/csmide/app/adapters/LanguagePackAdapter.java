@@ -1,5 +1,7 @@
 package com.csmide.app.adapters;
 
+// yet to complete
+
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;

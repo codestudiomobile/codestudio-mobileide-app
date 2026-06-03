@@ -56,6 +56,17 @@ an overview of the project and its features, please see the [README.md](../READM
 
 ---
 
+## 🚧 Pending & In-Progress (Yet to Complete)
+
+- **Manage Languages GUI**: A high-level interface for simplified package installation. Currently
+  disabled to prevent issues with incomplete components. Users can still use `apt` via terminal.
+- **Integrated Code Formatter**: Advanced formatting support for various languages within the Sora
+  Editor.
+- **Direct Update Path**: Ensuring pending modules can be updated via APK without reinstalling the
+  Termux environment.
+
+---
+
 ## 🚀 Future Roadmap (What's Next)
 
 ### 1. Creating Abstraction Layers
@@ -69,6 +80,8 @@ Moving towards a more user-friendly experience by abstracting the complexities o
   progress bars and status indicators outside the raw terminal view.
 - **Input Abstraction**: Providing simplified UI prompts for scripts that require user input, rather
   than relying solely on the interactive terminal.
+- **Finalizing Package Management**: Polishing the `ManageLanguagesActivity` and ensuring robust
+  error handling during extraction and patching.
 
 ### 2. Final Cleanups, Checks, and Bug Fixes
 
@@ -80,3 +93,4 @@ Ensuring the stability and reliability of the IDE:
 - **Community Feedback & Bug Squashing**: Addressing reported issues and polishing the UI for a
   production-ready release.
 - **Security Audits**: Ensuring the shell environment is secure and respects user data privacy.
+- **Performance Tuning**: Reducing overhead of background package patching.

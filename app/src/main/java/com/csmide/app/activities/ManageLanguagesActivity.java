@@ -1,5 +1,7 @@
 package com.csmide.app.activities;
 
+// yet to complete
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

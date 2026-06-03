@@ -144,14 +144,31 @@ The dynamic title resolution is defined in the `.bashrc` initialization file:
 
 ---
 
-## 3. Editor Themes
+## 3. Environment Management
+
+### Restart Terminal
+
+If you've modified global environment variables, installed new packages that require a shell
+refresh, or encounter a hung process, you can use the built-in restart command:
+
+1. Open an active terminal tab.
+2. Run the following command:
+   ```bash
+   restart-terminal
+   ```
+3. This will broadcast a restart signal to the IDE, kill all active background terminal sessions,
+   and re-initialize the terminal subsystem, ensuring a clean slate.
+
+---
+
+## 4. Editor Themes
 
 Editor themes can be adjusted in **Settings > Editor Settings**. You can choose from built-in themes
 or apply custom color schemes.
 
 ---
 
-## 4. Development Note
+## 5. Development Note
 
 We are continuously improving the customization engine. Future updates will include more ASCII fonts
 and deeper integration with shell themes.

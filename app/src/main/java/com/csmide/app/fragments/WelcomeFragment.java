@@ -51,6 +51,12 @@ public class WelcomeFragment extends Fragment implements SharedPreferences.OnSha
 	public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
 
+		// yet to complete: hide manage languages
+		View manageLanguages = view.findViewById(R.id.manageLanguagesSettings);
+		if (manageLanguages != null) {
+			manageLanguages.setVisibility(View.GONE);
+		}
+
 		initScalableViews(view);
 		setupClickListeners(view);
 		setupZoomGesture(view);
@@ -140,7 +146,9 @@ public class WelcomeFragment extends Fragment implements SharedPreferences.OnSha
 		});
 
 		view.findViewById(R.id.manageLanguagesSettings).setOnClickListener(v -> {
-			startActivity(new Intent(view.getContext(), ManageLanguagesActivity.class));
+			// yet to complete
+			android.widget.Toast.makeText(getContext(), "Language Management is coming soon!", android.widget.Toast.LENGTH_SHORT).show();
+			// startActivity(new Intent(view.getContext(), ManageLanguagesActivity.class));
 		});
 
 		view.findViewById(R.id.openEditorSettings).setOnClickListener(v -> {

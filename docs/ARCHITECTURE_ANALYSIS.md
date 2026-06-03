@@ -44,7 +44,7 @@ flowchart TD
         Native_PTY --> |allocates| Linux_Kernel[/dev/ptmx]
     end
 
-    subgraph "Package Management"
+    subgraph "Package Management (Pending GUI)"
         ManageLanguagesActivity --> |triggers| LanguageManagerService
         LanguageManagerService --> |uses| AptBackgroundService
         AptBackgroundService --> |runs| pkg_apt[pkg/apt binaries]
@@ -142,7 +142,9 @@ application setup.
 
 #### `ManageLanguagesActivity.java`
 
-* **Significance**: Programming environments dashboard.
+* **Significance**: Programming environments dashboard (**YET TO COMPLETE**).
+* **Status**: Currently disabled in the production APK. High-level GUI for simplified package
+  management is pending.
 * **Responsibility**:
     * Loads and maps programming language runtimes and auto-completion packs parsed by
       `CommandFetcher` from `commands.json`.
