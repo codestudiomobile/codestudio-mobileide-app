@@ -17,16 +17,15 @@ jobs:
   copy-and-push:
     if: github.repository == 'codestudiomobile/codestudio-mobileide-app'
     runs-on: ubuntu-latest
-
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      
+
     steps:
       - name: Checkout Android Project
         uses: actions/checkout@v4
 
       # ========================================================================
-      # REPOSITORY 1: termux-shell-presets
+      # REPOSITORY 1: termux-shell-presets (Shell & Core Utilities)
       # ========================================================================
 
       - name: Sync bash.bashrc to termux-shell-presets
@@ -41,30 +40,6 @@ jobs:
           user_name: 'CodeStudio Sync Bot'
           commit_message: 'Automated update: bash.bashrc'
 
-      - name: Sync ccr.sh to termux-shell-presets
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/ccr.sh'
-          destination_repo: 'codestudiomobile/termux-shell-presets'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: ccr.sh'
-
-      - name: Sync cscr.sh to termux-shell-presets
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/cscr.sh'
-          destination_repo: 'codestudiomobile/termux-shell-presets'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: cscr.sh'
-
       - name: Sync restart-terminal.sh to termux-shell-presets
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
@@ -77,32 +52,8 @@ jobs:
           user_name: 'CodeStudio Sync Bot'
           commit_message: 'Automated update: restart-terminal.sh'
 
-      - name: Sync apply-banner.sh to termux-shell-presets
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/apply-banner.sh'
-          destination_repo: 'codestudiomobile/termux-shell-presets'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: apply-banner.sh'
-
-      - name: Sync apply-title.sh to termux-shell-presets
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/apply-title.sh'
-          destination_repo: 'codestudiomobile/termux-shell-presets'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: apply-title.sh'
-
       # ========================================================================
-      # REPOSITORY 2: termux-custom-environment
+      # REPOSITORY 2: termux-custom-environment (Theming & Customizers)
       # ========================================================================
 
       - name: Sync bash.bashrc to termux-custom-environment
@@ -116,42 +67,6 @@ jobs:
           user_email: 'bot@codestudio.com'
           user_name: 'CodeStudio Sync Bot'
           commit_message: 'Automated update: bash.bashrc'
-
-      - name: Sync ccr.sh to termux-custom-environment
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/ccr.sh'
-          destination_repo: 'codestudiomobile/termux-custom-environment'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: ccr.sh'
-
-      - name: Sync cscr.sh to termux-custom-environment
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/cscr.sh'
-          destination_repo: 'codestudiomobile/termux-custom-environment'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: cscr.sh'
-
-      - name: Sync restart-terminal.sh to termux-custom-environment
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/restart-terminal.sh'
-          destination_repo: 'codestudiomobile/termux-custom-environment'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: restart-terminal.sh'
 
       - name: Sync apply-banner.sh to termux-custom-environment
         uses: dmnemec/copy_file_to_another_repo_action@main
@@ -178,20 +93,8 @@ jobs:
           commit_message: 'Automated update: apply-title.sh'
 
       # ========================================================================
-      # REPOSITORY 3: termux-ide-wrappers
+      # REPOSITORY 3: termux-ide-wrappers (Compiler Scripts)
       # ========================================================================
-
-      - name: Sync bash.bashrc to termux-ide-wrappers
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/bash.bashrc'
-          destination_repo: 'codestudiomobile/termux-ide-wrappers'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: bash.bashrc'
 
       - name: Sync ccr.sh to termux-ide-wrappers
         uses: dmnemec/copy_file_to_another_repo_action@main
@@ -216,39 +119,3 @@ jobs:
           user_email: 'bot@codestudio.com'
           user_name: 'CodeStudio Sync Bot'
           commit_message: 'Automated update: cscr.sh'
-
-      - name: Sync restart-terminal.sh to termux-ide-wrappers
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/restart-terminal.sh'
-          destination_repo: 'codestudiomobile/termux-ide-wrappers'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: restart-terminal.sh'
-
-      - name: Sync apply-banner.sh to termux-ide-wrappers
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/apply-banner.sh'
-          destination_repo: 'codestudiomobile/termux-ide-wrappers'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: apply-banner.sh'
-
-      - name: Sync apply-title.sh to termux-ide-wrappers
-        uses: dmnemec/copy_file_to_another_repo_action@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_BOT_TOKEN }}
-        with:
-          source_file: 'app/src/main/assets/apply-title.sh'
-          destination_repo: 'codestudiomobile/termux-ide-wrappers'
-          destination_folder: '/'
-          user_email: 'bot@codestudio.com'
-          user_name: 'CodeStudio Sync Bot'
-          commit_message: 'Automated update: apply-title.sh'
