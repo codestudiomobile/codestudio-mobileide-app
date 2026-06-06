@@ -89,6 +89,8 @@ see [ARCHITECTURE_ANALYSIS.md](docs/ARCHITECTURE_ANALYSIS.md).
 
 Additional developer resources:
 
+- [**The Journey & Story**](./docs/JOURNEY.md): The personal history, breakthroughs, and the "why"
+  behind CodeStudio.
 - [**Getting Started & Setup**](./docs/SETUP.md): Hardware requirements, storage configuration, and
   troubleshooting.
 - [COMPONENTS.md](./docs/COMPONENTS.md): Quick component-level testing and manual verification
