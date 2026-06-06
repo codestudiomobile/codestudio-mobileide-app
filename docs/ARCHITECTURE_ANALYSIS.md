@@ -41,7 +41,7 @@ flowchart TD
     subgraph "Native Layer (C/C++)"
         TerminalSession --> |I/O via| JNI_PtyBridge
         JNI_PtyBridge --> |fork/exec| Native_PTY[termux.c]
-        Native_PTY --> |allocates| Linux_Kernel[/dev/ptmx]
+        Native_PTY --> |allocates| Linux_Kernel["/dev/ptmx"]
     end
 
     subgraph "Package Management (Pending GUI)"
@@ -72,10 +72,10 @@ c:\Users\SaiSampath\Documents\codestudio-mobileide
 │   │   │   │   ├── termux.c (Subprocess forking and dev/ptmx master-slave allocation)
 │   │   │   │   └── local-socket.cpp (Unix socket channel bindings)
 │   │   │   ├── java
-│   │   │   │   └── com/cs
-│   │   │   │       ├── ide/app/ (Main IDE logical components, editor wrapper, managers)
-│   │   │   │       ├── ide/termux/ (Termux app integration, terminal sessions, rendering)
-│   │   │   │       └── ide/termuxam/ (Termux bridging utilities for ActivityManager commands)
+│   │   │   │   └── com/csmide
+│   │   │   │       ├── app/ (Main IDE logical components, editor wrapper, managers)
+│   │   │   │       ├── termux/ (Termux app integration, terminal sessions, rendering)
+│   │   │   │       └── termuxam/ (Termux bridging utilities for ActivityManager commands)
 │   │   │   └── res (Beautiful custom dark-themed XML UI layouts, drawables, XML assets)
 │   │   └── test/ / androidTest/ (Unit and instrumented tests)
 │   └── build.gradle.kts (App level dependency management)
@@ -518,7 +518,7 @@ This layer implements terminal emulation, VT100 interpretation, pseudo-terminal 
 streams, and terminal rendering.
 
 ```
-com/cs/ide/termux
+com/csmide/termux
 ├── app/
 │   ├── TermuxActivity.java (Standalone Terminal View window wrapper)
 │   ├── TermuxService.java (Persistent service holding terminal session processes)

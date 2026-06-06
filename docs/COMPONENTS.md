@@ -124,5 +124,5 @@ the IDE more accessible while keeping the terminal available for power users.
 
 ---
 
-> **Tip for Developers**: Most of the core logic resides in `app/src/main/java/com/cs/ide/app`. If
+> **Tip for Developers**: Most of the core logic resides in `app/src/main/java/com/csmide/app`. If
 > you want to add a new language, check out `SoraLanguageManager.java`.
