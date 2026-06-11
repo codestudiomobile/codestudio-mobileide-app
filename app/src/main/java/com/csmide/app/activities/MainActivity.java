@@ -177,14 +177,12 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
 		Log.d(TAG, "Handling file intent for URI: " + uri);
 		try {
-			String fileName = FileUtils.getFileName(context, uri);
-			String fileTypeKey = FileUtils.getFileTypeKey(fileName);
-			Toast.makeText(context, context.getString(R.string.msg_file_saved_successfully, fileName, fileTypeKey), Toast.LENGTH_LONG).show();
-
 			Intent mainIntent = new Intent(context, MainActivity.class);
 			mainIntent.setAction(Intent.ACTION_VIEW);
 			mainIntent.setData(uri);
-			mainIntent.putExtra("is_private", true);
+			mainIntent.putExtra("is_private", false);
+			// Carry over flags from original intent and add standard launch flags
+			mainIntent.addFlags(intent.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));
 			mainIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 			context.startActivity(mainIntent);
 		} catch (Exception e) {
@@ -283,6 +281,19 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		viewPager = findViewById(R.id.viewPager2);
 		viewPager.setUserInputEnabled(false);
 		viewPager.setOffscreenPageLimit(3); // Cache a few pages for smoother transitions
+
+		// Initialize adapter early to prevent NullPointerException in handleIntent race condition
+		viewPagerAdapter = new ViewPagerAdapter(this, new ArrayList<>(), new ArrayList<>());
+		viewPager.setAdapter(viewPagerAdapter);
+		tabLayout.addOnTabSelectedListener(this);
+
+		new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+			if (position < viewPagerAdapter.fileNames.size()) {
+				tab.setText(viewPagerAdapter.fileNames.get(position));
+			}
+			applyTabPreferences(tab);
+			setupTabLongClick(tab);
+		}).attach();
 	}
 
 	private void initializeNavigation() {
@@ -340,18 +351,20 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 		executor.execute(() -> {
 			TabManager.TabState state = tabManager.loadRecentTabs(this);
 			runOnUiThread(() -> {
-				viewPagerAdapter = new ViewPagerAdapter(this, state.uris(), state.names());
-				viewPager.setAdapter(viewPagerAdapter);
-				tabLayout.addOnTabSelectedListener(this);
-
-				new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
-					if (position < viewPagerAdapter.fileNames.size()) {
-						tab.setText(viewPagerAdapter.fileNames.get(position));
+				if (state.uris() != null && !state.uris().isEmpty()) {
+					// If the adapter only has the default welcome screen, clear it before adding recent tabs
+					if (viewPagerAdapter.getItemCount() == 1 &&
+							ViewPagerAdapter.WELCOME_URI.equals(viewPagerAdapter.fileUris.get(0))) {
+						viewPagerAdapter.fileUris.clear();
+						viewPagerAdapter.fileNames.clear();
+						viewPagerAdapter.isPrivateTab.clear();
 					}
-					applyTabPreferences(tab);
-					setupTabLongClick(tab);
-				}).attach();
 
+					for (int i = 0; i < state.uris().size(); i++) {
+						viewPagerAdapter.addTab(state.uris().get(i), state.names().get(i));
+					}
+					viewPagerAdapter.notifyDataSetChanged();
+				}
 				restoreActiveTab(state);
 			});
 		});
@@ -714,7 +727,8 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 					return;
 				}
 
-				boolean isPrivate = intent.getBooleanExtra("is_private", true);
+				// Default to false for external intents to ensure they are persistable and properly named
+				boolean isPrivate = intent.getBooleanExtra("is_private", false);
 				if (!isPrivate) {
 					try {
 						int takeFlags = intent.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
